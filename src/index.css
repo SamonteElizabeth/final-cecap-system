@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Poppins', system-ui, -apple-system, sans-serif;
+  --color-brand-orange: #FF5401;
+  --color-brand-orange-hover: #E54A00;
+  --color-brand-dark: #2B2B2B;
+  --color-brand-bg: #F5F5F5;
+  --color-brand-border: #E5E7EB;
+}
+
+@layer base {
+  * {
+    font-family: 'Poppins', system-ui, -apple-system, sans-serif;
+  }
+  body {
+    background-color: #F5F5F5;
+    color: #2B2B2B;
+    font-family: 'Poppins', system-ui, -apple-system, sans-serif;
+  }
+}
+
+/* Typography refinement: prevent overly heavy/bold fonts across all modules */
+.font-extrabold,
+.font-black,
+.font-bold {
+  font-weight: 600 !important;
+}
+
+b, strong {
+  font-weight: 600;
+}
+
+/* Custom Sleek Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.sleek-card-glow {
+  background: radial-gradient(circle at top right, rgba(255, 84, 1, 0.15), transparent 70%);
+}

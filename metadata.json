@@ -1,0 +1,8 @@
+{
+  "name": "Remix Remix Final-CECAp-System-10-08-2026",
+  "description": "Enterprise mobile self-service portal for Clark Electric Distribution Corporation (CEDC) customers featuring bill management, digital payments, consumption analytics, and customer support.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
