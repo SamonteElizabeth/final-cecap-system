@@ -5,7 +5,7 @@ export async function submitRegistrationRequest(payload: {
   serviceAddress: string;
   mobileNumber: string;
   email: string;
-  notificationChannel?: 'Email' | 'SMS' | 'Both';
+  notificationChannel?: 'Email' | 'SMS';
 }) {
   try {
     const res = await fetch('/api/auth/register-request', {

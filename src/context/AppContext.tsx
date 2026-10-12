@@ -227,7 +227,7 @@ interface AppContextType {
   biometricSuccessAction: (() => void) | null;
   triggerBiometricAuth: (onSuccess: () => void) => void;
   registrationRequests: RegistrationRequest[];
-  submitRegistration: (req: { fullName: string; accountCode?: string; serviceAddress: string; mobileNumber: string; email: string; notificationChannel?: 'Email' | 'SMS' | 'Both' }) => void;
+  submitRegistration: (req: { fullName: string; accountCode?: string; serviceAddress: string; mobileNumber: string; email: string; notificationChannel?: 'Email' | 'SMS' }) => void;
   approveRegistration: (id: string, customAccountCode?: string) => { accountCode: string; tempPassword: string };
   rejectRegistration: (id: string, reason: string) => void;
 
@@ -843,7 +843,7 @@ CECAp Cybersecurity Operations`,
     setBiometricPromptOpen(true);
   };
 
-  const submitRegistration = (req: { fullName: string; accountCode?: string; serviceAddress: string; mobileNumber: string; email: string; notificationChannel?: 'Email' | 'SMS' | 'Both' }) => {
+  const submitRegistration = (req: { fullName: string; accountCode?: string; serviceAddress: string; mobileNumber: string; email: string; notificationChannel?: 'Email' | 'SMS' }) => {
     const assignedAccountCode = req.accountCode || `0421-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(10 + Math.random() * 90)}`;
     const newReq: RegistrationRequest = {
       id: `REG-2026-${Math.floor(100 + Math.random() * 900)}`,

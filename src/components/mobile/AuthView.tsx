@@ -259,7 +259,7 @@ export const AuthView: React.FC = () => {
   const [regServiceAddress, setRegServiceAddress] = useState('');
   const [regMobile, setRegMobile] = useState('');
   const [regEmail, setRegEmail] = useState('');
-  const [regChannel, setRegChannel] = useState<'Email' | 'SMS' | 'Both'>('Email');
+  const [regChannel, setRegChannel] = useState<'Email' | 'SMS'>('Email');
   const [regError, setRegError] = useState('');
   const [submittedRegRequest, setSubmittedRegRequest] = useState<any>(null);
 
@@ -1528,19 +1528,20 @@ Please enter this verification code on the registration screen to finalize your 
 
                     <div>
                       <label className="block text-xs font-bold text-[#2B2B2B] mb-1">Preferred Notification Channel</label>
-                      <div className="grid grid-cols-3 gap-1.5">
-                        {(['Email', 'SMS', 'Both'] as const).map(ch => (
+                      <div className="grid grid-cols-2 gap-2">
+                        {(['Email', 'SMS'] as const).map(ch => (
                           <button
                             type="button"
                             key={ch}
                             onClick={() => setRegChannel(ch)}
-                            className={`py-2 px-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                            className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                               regChannel === ch
-                                ? 'bg-[#FF5401] text-[#FFFFFF] border-[#FF5401]'
+                                ? 'bg-[#FF5401] text-[#FFFFFF] border-[#FF5401] shadow-sm'
                                 : 'bg-[#FAF8F5] text-slate-600 border-[#EBE5DC] hover:bg-slate-100'
                             }`}
                           >
-                            {ch}
+                            {ch === 'Email' ? <Mail className="w-3.5 h-3.5 shrink-0" /> : <Smartphone className="w-3.5 h-3.5 shrink-0" />}
+                            <span>{ch}</span>
                           </button>
                         ))}
                       </div>

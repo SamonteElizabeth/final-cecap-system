@@ -273,7 +273,7 @@ export interface RegistrationRequest {
   accountCode?: string;
   tempPassword?: string;
   rejectionReason?: string;
-  notificationChannel: 'Email' | 'SMS' | 'Both';
+  notificationChannel: 'Email' | 'SMS';
   matchingBillingRecord?: MatchingBillingRecord;
 }
 

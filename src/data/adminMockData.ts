@@ -478,7 +478,7 @@ export const INITIAL_REGISTRATION_REQUESTS: RegistrationRequest[] = [
     email: 'sophia.castro@gmail.com',
     status: 'Pending',
     submittedAt: '2026-08-05 11:00 AM',
-    notificationChannel: 'Both',
+    notificationChannel: 'SMS',
     matchingBillingRecord: {
       accountNumber: '0421-3388-11',
       customerName: 'Sophia Castro',
