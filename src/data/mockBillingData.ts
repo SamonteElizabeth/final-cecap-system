@@ -151,6 +151,13 @@ export const MOCK_BILLING_HISTORY: Record<string, BillingHistoryItem[]> = {
 
 export const MOCK_CONSUMPTION_HISTORY: Record<string, ConsumptionData[]> = {
   '0421-8812-90': [
+    { month: 'Jan', year: 2025, kwh: 310, peakKw: 3.5, amount: 3950.0, averageTemperatureC: 26 },
+    { month: 'Feb', year: 2025, kwh: 300, peakKw: 3.4, amount: 3820.0, averageTemperatureC: 27 },
+    { month: 'Mar', year: 2025, kwh: 320, peakKw: 3.6, amount: 4070.0, averageTemperatureC: 29 },
+    { month: 'Apr', year: 2025, kwh: 380, peakKw: 4.2, amount: 4830.0, averageTemperatureC: 33 },
+    { month: 'May', year: 2025, kwh: 370, peakKw: 4.1, amount: 4700.0, averageTemperatureC: 32 },
+    { month: 'Jun', year: 2025, kwh: 355, peakKw: 3.9, amount: 4510.0, averageTemperatureC: 31 },
+    { month: 'Jul', year: 2025, kwh: 360, peakKw: 4.0, amount: 4580.0, averageTemperatureC: 30 },
     { month: 'Aug', year: 2025, kwh: 340, peakKw: 3.8, amount: 4320.0, averageTemperatureC: 29 },
     { month: 'Sep', year: 2025, kwh: 325, peakKw: 3.6, amount: 4120.0, averageTemperatureC: 28 },
     { month: 'Oct', year: 2025, kwh: 310, peakKw: 3.4, amount: 3950.0, averageTemperatureC: 28 },
@@ -163,8 +170,20 @@ export const MOCK_CONSUMPTION_HISTORY: Record<string, ConsumptionData[]> = {
     { month: 'May', year: 2026, kwh: 365, peakKw: 4.0, amount: 4520.0, averageTemperatureC: 32 },
     { month: 'Jun', year: 2026, kwh: 385, peakKw: 4.2, amount: 4850.75, averageTemperatureC: 31 },
     { month: 'Jul', year: 2026, kwh: 390, peakKw: 4.3, amount: 4920.0, averageTemperatureC: 31 },
+    { month: 'Aug', year: 2026, kwh: 405, peakKw: 4.4, amount: 5090.0, averageTemperatureC: 30 },
+    { month: 'Sep', year: 2026, kwh: 395, peakKw: 4.3, amount: 4980.0, averageTemperatureC: 29 },
+    { month: 'Oct', year: 2026, kwh: 375, peakKw: 4.1, amount: 4720.0, averageTemperatureC: 28 },
+    { month: 'Nov', year: 2026, kwh: 360, peakKw: 3.9, amount: 4540.0, averageTemperatureC: 27 },
+    { month: 'Dec', year: 2026, kwh: 420, peakKw: 4.6, amount: 5290.0, averageTemperatureC: 26 },
   ],
   '0421-9943-11': [
+    { month: 'Jan', year: 2025, kwh: 1220, peakKw: 15.4, amount: 15450.0 },
+    { month: 'Feb', year: 2025, kwh: 1190, peakKw: 15.0, amount: 15100.0 },
+    { month: 'Mar', year: 2025, kwh: 1260, peakKw: 15.8, amount: 15950.0 },
+    { month: 'Apr', year: 2025, kwh: 1450, peakKw: 18.2, amount: 18400.0 },
+    { month: 'May', year: 2025, kwh: 1410, peakKw: 17.8, amount: 17900.0 },
+    { month: 'Jun', year: 2025, kwh: 1390, peakKw: 17.6, amount: 17650.0 },
+    { month: 'Jul', year: 2025, kwh: 1400, peakKw: 17.7, amount: 17750.0 },
     { month: 'Aug', year: 2025, kwh: 1380, peakKw: 17.5, amount: 17500.0 },
     { month: 'Sep', year: 2025, kwh: 1320, peakKw: 16.8, amount: 16800.0 },
     { month: 'Oct', year: 2025, kwh: 1290, peakKw: 16.2, amount: 16400.0 },
@@ -177,6 +196,11 @@ export const MOCK_CONSUMPTION_HISTORY: Record<string, ConsumptionData[]> = {
     { month: 'May', year: 2026, kwh: 1420, peakKw: 17.9, amount: 18050.0 },
     { month: 'Jun', year: 2026, kwh: 1450, peakKw: 18.5, amount: 18420.5 },
     { month: 'Jul', year: 2026, kwh: 1510, peakKw: 18.9, amount: 19180.0 },
+    { month: 'Aug', year: 2026, kwh: 1530, peakKw: 19.1, amount: 19450.0 },
+    { month: 'Sep', year: 2026, kwh: 1490, peakKw: 18.7, amount: 18920.0 },
+    { month: 'Oct', year: 2026, kwh: 1460, peakKw: 18.4, amount: 18550.0 },
+    { month: 'Nov', year: 2026, kwh: 1430, peakKw: 18.0, amount: 18150.0 },
+    { month: 'Dec', year: 2026, kwh: 1600, peakKw: 19.8, amount: 20300.0 },
   ],
 };
 

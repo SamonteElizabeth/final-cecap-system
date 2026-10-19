@@ -8,15 +8,9 @@ import {
   Activity,
   CreditCard,
   Calendar,
-  Sparkles,
   Info,
-  Clock,
   ArrowUpRight,
   ArrowDownRight,
-  ShieldCheck,
-  CheckCircle2,
-  AlertCircle,
-  Lightbulb,
   ChevronDown,
 } from 'lucide-react';
 import {
@@ -32,9 +26,9 @@ import {
 } from 'recharts';
 
 export const ConsumptionView: React.FC = () => {
-  const { selectedAccount, setPaymentModalOpen, setActiveTab } = useApp();
+  const { selectedAccount, setActiveTab } = useApp();
   const [selectedYear, setSelectedYear] = useState<string>('2026');
-  const [timeRange, setTimeRange] = useState<'6M' | '12M'>('6M');
+  const [selectedMonthData, setSelectedMonthData] = useState<ConsumptionData | null>(null);
   const [consumptionList, setConsumptionList] = useState<ConsumptionData[]>([]);
   const [hoveredBar, setHoveredBar] = useState<ConsumptionData | null>(null);
 
@@ -61,14 +55,24 @@ export const ConsumptionView: React.FC = () => {
     return consumptionList.filter(item => item.year.toString() === selectedYear);
   }, [consumptionList, selectedYear]);
 
-  // Filter based on 6M or 12M toggle
+  // Full months display (no 6M or 12M truncation)
   const chartData = useMemo(() => {
-    if (!filteredByYear.length) return [];
-    if (timeRange === '6M') {
-      return filteredByYear.slice(-6);
+    return filteredByYear;
+  }, [filteredByYear]);
+
+  // Keep selectedMonthData synchronized with active chart data
+  useEffect(() => {
+    if (chartData.length > 0) {
+      setSelectedMonthData(prev => {
+        if (prev && chartData.some(d => d.month === prev.month && d.year === prev.year)) {
+          return prev;
+        }
+        return chartData[chartData.length - 1];
+      });
+    } else {
+      setSelectedMonthData(null);
     }
-    return filteredByYear.slice(-12);
-  }, [filteredByYear, timeRange]);
+  }, [chartData]);
 
   // Derived metrics
   const currentConsumption = useMemo(() => {
@@ -194,7 +198,7 @@ export const ConsumptionView: React.FC = () => {
             </div>
           </div>
           <p className="text-[10px] text-slate-400 pt-1 border-t border-slate-100">
-            Based on {timeRange === '6M' ? 'last 6 months' : 'last 12 months'}
+            Full annual billing period ({chartData.length} months)
           </p>
         </div>
 
@@ -244,7 +248,7 @@ export const ConsumptionView: React.FC = () => {
         </div>
       </div>
 
-      {/* MONTHLY KWH CONSUMPTION CHART WITH 6/12-MONTH TOGGLE & AVERAGE REFERENCE LINE */}
+      {/* MONTHLY KWH CONSUMPTION CHART WITH FULL MONTHS & CLICKABLE BARS */}
       <div className="bg-white rounded-3xl p-5 md:p-7 border border-[#E5E7EB] shadow-xs space-y-5">
         {/* Chart Header and Controls */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E5E7EB] pb-4">
@@ -252,19 +256,17 @@ export const ConsumptionView: React.FC = () => {
             <div className="flex items-center gap-2">
               <h3 className="text-sm md:text-base font-semibold text-[#2B2B2B]">Monthly kWh Consumption Trend</h3>
               <span className="bg-orange-50 text-[#FF5401] text-[10px] font-medium px-2 py-0.5 rounded-md border border-[#FF5401]/20">
-                {selectedYear === 'ALL' ? 'All-Time Trend' : `${selectedYear} Trend`}
+                {selectedYear === 'ALL' ? 'All-Time Trend' : `Full ${selectedYear} (${chartData.length} Months)`}
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
-              Compare your power usage against the monthly reference average of{' '}
-              <strong className="text-[#FF5401] font-semibold">{averageUsage} kWh</strong>
-              {selectedYear !== 'ALL' && <span className="text-slate-400 font-medium"> ({selectedYear})</span>}
+              Monthly reference average: <strong className="text-[#FF5401] font-semibold">{averageUsage} kWh</strong>.
+              <span className="text-slate-600 font-medium ml-1">Click any bar to view that month's consumption.</span>
             </p>
           </div>
 
-          {/* Controls: Year Filter on the left of 6 Months, then 6/12-Month Toggle */}
+          {/* Controls: Year Filter */}
           <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
-            {/* Year Filter (Left side of 6 Months) */}
             <div className="bg-[#F0F2F5] p-1 rounded-2xl flex items-center gap-1.5">
               <span className="text-[10px] font-medium text-slate-500 pl-2.5 pr-0.5 uppercase tracking-wider flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5 text-[#FF5401]" />
@@ -287,54 +289,31 @@ export const ConsumptionView: React.FC = () => {
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             </div>
-
-            {/* 6-Month / 12-Month Toggle Button */}
-            <div className="bg-[#F0F2F5] p-1 rounded-2xl flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => setTimeRange('6M')}
-                className={`px-3.5 py-1.5 rounded-xl text-xs transition-all cursor-pointer ${
-                  timeRange === '6M'
-                    ? 'bg-white text-[#FF5401] shadow-xs font-semibold border border-[#E5E7EB]'
-                    : 'text-slate-600 hover:text-[#2B2B2B] font-medium'
-                }`}
-              >
-                6 Months
-              </button>
-              <button
-                type="button"
-                onClick={() => setTimeRange('12M')}
-                className={`px-3.5 py-1.5 rounded-xl text-xs transition-all cursor-pointer ${
-                  timeRange === '12M'
-                    ? 'bg-white text-[#FF5401] shadow-xs font-semibold border border-[#E5E7EB]'
-                    : 'text-slate-600 hover:text-[#2B2B2B] font-medium'
-                }`}
-              >
-                12 Months
-              </button>
-            </div>
           </div>
         </div>
 
-        {/* Legend & Average Marker */}
+        {/* Legend & Active Month Indicator */}
         <div className="flex flex-wrap items-center justify-between gap-3 text-xs pt-1">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
             <div className="flex items-center gap-2">
               <div className="w-3.5 h-3.5 rounded bg-[#FF5401]" />
               <span className="text-slate-600 font-medium">Billed Consumption (kWh)</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-0.5 border-t-2 border-dashed border-[#E54A00]" />
-              <span className="text-slate-600 font-medium">Average Reference Line ({averageUsage} kWh)</span>
+              <span className="text-slate-600 font-medium">Average Line ({averageUsage} kWh)</span>
             </div>
           </div>
 
-          {hoveredBar && (
-            <div className="text-[11px] font-bold text-slate-500 bg-[#F8FAFC] px-3 py-1 rounded-lg border border-[#E5E7EB]">
-              {hoveredBar.month} {hoveredBar.year}: <strong className="text-[#FF5401]">{hoveredBar.kwh} kWh</strong> (Peak:{' '}
-              {hoveredBar.peakKw} kW)
-            </div>
-          )}
+          <div className="text-[11px] font-medium text-slate-500 bg-[#F8FAFC] px-3 py-1 rounded-lg border border-[#E5E7EB]">
+            {selectedMonthData ? (
+              <span>
+                Selected: <strong className="text-[#FF5401]">{selectedMonthData.month} {selectedMonthData.year}</strong> ({selectedMonthData.kwh} kWh • ₱{selectedMonthData.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })})
+              </span>
+            ) : (
+              <span>Click a bar to inspect month</span>
+            )}
+          </div>
         </div>
 
         {/* Recharts Bar Chart Container */}
@@ -343,6 +322,11 @@ export const ConsumptionView: React.FC = () => {
             <BarChart
               data={chartData}
               margin={{ top: 20, right: 15, left: -10, bottom: 5 }}
+              onClick={(state: any) => {
+                if (state && state.activePayload && state.activePayload.length) {
+                  setSelectedMonthData(state.activePayload[0].payload as ConsumptionData);
+                }
+              }}
               onMouseMove={(state: any) => {
                 if (state && state.activePayload && state.activePayload.length) {
                   setHoveredBar(state.activePayload[0].payload);
@@ -374,13 +358,13 @@ export const ConsumptionView: React.FC = () => {
                 unit=" kWh"
               />
               <Tooltip
-                cursor={{ fill: 'rgba(255, 84, 1, 0.06)' }}
+                cursor={{ fill: 'rgba(255, 84, 1, 0.08)' }}
                 content={({ active, payload }) => {
                   if (active && payload && payload.length) {
                     const data = payload[0].payload as ConsumptionData;
                     const diffFromAvg = data.kwh - averageUsage;
                     return (
-                      <div className="bg-[#2B2B2B] text-white p-3.5 rounded-2xl shadow-xl border border-slate-700 text-xs min-w-[200px] space-y-2">
+                      <div className="bg-[#2B2B2B] text-white p-3.5 rounded-2xl shadow-xl border border-slate-700 text-xs min-w-[210px] space-y-2">
                         <div className="flex items-center justify-between border-b border-slate-600 pb-1.5">
                           <span className="font-semibold text-white text-sm">
                             {data.month} {data.year}
@@ -410,6 +394,9 @@ export const ConsumptionView: React.FC = () => {
                               {diffFromAvg >= 0 ? `+${diffFromAvg} kWh` : `${diffFromAvg} kWh`}
                             </span>
                           </div>
+                          <div className="text-[10px] text-center text-[#FF9E66] pt-1 border-t border-slate-700/60 font-medium">
+                            👆 Click to view full month details
+                          </div>
                         </div>
                       </div>
                     );
@@ -430,13 +417,36 @@ export const ConsumptionView: React.FC = () => {
                   position: 'top',
                 }}
               />
-              <Bar dataKey="kwh" radius={[8, 8, 0, 0]} maxBarSize={48}>
+              <Bar
+                dataKey="kwh"
+                radius={[8, 8, 0, 0]}
+                maxBarSize={44}
+                className="cursor-pointer"
+                onClick={(entry: any) => {
+                  if (entry && entry.kwh !== undefined) {
+                    setSelectedMonthData(entry as ConsumptionData);
+                  }
+                }}
+              >
                 {chartData.map((entry, index) => {
-                  const isCurrent = index === chartData.length - 1;
+                  const isSelected =
+                    selectedMonthData?.month === entry.month &&
+                    selectedMonthData?.year === entry.year;
+                  const isLatest = index === chartData.length - 1;
                   return (
                     <Cell
-                      key={`cell-${index}`}
-                      fill={isCurrent ? 'url(#peakBarGrad)' : 'url(#consumptionBarGrad)'}
+                      key={`cell-${entry.year}-${entry.month}-${index}`}
+                      cursor="pointer"
+                      fill={
+                        isSelected
+                          ? '#FF5401'
+                          : isLatest
+                          ? 'url(#peakBarGrad)'
+                          : 'url(#consumptionBarGrad)'
+                      }
+                      stroke={isSelected ? '#2B2B2B' : 'transparent'}
+                      strokeWidth={isSelected ? 2 : 0}
+                      opacity={selectedMonthData ? (isSelected ? 1 : 0.6) : 1}
                     />
                   );
                 })}
@@ -444,6 +454,162 @@ export const ConsumptionView: React.FC = () => {
             </BarChart>
           </ResponsiveContainer>
         </div>
+
+        {/* CLICKABLE MONTH STRIP FOR QUICK NAVIGATION */}
+        <div className="pt-2 border-t border-slate-100">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-semibold text-slate-600">
+              Select Month ({chartData.length} Full Months):
+            </span>
+            <span className="text-[10px] text-slate-400">Click bar or month to view</span>
+          </div>
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 pt-0.5">
+            {chartData.map((d, i) => {
+              const isSelected = selectedMonthData?.month === d.month && selectedMonthData?.year === d.year;
+              return (
+                <button
+                  key={`month-btn-${d.year}-${d.month}-${i}`}
+                  type="button"
+                  onClick={() => setSelectedMonthData(d)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer border flex items-center gap-1.5 ${
+                    isSelected
+                      ? 'bg-[#FF5401] text-white border-[#FF5401] shadow-xs'
+                      : 'bg-[#F8FAFC] text-slate-600 border-[#E2E8F0] hover:bg-slate-100 hover:text-[#2B2B2B]'
+                  }`}
+                >
+                  <span>{d.month}</span>
+                  <span className={`text-[10px] ${isSelected ? 'text-white/90' : 'text-slate-400'}`}>
+                    {d.kwh} kWh
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* CLICKED MONTH CONSUMPTION DETAIL SPOTLIGHT PANEL */}
+        {selectedMonthData && (
+          <div className="bg-[#FAF8F5] rounded-2xl p-4 md:p-5 border border-[#EBE5DC] space-y-4 animate-fade-in">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#EBE5DC] pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-[#FF5401] text-white flex items-center justify-center shrink-0 shadow-2xs">
+                  <Zap className="w-5 h-5 fill-white" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm md:text-base font-semibold text-[#2B2B2B]">
+                      {selectedMonthData.month} {selectedMonthData.year} Consumption Details
+                    </h4>
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-orange-100 text-[#FF5401] border border-[#FF5401]/30">
+                      Active
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500">
+                    Billed usage, demand profile, and unbundled rates for this cycle
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('billing')}
+                  className="bg-white hover:bg-slate-50 text-[#FF5401] border border-[#FF5401]/30 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
+                >
+                  <span>View Statement</span>
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* 4 Detail Metrics for Clicked Month */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="bg-white p-3.5 rounded-xl border border-[#E5E7EB] shadow-2xs">
+                <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400 block">Total Energy</span>
+                <div className="flex items-baseline gap-1 mt-1">
+                  <span className="text-xl md:text-2xl font-semibold text-[#FF5401]">{selectedMonthData.kwh}</span>
+                  <span className="text-xs font-medium text-slate-500">kWh</span>
+                </div>
+                <div className="mt-1 text-[10px]">
+                  {selectedMonthData.kwh >= averageUsage ? (
+                    <span className="text-amber-700 font-medium">
+                      +{selectedMonthData.kwh - averageUsage} kWh vs period avg
+                    </span>
+                  ) : (
+                    <span className="text-emerald-700 font-medium">
+                      -{averageUsage - selectedMonthData.kwh} kWh vs period avg
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-white p-3.5 rounded-xl border border-[#E5E7EB] shadow-2xs">
+                <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400 block">Billed Amount</span>
+                <div className="flex items-baseline gap-1 mt-1">
+                  <span className="text-xl md:text-2xl font-semibold text-[#2B2B2B]">
+                    ₱{selectedMonthData.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <span className="text-[10px] text-slate-400 mt-1 block">Full month statement</span>
+              </div>
+
+              <div className="bg-white p-3.5 rounded-xl border border-[#E5E7EB] shadow-2xs">
+                <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400 block">Peak Demand</span>
+                <div className="flex items-baseline gap-1 mt-1">
+                  <span className="text-xl md:text-2xl font-semibold text-rose-600">{selectedMonthData.peakKw}</span>
+                  <span className="text-xs font-medium text-slate-500">kW</span>
+                </div>
+                <span className="text-[10px] text-slate-400 mt-1 block">Max 15-min peak</span>
+              </div>
+
+              <div className="bg-white p-3.5 rounded-xl border border-[#E5E7EB] shadow-2xs">
+                <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400 block">Effective Rate & Daily</span>
+                <div className="flex items-baseline gap-1 mt-1">
+                  <span className="text-xl md:text-2xl font-semibold text-emerald-600">
+                    ₱{(selectedMonthData.amount / selectedMonthData.kwh).toFixed(2)}
+                  </span>
+                  <span className="text-xs font-medium text-slate-500">/kWh</span>
+                </div>
+                <span className="text-[10px] text-slate-500 mt-1 block">
+                  ~{(selectedMonthData.kwh / 30).toFixed(1)} kWh per day
+                </span>
+              </div>
+            </div>
+
+            {/* Estimated Unbundled Cost Breakdown for Selected Month */}
+            <div className="bg-white p-3.5 rounded-xl border border-[#E5E7EB] space-y-2">
+              <span className="text-[11px] font-semibold text-[#2B2B2B] block">
+                Estimated Unbundled Billing Breakdown ({selectedMonthData.month} {selectedMonthData.year}):
+              </span>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                <div className="bg-[#FAF8F5] p-2 rounded-lg border border-[#EBE5DC]">
+                  <span className="text-[10px] text-slate-500 block">Generation (55%)</span>
+                  <span className="font-semibold text-[#2B2B2B]">
+                    ₱{(selectedMonthData.amount * 0.55).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div className="bg-[#FAF8F5] p-2 rounded-lg border border-[#EBE5DC]">
+                  <span className="text-[10px] text-slate-500 block">Transmission (11%)</span>
+                  <span className="font-semibold text-[#2B2B2B]">
+                    ₱{(selectedMonthData.amount * 0.11).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div className="bg-[#FAF8F5] p-2 rounded-lg border border-[#EBE5DC]">
+                  <span className="text-[10px] text-slate-500 block">Distribution (17%)</span>
+                  <span className="font-semibold text-[#2B2B2B]">
+                    ₱{(selectedMonthData.amount * 0.17).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div className="bg-[#FAF8F5] p-2 rounded-lg border border-[#EBE5DC]">
+                  <span className="text-[10px] text-slate-500 block">Taxes & Universal (17%)</span>
+                  <span className="font-semibold text-[#2B2B2B]">
+                    ₱{(selectedMonthData.amount * 0.17).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Footer tip */}
         <div className="bg-orange-50/70 border border-[#FF5401]/20 rounded-2xl p-3.5 flex items-start gap-3 text-xs">
@@ -459,118 +625,6 @@ export const ConsumptionView: React.FC = () => {
         </div>
       </div>
 
-      {/* ADDITIONAL CUSTOMER-FRIENDLY INSIGHTS & EFFICIENCY MODULES */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
-        {/* Time-of-Use & Consumption Breakdown Card */}
-        <div className="bg-white rounded-3xl p-6 border border-[#E5E7EB] shadow-xs flex flex-col justify-between space-y-4">
-          <div>
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs md:text-sm font-semibold text-[#2B2B2B] uppercase tracking-wider flex items-center gap-2">
-                <Clock className="w-4 h-4 text-[#FF5401]" />
-                Estimated Load Distribution
-              </h3>
-              <span className="text-[10px] font-medium text-slate-400">Time-of-Use Pattern</span>
-            </div>
-            <p className="text-xs text-slate-500 mt-1">
-              Estimated electricity breakdown across peak daytime and off-peak night hours.
-            </p>
-          </div>
-
-          <div className="space-y-3.5 my-2">
-            {/* Daytime Peak Bar */}
-            <div>
-              <div className="flex justify-between text-xs font-semibold mb-1">
-                <span className="text-[#2B2B2B] flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#FF5401]" /> Daytime Peak (8 AM – 6 PM)
-                </span>
-                <span className="text-[#FF5401] font-semibold">62% (~{Math.round(currentConsumption * 0.62)} kWh)</span>
-              </div>
-              <div className="w-full bg-[#F5F5F5] h-2.5 rounded-full overflow-hidden">
-                <div className="bg-[#FF5401] h-full rounded-full" style={{ width: '62%' }} />
-              </div>
-            </div>
-
-            {/* Evening Normal Bar */}
-            <div>
-              <div className="flex justify-between text-xs font-semibold mb-1">
-                <span className="text-[#2B2B2B] flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-amber-400" /> Evening Regular (6 PM – 10 PM)
-                </span>
-                <span className="text-amber-600 font-semibold">23% (~{Math.round(currentConsumption * 0.23)} kWh)</span>
-              </div>
-              <div className="w-full bg-[#F5F5F5] h-2.5 rounded-full overflow-hidden">
-                <div className="bg-amber-400 h-full rounded-full" style={{ width: '23%' }} />
-              </div>
-            </div>
-
-            {/* Off-Peak Night Bar */}
-            <div>
-              <div className="flex justify-between text-xs font-semibold mb-1">
-                <span className="text-[#2B2B2B] flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> Off-Peak Night (10 PM – 8 AM)
-                </span>
-                <span className="text-emerald-600 font-semibold">15% (~{Math.round(currentConsumption * 0.15)} kWh)</span>
-              </div>
-              <div className="w-full bg-[#F5F5F5] h-2.5 rounded-full overflow-hidden">
-                <div className="bg-emerald-500 h-full rounded-full" style={{ width: '15%' }} />
-              </div>
-            </div>
-          </div>
-
-          <div className="p-3 bg-[#F8FAFC] rounded-2xl border border-[#E5E7EB] flex items-center justify-between text-xs">
-            <span className="text-slate-500">Service Category:</span>
-            <span className="font-semibold text-[#2B2B2B]">Standard {selectedAccount.serviceType} Tariff</span>
-          </div>
-        </div>
-
-        {/* Energy Savings & Eco Advisor Card */}
-        <div className="bg-gradient-to-br from-[#FFF3DF] via-[#FFF9F0] to-[#FFD08A]/30 rounded-3xl p-6 border border-[#FFD08A] shadow-xs flex flex-col justify-between space-y-4">
-          <div>
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#FF5401] bg-white px-2.5 py-0.5 rounded-full border border-[#FF5401]/20">
-                Energy Conservation Advisory
-              </span>
-              <Sparkles className="w-4 h-4 text-[#FF5401]" />
-            </div>
-            <h4 className="text-base font-semibold text-[#2B2B2B] mt-2">
-              Optimize Your Electric Bill with CEDC
-            </h4>
-            <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-              Based on your monthly average of <strong>{averageUsage} kWh</strong>, simple habits can help save up to 10% on
-              your next billing statement.
-            </p>
-          </div>
-
-          <div className="space-y-2 text-xs">
-            <div className="flex items-start gap-2.5 bg-white/80 backdrop-blur-xs p-2.5 rounded-xl border border-white">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-              <span className="text-slate-700">Set air conditioners to 24°C–25°C for optimal inverter energy efficiency.</span>
-            </div>
-            <div className="flex items-start gap-2.5 bg-white/80 backdrop-blur-xs p-2.5 rounded-xl border border-white">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-              <span className="text-slate-700">Unplug phantom loads (chargers, gaming rigs, entertainment systems) when idle.</span>
-            </div>
-          </div>
-
-          <div className="pt-2 flex items-center justify-between">
-            <button
-              type="button"
-              onClick={() => setActiveTab('billing')}
-              className="bg-[#FF5401] hover:bg-[#E54A00] text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow-xs transition-all cursor-pointer flex items-center gap-1.5"
-            >
-              <span>View Statement of Account</span>
-              <ArrowUpRight className="w-3.5 h-3.5" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setPaymentModalOpen(true)}
-              className="bg-white hover:bg-slate-50 text-[#2B2B2B] font-medium text-xs px-3.5 py-2.5 rounded-xl border border-[#E5E7EB] transition-all cursor-pointer"
-            >
-              Pay Online
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
