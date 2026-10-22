@@ -331,7 +331,7 @@ export const SupportView: React.FC<SupportViewProps> = ({ searchQuery = '' }) =>
                     className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#FF5401] hover:bg-[#E54A00] text-white font-bold text-xs shadow-xs cursor-pointer"
                   >
                     <Send className="w-4 h-4" />
-                    <span>Save & Dispatch Response</span>
+                    <span>Save</span>
                   </button>
                 </div>
               </form>
