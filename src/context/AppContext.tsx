@@ -56,25 +56,51 @@ const INITIAL_SUPPORT_CONCERNS: SupportConcern[] = [
   {
     id: 'CONCERN-101',
     accountNumber: '0421-8812-90',
+    customerName: 'Juan Dela Cruz',
+    customerAddress: 'Block 12 Lot 5, Berthaphil Industrial Park, Clark Freeport Zone, Pampanga',
+    serviceType: 'Residential',
     ticketNumber: 'TK-2026-8801',
     category: 'Billing Concern',
     subject: 'High consumption charge inquiry for July',
     description: 'Noticeable jump in kWh compared to previous month. Kindly verify meter accuracy.',
     status: 'In Progress',
     createdAt: '2026-08-02 11:20 AM',
-    adminName: 'Engr. Roberto Santos',
+    adminName: 'Clarissa Fernandez',
+    assignedStaff: 'Clarissa Fernandez',
     adminResponse: 'Meter dispatch unit scheduled for field verification on Aug 05.',
     adminRespondedAt: '2026-08-03 09:15 AM',
   },
   {
     id: 'CONCERN-102',
     accountNumber: '0421-9943-11',
+    customerName: 'Juan Dela Cruz',
+    customerAddress: 'Unit 402 Philexcel Business Park, Clark Freeport Zone, Pampanga',
+    serviceType: 'Commercial',
     ticketNumber: 'TK-2026-9923',
     category: 'Power Outage',
     subject: 'Voltage dip reported at Philexcel Business Park',
     description: 'Brief 3-second voltage sag affected server room UPS equipment.',
     status: 'Submitted',
     createdAt: '2026-08-04 08:10 AM',
+    assignedStaff: 'Clarissa Fernandez',
+  },
+  {
+    id: 'CONCERN-103',
+    accountNumber: '0421-3310-88',
+    customerName: 'Maria Clara Santos',
+    customerAddress: 'Villa 14, Mimosa Leisure Estate, Clark Freeport Zone',
+    serviceType: 'Residential',
+    ticketNumber: 'TK-2026-7712',
+    category: 'Meter Concern',
+    subject: 'Digital smart meter display flickering',
+    description: 'LCD panel blinking irregularly during afternoon peak load. Power remains on.',
+    status: 'Solved',
+    createdAt: '2026-08-01 02:30 PM',
+    adminName: 'Clarissa Fernandez',
+    assignedStaff: 'Clarissa Fernandez',
+    completionDate: '2026-08-03 04:15 PM',
+    adminResponse: 'Digital meter firmware updated and secondary surge protective device inspected.',
+    adminRespondedAt: '2026-08-03 04:15 PM',
   },
 ];
 
@@ -176,7 +202,12 @@ interface AppContextType {
   editAnnouncement: (id: string, updated: Partial<NotificationItem>) => void;
   supportConcerns: SupportConcern[];
   addSupportConcern: (concern: SupportConcern) => void;
-  updateSupportConcernStatus: (id: string, status: SupportConcern['status'], adminNotes?: string) => void;
+  updateSupportConcernStatus: (
+    id: string,
+    status: SupportConcern['status'],
+    adminNotes?: string,
+    assignedStaff?: string
+  ) => void;
   biometricsEnabled: boolean;
   setBiometricsEnabled: (val: boolean) => void;
   notificationPreferences: NotificationPreferences;
@@ -775,16 +806,34 @@ CECAp Cybersecurity Operations`,
     setSupportConcerns(prev => [concern, ...prev]);
   };
 
-  const updateSupportConcernStatus = (id: string, status: SupportConcern['status'], adminNotes?: string) => {
+  const updateSupportConcernStatus = (
+    id: string,
+    status: SupportConcern['status'],
+    adminNotes?: string,
+    assignedStaffName?: string
+  ) => {
+    const isCompleted = status === 'Solved' || status === 'Resolved';
+    const nowTimestamp = new Date().toLocaleString('en-US', {
+      month: 'short',
+      day: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+
     setSupportConcerns(prev =>
       prev.map(c =>
         c.id === id
           ? {
               ...c,
               status,
-              adminResponse: adminNotes || c.adminResponse,
-              adminRespondedAt: new Date().toLocaleString(),
+              adminResponse: adminNotes !== undefined ? adminNotes : c.adminResponse,
+              adminRespondedAt: nowTimestamp,
               adminName: adminUser?.name || 'CEDC Operations Admin',
+              assignedStaff: assignedStaffName || c.assignedStaff || adminUser?.name || 'Clarissa Fernandez',
+              // Automatically record completion date when marked as Solved
+              completionDate: isCompleted ? (c.completionDate || nowTimestamp) : (status === 'In Progress' ? undefined : c.completionDate),
             }
           : c
       )

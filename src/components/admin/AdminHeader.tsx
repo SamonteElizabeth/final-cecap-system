@@ -28,7 +28,8 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
   advisoriesSubTab,
   maintenanceSubTab,
 }) => {
-  const { notifications, unreadNotifCount, markNotificationRead, markAllNotificationsRead, sentEmails, setEmailModalOpen } = useApp();
+  const { notifications, unreadNotifCount, markNotificationRead, markAllNotificationsRead, sentEmails, setEmailModalOpen, userRole, adminUser } = useApp();
+  const isSupportStaff = userRole === 'support_staff' || adminUser?.role === 'support_staff';
 
   const [notifDrawerOpen, setNotifDrawerOpen] = useState(false);
   const [filter, setFilter] = useState<'ALL' | 'OUTAGE' | 'BILL' | 'ANNOUNCEMENT'>('ALL');
@@ -60,6 +61,9 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
   };
 
   const getBreadcrumbTitle = () => {
+    if (isSupportStaff) {
+      return 'Support Desk • Ticket Operations';
+    }
     switch (activeTab) {
       case 'analytics':
         return ' Analytics';
@@ -68,6 +72,9 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
       case 'support':
         return 'Support';
       case 'advisories':
+        if (advisoriesSubTab === 'announcements') return 'Advisories • Announcement';
+        if (advisoriesSubTab === 'faqs') return 'Advisories • FAQs';
+        if (advisoriesSubTab === 'guides') return 'Advisories • Self Service Guides';
         return 'Advisories';
       case 'payments':
         return 'Payment Transactions & Monitoring';

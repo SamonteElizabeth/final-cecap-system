@@ -45,7 +45,7 @@ export const MobileFrame: React.FC = () => {
   } = useApp();
 
 
-  if (isAuthenticated && activeTab === 'admin-console') {
+  if (isAuthenticated && (activeTab === 'admin-console' || userRole === 'admin' || userRole === 'support_staff')) {
     return <AdminConsoleView />;
   }
 

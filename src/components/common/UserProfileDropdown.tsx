@@ -31,12 +31,14 @@ export const UserProfileDropdown: React.FC = () => {
     };
   }, [isOpen]);
 
-  const displayName = userRole === 'admin'
-    ? (adminUser?.name || 'Administrator')
+  const isStaff = userRole === 'admin' || userRole === 'support_staff';
+
+  const displayName = isStaff
+    ? (adminUser?.name || (userRole === 'support_staff' ? 'Support Staff' : 'Administrator'))
     : (user?.name || 'Customer User');
 
-  const displayEmail = userRole === 'admin'
-    ? (adminUser?.email || 'admin@clarkelectric.ph')
+  const displayEmail = isStaff
+    ? (adminUser?.email || (userRole === 'support_staff' ? 'support@clarkelectric.ph' : 'admin@clarkelectric.ph'))
     : (user?.email || 'customer@clarkelectric.ph');
 
   const initials = displayName
@@ -45,7 +47,7 @@ export const UserProfileDropdown: React.FC = () => {
     .map(n => n[0])
     .slice(0, 2)
     .join('')
-    .toUpperCase() || (userRole === 'admin' ? 'AD' : 'CU');
+    .toUpperCase() || (userRole === 'support_staff' ? 'SS' : userRole === 'admin' ? 'AD' : 'CU');
 
   return (
     <div className="relative" ref={dropdownRef}>

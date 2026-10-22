@@ -116,6 +116,21 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({ searchQu
     setTimeout(() => setToastMsg(''), 4000);
   };
 
+  const handleRoleChange = (newRole: AdminStaffUser['role']) => {
+    setRole(newRole);
+    if (newRole === 'Support Staff') {
+      setPermissions({
+        analytics: false,
+        customers: false,
+        support: true,
+        advisories: false,
+        payments: false,
+        maintenance: false,
+        userManagement: false,
+      });
+    }
+  };
+
   const handleSaveUser = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !email.trim()) return;
@@ -124,18 +139,20 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({ searchQu
       updateAdminStaffUser(editingUser.id, {
         name,
         email,
+        role,
         permissions,
       });
-      setToastMsg(`✅ Administrator profile for ${name} updated successfully!`);
+      setToastMsg(`✅ User profile for ${name} updated successfully!`);
     } else {
-      // New admin accounts start with Status: Pending and no password
+      // New staff accounts start with Status: Pending and no password
       createAdminStaffUser({
         name,
         email,
-        role: 'Admin',
+        role,
+        department: role === 'Support Staff' ? 'Helpdesk & Support' : 'System Operations',
         permissions,
       });
-      setToastMsg(`✅ New administrator provisioned with Status: Pending! Single-use setup link sent to ${email}`);
+      setToastMsg(`✅ New ${role} account provisioned with Status: Pending! Single-use setup link sent to ${email}`);
     }
 
     setIsModalOpen(false);
@@ -149,7 +166,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({ searchQu
     setEditingUser(u);
     setName(u.name);
     setEmail(u.email);
-    setRole('Admin');
+    setRole(u.role);
     setPermissions(u.permissions);
     setIsModalOpen(true);
   };
@@ -302,7 +319,13 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({ searchQu
                         <div className="text-[10px] text-slate-400">{u.email}</div>
                       </td>
                       <td className="py-3.5 px-4">
-                        <span className="inline-block font-extrabold text-[#FF5401] bg-orange-50 px-2.5 py-1 rounded-md text-[10px] uppercase border border-[#FF5401]/20">
+                        <span
+                          className={`inline-block font-extrabold px-2.5 py-1 rounded-md text-[10px] uppercase border ${
+                            u.role === 'Support Staff'
+                              ? 'text-blue-700 bg-blue-50 border-blue-200'
+                              : 'text-[#FF5401] bg-orange-50 border-[#FF5401]/20'
+                          }`}
+                        >
                           {u.role}
                         </span>
                       </td>
@@ -575,10 +598,11 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({ searchQu
                 <label className="block text-[10px] font-extrabold uppercase text-slate-500 mb-1">Assign Role</label>
                 <select
                   value={role}
-                  onChange={e => setRole(e.target.value as any)}
+                  onChange={e => handleRoleChange(e.target.value as any)}
                   className="w-full bg-[#F8FAFC] border border-[#E2E8F0] focus:border-[#FF5401] focus:bg-white rounded-xl p-2.5 text-xs font-bold text-[#2B2B2B] focus:outline-none cursor-pointer"
                 >
                   <option value="Admin">Admin</option>
+                  <option value="Support Staff">Support Staff</option>
                 </select>
               </div>
 

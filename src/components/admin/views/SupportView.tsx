@@ -13,21 +13,24 @@ import {
   FileText,
   Tag,
   ShieldAlert,
+  User,
+  MapPin,
+  Zap,
 } from 'lucide-react';
 import { useApp } from '../../../context/AppContext';
 import { SupportConcern } from '../../../types';
+import { ADMIN_CUSTOMERS_LIST } from '../../../data/adminMockData';
 
 interface SupportViewProps {
   searchQuery?: string;
 }
 
 export const SupportView: React.FC<SupportViewProps> = ({ searchQuery = '' }) => {
-  const { supportConcerns, updateSupportConcernStatus } = useApp();
+  const { supportConcerns, updateSupportConcernStatus, adminUser, userRole } = useApp();
 
   const [localSearch, setLocalSearch] = useState(searchQuery);
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'Submitted' | 'In Progress' | 'Resolved' | 'Closed'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'Submitted' | 'In Progress' | 'Solved' | 'Closed'>('ALL');
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
-  const [priorityFilter, setPriorityFilter] = useState<'ALL' | 'Low' | 'Medium' | 'High' | 'Emergency'>('ALL');
   const [selectedTicket, setSelectedTicket] = useState<SupportConcern | null>(null);
 
   // Form State inside Modal
@@ -38,14 +41,40 @@ export const SupportView: React.FC<SupportViewProps> = ({ searchQuery = '' }) =>
 
   const query = (localSearch || searchQuery).toLowerCase();
 
+  const getTicketCustomerInfo = (ticket: SupportConcern) => {
+    const directName = ticket.customerName;
+    const directAddress = ticket.customerAddress;
+    const directType = ticket.serviceType;
+
+    const matched = ADMIN_CUSTOMERS_LIST.find(
+      c => c.accountNumber === ticket.accountNumber || c.linkedAccounts?.some(la => la.accountNumber === ticket.accountNumber)
+    );
+    const linked = matched?.linkedAccounts?.find(la => la.accountNumber === ticket.accountNumber);
+
+    const name = directName || matched?.name || 'Juan Dela Cruz';
+    const address = directAddress || linked?.serviceAddress || matched?.serviceAddress || 'Block 12 Lot 5, Berthaphil Industrial Park, Clark Freeport Zone, Pampanga';
+    const serviceType = directType || linked?.serviceType || matched?.serviceType || 'Residential';
+
+    return { name, address, serviceType };
+  };
+
   const filteredTickets = supportConcerns.filter(t => {
+    const cust = getTicketCustomerInfo(t);
     const matchesQuery =
       t.ticketNumber.toLowerCase().includes(query) ||
       t.subject.toLowerCase().includes(query) ||
       t.description.toLowerCase().includes(query) ||
-      t.accountNumber.toLowerCase().includes(query);
+      t.accountNumber.toLowerCase().includes(query) ||
+      cust.name.toLowerCase().includes(query) ||
+      (t.assignedStaff && t.assignedStaff.toLowerCase().includes(query));
 
-    const matchesStatus = statusFilter === 'ALL' || t.status === statusFilter;
+    const matchesStatus =
+      statusFilter === 'ALL'
+        ? true
+        : statusFilter === 'Solved'
+        ? t.status === 'Solved' || t.status === 'Resolved'
+        : t.status === statusFilter;
+
     const matchesCategory = categoryFilter === 'ALL' || t.category === categoryFilter;
 
     return matchesQuery && matchesStatus && matchesCategory;
@@ -53,15 +82,23 @@ export const SupportView: React.FC<SupportViewProps> = ({ searchQuery = '' }) =>
 
   const openTicketModal = (t: SupportConcern) => {
     setSelectedTicket(t);
-    setTicketStatus(t.status);
+    setTicketStatus(t.status === 'Resolved' ? 'Solved' : t.status);
+    setAssignedStaff(t.assignedStaff || adminUser?.name || 'Clarissa Fernandez');
     setAdminResponseText(t.adminResponse || '');
+  };
+
+  const handleQuickStatusUpdate = (t: SupportConcern, newStatus: 'In Progress' | 'Solved') => {
+    const staff = t.assignedStaff || adminUser?.name || 'Clarissa Fernandez';
+    updateSupportConcernStatus(t.id, newStatus, t.adminResponse, staff);
+    setToastMsg(`✅ Ticket ${t.ticketNumber} updated to "${newStatus}"${newStatus === 'Solved' ? ' — Completion date recorded!' : ''}`);
+    setTimeout(() => setToastMsg(''), 3500);
   };
 
   const handleSaveTicket = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedTicket) return;
 
-    updateSupportConcernStatus(selectedTicket.id, ticketStatus, adminResponseText);
+    updateSupportConcernStatus(selectedTicket.id, ticketStatus, adminResponseText, assignedStaff);
     setSelectedTicket(null);
     setToastMsg(`✅ Ticket ${selectedTicket.ticketNumber} updated successfully! Customer notified.`);
     setTimeout(() => setToastMsg(''), 3500);
@@ -102,11 +139,11 @@ export const SupportView: React.FC<SupportViewProps> = ({ searchQuery = '' }) =>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-2xs space-y-2">
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Resolved Tickets</span>
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Solved Tickets</span>
           <div className="text-2xl font-black text-emerald-600">
-            {supportConcerns.filter(t => t.status === 'Resolved' || t.status === 'Closed').length}
+            {supportConcerns.filter(t => t.status === 'Solved' || t.status === 'Resolved').length}
           </div>
-          <span className="text-[11px] text-emerald-600 font-bold">100% SLA target</span>
+          <span className="text-[11px] text-emerald-600 font-bold">Recorded with completion date</span>
         </div>
       </div>
 
@@ -133,7 +170,7 @@ export const SupportView: React.FC<SupportViewProps> = ({ searchQuery = '' }) =>
               <option value="ALL">All Statuses</option>
               <option value="Submitted">Submitted (Pending)</option>
               <option value="In Progress">In Progress</option>
-              <option value="Resolved">Resolved</option>
+              <option value="Solved">Solved</option>
               <option value="Closed">Closed</option>
             </select>
           </div>
@@ -168,174 +205,315 @@ export const SupportView: React.FC<SupportViewProps> = ({ searchQuery = '' }) =>
                 <th className="py-3.5 px-4">Date Submitted</th>
                 <th className="py-3.5 px-4">Assigned Staff</th>
                 <th className="py-3.5 px-4">Status</th>
+                <th className="py-3.5 px-4">Completion Date</th>
                 <th className="py-3.5 px-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium">
               {filteredTickets.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-12 text-slate-400 font-bold">
+                  <td colSpan={8} className="text-center py-12 text-slate-400 font-bold">
                     No support tickets match your filter criteria
                   </td>
                 </tr>
               ) : (
-                filteredTickets.map(t => (
-                  <tr key={t.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3.5 px-4 font-mono font-bold text-[#FF5401]">{t.ticketNumber}</td>
-                    <td className="py-3.5 px-4 max-w-xs">
-                      <div className="font-extrabold text-[#2B2B2B] truncate">{t.subject}</div>
-                      <div className="text-[10px] text-slate-500">Acc #{t.accountNumber}</div>
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-700">
-                        {t.category}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 text-slate-600 font-bold">{t.createdAt}</td>
-                    <td className="py-3.5 px-4 text-slate-700 font-bold">Clarissa Fernandez</td>
-                    <td className="py-3.5 px-4">
-                      <span
-                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
-                          t.status === 'Resolved'
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                            : t.status === 'In Progress'
-                            ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                            : 'bg-amber-50 text-amber-700 border border-amber-200'
-                        }`}
-                      >
-                        {t.status}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 text-right">
-                      <button
-                        type="button"
-                        onClick={() => openTicketModal(t)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-50 hover:bg-[#FF5401] text-[#FF5401] hover:text-white text-xs font-bold transition-all cursor-pointer"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        <span>Manage Ticket</span>
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                filteredTickets.map(t => {
+                  const cust = getTicketCustomerInfo(t);
+                  const isSolved = t.status === 'Solved' || t.status === 'Resolved';
+                  return (
+                    <tr key={t.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-3.5 px-4 font-mono font-bold text-[#FF5401]">{t.ticketNumber}</td>
+                      <td className="py-3.5 px-4 max-w-xs">
+                        <div className="font-extrabold text-[#2B2B2B] truncate">{t.subject}</div>
+                        <div className="text-[10px] text-slate-500 font-medium truncate">
+                          {cust.name} • <span className="font-mono">#{t.accountNumber}</span>
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-700">
+                          {t.category}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4 text-slate-600 font-bold whitespace-nowrap">{t.createdAt}</td>
+                      <td className="py-3.5 px-4 text-slate-700 font-bold whitespace-nowrap">
+                        <div className="flex items-center gap-1.5">
+                          <UserCheck className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          <span>{t.assignedStaff || 'Clarissa Fernandez'}</span>
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        <span
+                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
+                            isSolved
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                              : t.status === 'In Progress'
+                              ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                              : 'bg-amber-50 text-amber-700 border border-amber-200'
+                          }`}
+                        >
+                          {isSolved ? 'Solved' : t.status}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        {t.completionDate ? (
+                          <span className="inline-flex items-center gap-1.5 text-emerald-700 font-bold text-[11px] bg-emerald-50/80 px-2.5 py-0.5 rounded-lg border border-emerald-200">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                            <span>{t.completionDate}</span>
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 font-semibold text-xs">-</span>
+                        )}
+                      </td>
+                      <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {t.status === 'Submitted' && (
+                            <button
+                              type="button"
+                              onClick={() => handleQuickStatusUpdate(t, 'In Progress')}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                              title="Update ticket to In Progress"
+                            >
+                              <Clock className="w-3.5 h-3.5" />
+                              <span>In Progress</span>
+                            </button>
+                          )}
+                          {t.status === 'In Progress' && (
+                            <button
+                              type="button"
+                              onClick={() => handleQuickStatusUpdate(t, 'Solved')}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                              title="Mark ticket as Solved (records completion date)"
+                            >
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              <span>Solved</span>
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => openTicketModal(t)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-50 hover:bg-[#FF5401] text-[#FF5401] hover:text-white text-xs font-bold transition-all cursor-pointer"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>Manage</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Ticket Detail Drawer/Modal */}
+      {/* Ticket Detail Center Modal */}
       {selectedTicket && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-end animate-fade-in">
-          <div className="bg-white w-full max-w-2xl h-full shadow-2xl p-6 overflow-y-auto space-y-6 flex flex-col justify-between">
-            <div className="space-y-6">
-              {/* Modal Header */}
-              <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+        <div 
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelectedTicket(null);
+          }}
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 sm:p-6 animate-fade-in overflow-y-auto"
+        >
+          <div className="bg-white w-full max-w-2xl max-h-[90vh] rounded-3xl shadow-2xl p-6 md:p-7 overflow-y-auto space-y-6 my-auto relative border border-slate-100">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-100">
+              <div>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="font-mono font-black text-sm text-[#FF5401]">{selectedTicket.ticketNumber}</span>
+                  <span className="text-xs font-extrabold px-2.5 py-0.5 bg-slate-100 text-slate-700 rounded-md">
+                    {selectedTicket.category}
+                  </span>
+                  <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
+                    selectedTicket.status === 'Solved' || selectedTicket.status === 'Resolved'
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : selectedTicket.status === 'In Progress'
+                      ? 'bg-blue-100 text-blue-800'
+                      : selectedTicket.status === 'Closed'
+                      ? 'bg-slate-200 text-slate-800'
+                      : 'bg-amber-100 text-amber-800'
+                  }`}>
+                    {selectedTicket.status}
+                  </span>
+                </div>
+                <h3 className="font-extrabold text-base text-[#2B2B2B]">{selectedTicket.subject}</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedTicket(null)}
+                className="w-8 h-8 shrink-0 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-700 flex items-center justify-center cursor-pointer transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Customer & Account Details Card */}
+            {(() => {
+              const selectedCust = getTicketCustomerInfo(selectedTicket);
+              return (
+                <div className="bg-[#F8FAFC] p-4 rounded-2xl border border-slate-200 space-y-3">
+                  <div className="flex items-center justify-between text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                    <span>Customer & Service Profile</span>
+                    <span className="font-mono text-slate-700 font-bold">Acct #{selectedTicket.accountNumber}</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs">
+                      <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase text-slate-400 mb-1">
+                        <User className="w-3.5 h-3.5 text-[#FF5401]" />
+                        <span>Customer Full Name</span>
+                      </div>
+                      <div className="text-xs font-black text-[#2B2B2B] truncate" title={selectedCust.name}>
+                        {selectedCust.name}
+                      </div>
+                    </div>
+
+                    <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs">
+                      <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase text-slate-400 mb-1">
+                        <Zap className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Service Type</span>
+                      </div>
+                      <div className="inline-block">
+                        <span className={`px-2 py-0.5 rounded-md text-[11px] font-black ${
+                          selectedCust.serviceType === 'Commercial'
+                            ? 'bg-purple-100 text-purple-700'
+                            : selectedCust.serviceType === 'Industrial'
+                            ? 'bg-amber-100 text-amber-800'
+                            : 'bg-emerald-100 text-emerald-800'
+                        }`}>
+                          {selectedCust.serviceType}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs">
+                      <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase text-slate-400 mb-1">
+                        <Clock className="w-3.5 h-3.5 text-slate-400" />
+                        <span>Date Submitted</span>
+                      </div>
+                      <div className="text-xs font-bold text-[#2B2B2B]">
+                        {selectedTicket.createdAt}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Customer Address */}
+                  <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs flex items-start gap-2.5">
+                    <MapPin className="w-4 h-4 text-[#FF5401] shrink-0 mt-0.5" />
+                    <div className="space-y-0.5 min-w-0">
+                      <span className="text-[10px] font-bold uppercase text-slate-400 block">Service Address</span>
+                      <div className="text-xs font-semibold text-[#2B2B2B] leading-snug">
+                        {selectedCust.address}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Customer Concern Description */}
+            <div className="bg-[#F8FAFC] p-4 rounded-2xl border border-slate-200 space-y-2">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
+                Inquiry / Problem Description
+              </span>
+              <div className="text-xs font-medium text-[#2B2B2B] leading-relaxed">
+                {selectedTicket.description}
+              </div>
+              {selectedTicket.attachmentName && (
+                <div className="pt-2 flex items-center gap-2 text-xs font-bold text-[#FF5401] border-t border-slate-200 mt-2">
+                  <FileText className="w-4 h-4" />
+                  <span>Attachment: {selectedTicket.attachmentName}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Update & Response Form */}
+            <form onSubmit={handleSaveTicket} className="space-y-4">
+              <h4 className="font-extrabold text-xs text-[#2B2B2B] uppercase tracking-wider">
+                Support Resolution & Response
+              </h4>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono font-black text-sm text-[#FF5401]">{selectedTicket.ticketNumber}</span>
-                    <span className="text-xs font-extrabold px-2.5 py-0.5 bg-slate-100 text-slate-700 rounded-md">
-                      {selectedTicket.category}
-                    </span>
-                  </div>
-                  <h3 className="font-extrabold text-base text-[#2B2B2B] mt-1">{selectedTicket.subject}</h3>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setSelectedTicket(null)}
-                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Customer Concern Card */}
-              <div className="bg-[#F8FAFC] p-4 rounded-2xl border border-slate-200 space-y-3">
-                <div className="flex items-center justify-between text-xs text-slate-500">
-                  <span>Customer Account: <strong>#{selectedTicket.accountNumber}</strong></span>
-                  <span>Submitted: <strong>{selectedTicket.createdAt}</strong></span>
-                </div>
-                <div className="pt-2 border-t border-slate-200 text-xs font-medium text-[#2B2B2B] leading-relaxed">
-                  {selectedTicket.description}
-                </div>
-                {selectedTicket.attachmentName && (
-                  <div className="pt-2 flex items-center gap-2 text-xs font-bold text-[#FF5401]">
-                    <FileText className="w-4 h-4" />
-                    <span>Attachment: {selectedTicket.attachmentName}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Update & Response Form */}
-              <form onSubmit={handleSaveTicket} className="space-y-4">
-                <h4 className="font-extrabold text-xs text-[#2B2B2B] uppercase tracking-wider">
-                  Admin Resolution & Response
-                </h4>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[10px] font-extrabold uppercase text-slate-500 mb-1">
-                      Update Ticket Status
-                    </label>
-                    <select
-                      value={ticketStatus}
-                      onChange={e => setTicketStatus(e.target.value as any)}
-                      className="w-full bg-[#F8FAFC] border border-[#E2E8F0] focus:border-[#FF5401] focus:bg-white rounded-xl p-2.5 text-xs font-bold text-[#2B2B2B] focus:outline-none cursor-pointer"
-                    >
-                      <option value="Submitted">Submitted (Pending)</option>
-                      <option value="In Progress">In Progress</option>
-                      <option value="Resolved">Resolved</option>
-                      <option value="Closed">Closed</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-extrabold uppercase text-slate-500 mb-1">
-                      Assign Lead Agent
-                    </label>
-                    <select
-                      value={assignedStaff}
-                      onChange={e => setAssignedStaff(e.target.value)}
-                      className="w-full bg-[#F8FAFC] border border-[#E2E8F0] focus:border-[#FF5401] focus:bg-white rounded-xl p-2.5 text-xs font-bold text-[#2B2B2B] focus:outline-none cursor-pointer"
-                    >
-                      <option value="Clarissa Fernandez">Clarissa Fernandez (Support)</option>
-                      <option value="Teresa Gonzales">Teresa Gonzales (Ops Lead)</option>
-                      <option value="Engr. Michael Tan">Engr. Michael Tan (Field Tech)</option>
-                    </select>
-                  </div>
+                  <label className="block text-[10px] font-extrabold uppercase text-slate-500 mb-1">
+                    Update Ticket Status
+                  </label>
+                  <select
+                    value={ticketStatus}
+                    onChange={e => setTicketStatus(e.target.value as any)}
+                    className="w-full bg-[#F8FAFC] border border-[#E2E8F0] focus:border-[#FF5401] focus:bg-white rounded-xl p-2.5 text-xs font-bold text-[#2B2B2B] focus:outline-none cursor-pointer"
+                  >
+                    <option value="Submitted">Submitted (Pending)</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Solved">Solved</option>
+                    <option value="Closed">Closed</option>
+                  </select>
                 </div>
 
                 <div>
                   <label className="block text-[10px] font-extrabold uppercase text-slate-500 mb-1">
-                    Customer Response Message
+                    Assign Lead Agent
                   </label>
-                  <textarea
-                    rows={4}
-                    value={adminResponseText}
-                    onChange={e => setAdminResponseText(e.target.value)}
-                    placeholder="Type official response or resolution notes to send to customer..."
-                    className="w-full bg-[#F8FAFC] border border-[#E2E8F0] focus:border-[#FF5401] focus:bg-white rounded-xl p-3 text-xs font-medium text-[#2B2B2B] focus:outline-none"
-                  />
+                  <select
+                    value={assignedStaff}
+                    onChange={e => setAssignedStaff(e.target.value)}
+                    className="w-full bg-[#F8FAFC] border border-[#E2E8F0] focus:border-[#FF5401] focus:bg-white rounded-xl p-2.5 text-xs font-bold text-[#2B2B2B] focus:outline-none cursor-pointer"
+                  >
+                    <option value="Clarissa Fernandez">Clarissa Fernandez (Support Staff)</option>
+                    <option value="Engr. Roberto Santos">Engr. Roberto Santos (Admin Lead)</option>
+                    <option value="Maria Teresa Gonzales">Maria Teresa Gonzales (Customer Care)</option>
+                    <option value="Engr. Michael Tan">Engr. Michael Tan (Field Tech Lead)</option>
+                  </select>
                 </div>
+              </div>
 
-                <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedTicket(null)}
-                    className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#FF5401] hover:bg-[#E54A00] text-white font-bold text-xs shadow-xs cursor-pointer"
-                  >
-                    <Send className="w-4 h-4" />
-                    <span>Save</span>
-                  </button>
+              {/* Completion Date Auto-Notice when Solved */}
+              {(ticketStatus === 'Solved' || selectedTicket.status === 'Solved' || selectedTicket.status === 'Resolved') && (
+                <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-200/80 text-xs text-emerald-800 flex items-center justify-between animate-fade-in">
+                  <div className="flex items-center gap-2 font-bold">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>
+                      {selectedTicket.completionDate
+                        ? `Completion Date: ${selectedTicket.completionDate}`
+                        : 'Completion date will be automatically recorded upon saving.'}
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-900 border border-emerald-300 shrink-0">
+                    Auto-Recorded
+                  </span>
                 </div>
-              </form>
-            </div>
+              )}
+
+              <div>
+                <label className="block text-[10px] font-extrabold uppercase text-slate-500 mb-1">
+                  Customer Response Message
+                </label>
+                <textarea
+                  rows={4}
+                  value={adminResponseText}
+                  onChange={e => setAdminResponseText(e.target.value)}
+                  placeholder="Type official response or resolution notes to send to customer..."
+                  className="w-full bg-[#F8FAFC] border border-[#E2E8F0] focus:border-[#FF5401] focus:bg-white rounded-xl p-3 text-xs font-medium text-[#2B2B2B] focus:outline-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setSelectedTicket(null)}
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#FF5401] hover:bg-[#E54A00] text-white font-bold text-xs shadow-xs cursor-pointer transition-colors"
+                >
+                  <Send className="w-4 h-4" />
+                  <span>Save</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

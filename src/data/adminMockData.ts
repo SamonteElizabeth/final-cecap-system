@@ -398,11 +398,11 @@ export const ADMIN_STAFF_USERS_LIST: AdminStaffUser[] = [
     id: 'ADM-005',
     name: 'Clarissa Fernandez',
     email: 'c.fernandez@clarkelectric.ph',
-    role: 'Admin',
+    role: 'Support Staff',
     department: 'Helpdesk & Support',
     status: 'Active',
     lastLogin: '2026-08-05 07:50 AM',
-    permissions: { analytics: false, customers: true, support: true, advisories: false, payments: false, maintenance: false, userManagement: false },
+    permissions: { analytics: false, customers: false, support: true, advisories: false, payments: false, maintenance: false, userManagement: false },
   },
   {
     id: 'ADM-006',

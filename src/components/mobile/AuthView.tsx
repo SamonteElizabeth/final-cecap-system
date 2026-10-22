@@ -662,19 +662,20 @@ Valid for 5 minutes.`,
         return;
       }
 
+      const isSupportRole = existingAdmin.role === 'Support Staff';
       setIsSubmitting(true);
       setTimeout(() => {
         setIsSubmitting(false);
-        logAuthEvent('LOGIN_SUCCESS', targetEmail, 'SUCCESS', 'Administrator successfully signed in.');
+        logAuthEvent('LOGIN_SUCCESS', targetEmail, 'SUCCESS', `${existingAdmin.name} (${existingAdmin.role}) successfully signed in.`);
         setAdminUser({
           id: existingAdmin.id,
           name: existingAdmin.name,
           email: existingAdmin.email,
-          role: 'admin',
-          department: existingAdmin.department || 'System Operations',
-          title: 'Senior Utility Administrator',
+          role: isSupportRole ? 'support_staff' : 'admin',
+          department: existingAdmin.department || (isSupportRole ? 'Helpdesk & Support' : 'System Operations'),
+          title: isSupportRole ? 'Support Staff Specialist' : 'Senior Utility Administrator',
         });
-        setUserRole('admin');
+        setUserRole(isSupportRole ? 'support_staff' : 'admin');
         setActiveTab('admin-console');
         setIsAuthenticated(true);
       }, 500);
@@ -1365,8 +1366,52 @@ Valid for 5 minutes.`,
                 </div>
               )}
 
+              {/* Quick Demo Staff Role Selector */}
+              <div className="bg-[#FAF8F5] p-3 rounded-2xl border border-[#EBE5DC] space-y-2">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                  Select Staff Role Profile
+                </span>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAdminEmail('admin@clarkelectric.ph');
+                      setAdminPassword('••••••••');
+                      setAdminError('');
+                    }}
+                    className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                      adminEmail === 'admin@clarkelectric.ph'
+                        ? 'bg-orange-50/90 border-[#FF5401] text-[#2B2B2B] shadow-2xs'
+                        : 'bg-white border-[#E2E8F0] text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="font-extrabold text-[11px] text-[#FF5401]">Administrator</div>
+                    <div className="text-[10px] text-slate-500 truncate">Engr. Roberto Santos</div>
+                    <div className="text-[9px] text-slate-400 mt-0.5">Full System Access</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAdminEmail('c.fernandez@clarkelectric.ph');
+                      setAdminPassword('Cedc@2026!');
+                      setAdminError('');
+                    }}
+                    className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                      adminEmail === 'c.fernandez@clarkelectric.ph'
+                        ? 'bg-blue-50/90 border-blue-500 text-[#2B2B2B] shadow-2xs'
+                        : 'bg-white border-[#E2E8F0] text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="font-extrabold text-[11px] text-blue-700">Support Staff</div>
+                    <div className="text-[10px] text-slate-500 truncate">Clarissa Fernandez</div>
+                    <div className="text-[9px] text-slate-400 mt-0.5">Support Module Only</div>
+                  </button>
+                </div>
+              </div>
+
               <div>
-                <label className="block text-xs font-bold text-[#2B2B2B] mb-2">Admin Email / Staff Username</label>
+                <label className="block text-xs font-bold text-[#2B2B2B] mb-2">Staff Email / Username</label>
                 <div className="relative">
                   <Shield className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
@@ -1382,7 +1427,7 @@ Valid for 5 minutes.`,
 
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-bold text-[#2B2B2B]">Admin Security Password</label>
+                  <label className="text-xs font-bold text-[#2B2B2B]">Security Password</label>
                   <button
                     type="button"
                     onClick={() => alert('Password reset link sent to registered admin email.')}
@@ -1409,7 +1454,13 @@ Valid for 5 minutes.`,
                 disabled={isSubmitting}
                 className="w-full bg-[#FF5401] hover:bg-[#E54A00] text-white font-bold text-sm py-3.5 rounded-2xl shadow-[0_8px_20px_-4px_rgba(255,84,1,0.45)] transition-all flex items-center justify-center gap-2 mt-2 cursor-pointer"
               >
-                <span>{isSubmitting ? 'Signing In Staff...' : 'Sign In as Admin'}</span>
+                <span>
+                  {isSubmitting
+                    ? 'Signing In...'
+                    : adminEmail === 'c.fernandez@clarkelectric.ph'
+                    ? 'Sign In as Support Staff'
+                    : 'Sign In as Administrator'}
+                </span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 

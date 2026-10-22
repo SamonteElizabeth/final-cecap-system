@@ -63,12 +63,16 @@ export const SupportView: React.FC = () => {
       id: res.ticket?.id || `CONCERN-${Date.now()}`,
       ticketNumber: res.ticket?.ticketNumber || `TK-2026-${Math.floor(10000 + Math.random() * 90000)}`,
       accountNumber: selectedAccount.accountNumber,
+      customerName: user?.name || 'Juan Dela Cruz',
+      customerAddress: selectedAccount.serviceAddress,
+      serviceType: selectedAccount.serviceType,
       category,
       subject,
       description,
       status: 'Submitted',
       createdAt: nowStr,
       attachmentName: attachmentName || undefined,
+      assignedStaff: 'Clarissa Fernandez',
     };
 
     addSupportConcern(newTicket);
@@ -581,12 +585,24 @@ export const SupportView: React.FC = () => {
             {/* Key Metadata Grid */}
             <div className="grid grid-cols-2 gap-3 text-xs bg-[#F8FAFC] p-3.5 rounded-2xl border border-[#E5E7EB]">
               <div>
+                <span className="text-[10px] text-slate-400 font-semibold uppercase block">Customer Full Name</span>
+                <span className="font-semibold text-[#2B2B2B]">{selectedRequest.customerName || user?.name || 'Juan Dela Cruz'}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-400 font-semibold uppercase block">Service Type</span>
+                <span className="font-semibold text-[#2B2B2B]">{selectedRequest.serviceType || selectedAccount?.serviceType || 'Residential'}</span>
+              </div>
+              <div className="col-span-2">
+                <span className="text-[10px] text-slate-400 font-semibold uppercase block">Service Address</span>
+                <span className="font-medium text-slate-700 leading-snug">{selectedRequest.customerAddress || selectedAccount?.serviceAddress || 'Block 12 Lot 5, Berthaphil Industrial Park, Clark Freeport Zone, Pampanga'}</span>
+              </div>
+              <div>
                 <span className="text-[10px] text-slate-400 font-semibold uppercase block">Category</span>
                 <span className="font-semibold text-[#2B2B2B]">{selectedRequest.category}</span>
               </div>
               <div>
                 <span className="text-[10px] text-slate-400 font-semibold uppercase block">Account Number</span>
-                <span className="font-mono font-semibold text-[#2B2B2B]">{selectedRequest.accountNumber}</span>
+                <span className="font-mono font-semibold text-[#2B2B2B]">#{selectedRequest.accountNumber}</span>
               </div>
               <div>
                 <span className="text-[10px] text-slate-400 font-semibold uppercase block">Date Submitted</span>

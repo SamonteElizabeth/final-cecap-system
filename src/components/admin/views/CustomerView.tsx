@@ -677,18 +677,6 @@ export const CustomerView: React.FC<CustomerViewProps> = ({ searchQuery = '' }) 
                         </span>
                       )}
                     </div>
-                    <p className={`text-xs mt-0.5 ${
-                      verificationStatus === 'found'
-                        ? 'text-emerald-800'
-                        : verificationStatus === 'not_found'
-                        ? 'text-rose-800'
-                        : verificationStatus === 'verifying'
-                        ? 'text-amber-800'
-                        : 'text-slate-600'
-                    }`}>
-                      {verificationStatus === 'verifying' && 'Searching central billing database for matching customer account records...'}
-                      {verificationStatus === 'not_found' && 'No customer record found in billing system. Reject button is now active.'}
-                    </p>
                   </div>
                 </div>
 

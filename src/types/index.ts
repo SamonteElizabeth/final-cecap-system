@@ -1,10 +1,10 @@
-export type UserRole = 'customer' | 'admin';
+export type UserRole = 'customer' | 'admin' | 'support_staff';
 
 export interface AdminUser {
   id: string;
   name: string;
   email: string;
-  role: 'admin';
+  role: 'admin' | 'support_staff';
   department: string;
   title: string;
   avatarUrl?: string;
@@ -119,13 +119,18 @@ export interface SupportConcern {
   category: 'Billing Concern' | 'Service Complaint' | 'Payment Concern' | 'Meter Concern' | 'Power Outage' | 'Others';
   subject: string;
   description: string;
-  status: 'Submitted' | 'In Progress' | 'Resolved' | 'Closed';
+  status: 'Submitted' | 'In Progress' | 'Solved' | 'Resolved' | 'Closed';
   createdAt: string;
   attachmentName?: string;
   ticketNumber: string;
   adminResponse?: string;
   adminRespondedAt?: string;
   adminName?: string;
+  assignedStaff?: string;
+  completionDate?: string;
+  customerName?: string;
+  customerAddress?: string;
+  serviceType?: 'Residential' | 'Commercial' | 'Industrial' | string;
 }
 
 export interface NotificationItem {
@@ -174,7 +179,7 @@ export interface AdminStaffUser {
   id: string;
   name: string;
   email: string;
-  role: 'Admin' | 'Super Admin' | 'Operations Lead' | 'Customer Care Agent' | 'Billing Specialist' | 'Field Tech Lead';
+  role: 'Admin' | 'Super Admin' | 'Support Staff' | 'Operations Lead' | 'Customer Care Agent' | 'Billing Specialist' | 'Field Tech Lead';
   department?: string;
   status: 'Active' | 'Pending' | 'Suspended' | 'Inactive';
   lastLogin: string;
