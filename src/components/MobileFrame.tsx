@@ -55,112 +55,128 @@ export const MobileFrame: React.FC = () => {
       {isAuthenticated && (
         <aside
           style={{ background: 'linear-gradient(180deg, #FFF3DF 0%, #FFD08A 100%)' }}
-          className="hidden md:flex flex-col fixed top-0 left-0 bottom-0 w-64 bg-gradient-to-b from-[#FFF3DF] to-[#FFD08A] border-r border-[#E5E7EB] z-40 p-5 shadow-xs overflow-y-auto"
+          className="hidden md:flex flex-col fixed top-0 left-0 bottom-0 w-80 bg-gradient-to-b from-[#FFF3DF] to-[#FFD08A] border-r border-[#E5E7EB] z-40 shadow-xs select-none"
         >
-          <div className="space-y-6">
-            {/* Sidebar Brand Header */}
-            <div className="flex flex-col items-center justify-center pb-5 border-b border-[#E5E7EB]">
-              <img src={cecapLogo} alt="CECAP Logo" className="h-14 md:h-16 object-contain max-w-full" />
-              {userRole === 'admin' ? (
-                <div className="mt-2.5 flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50/80 border border-[#FF5401]/30 text-[#FF5401]">
-                  <ShieldAlert className="w-3.5 h-3.5 text-[#FF5401]" />
-                  <span className="text-[10px] font-semibold uppercase tracking-wider">Admin Portal</span>
-                </div>
-              ) : (
-                <div className="mt-2.5 flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50/80 border border-[#FF5401]/30 text-[#FF5401]">
-                  <UserCheck className="w-3.5 h-3.5 text-[#FF5401]" />
-                  <span className="text-[10px] font-semibold uppercase tracking-wider">Customer Portal</span>
-                </div>
-              )}
-            </div>
+          {/* Brand Header */}
+          <div className="p-6 border-b border-[#E5E7EB] flex flex-col items-center justify-center bg-transparent">
+            <img src={cecapLogo} alt="CECAP Logo" className="h-16 object-contain" />
+            {userRole === 'admin' ? (
+              <div className="mt-3 flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-orange-50 border border-[#FF5401]/25 text-[#FF5401]">
+                <ShieldAlert className="w-3.5 h-3.5 text-[#FF5401]" />
+                <span className="text-[11px] font-semibold uppercase tracking-wider">Admin Portal</span>
+              </div>
+            ) : (
+              <div className="mt-3 flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-orange-50 border border-[#FF5401]/25 text-[#FF5401]">
+                <UserCheck className="w-3.5 h-3.5 text-[#FF5401]" />
+                <span className="text-[11px] font-semibold uppercase tracking-wider">Customer Portal</span>
+              </div>
+            )}
+          </div>
 
-            {/* Sidebar Navigation Menu */}
-            <nav className="space-y-1.5">
-              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-3 block mb-2">
-                Navigation
-              </span>
+          {/* Navigation Menu Links */}
+          <div className="flex-1 overflow-y-auto p-4 md:p-5 space-y-2 custom-scrollbar">
+            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider px-3.5 block mb-2.5">
+              Navigation
+            </span>
 
-              {userRole === 'admin' && (
-                <button
-                  onClick={() => setActiveTab('admin-console')}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all cursor-pointer ${
-                    activeTab === 'admin-console'
-                      ? 'bg-[#FF5401] text-white shadow-xs'
-                      : 'text-slate-600 hover:bg-[#F5F5F5] hover:text-[#2B2B2B]'
-                  }`}
-                >
-                  <ShieldAlert className="w-4 h-4 shrink-0" />
+            {userRole === 'admin' && (
+              <button
+                type="button"
+                onClick={() => setActiveTab('admin-console')}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-[13px] font-semibold transition-all cursor-pointer ${
+                  activeTab === 'admin-console'
+                    ? 'bg-[#FF5401] text-white shadow-xs'
+                    : 'text-slate-600 hover:bg-slate-50/80 hover:text-[#2B2B2B]'
+                }`}
+              >
+                <div className="flex items-center gap-3.5">
+                  <ShieldAlert className="w-5 h-5 shrink-0" />
                   <span>Admin Console</span>
-                </button>
-              )}
+                </div>
+              </button>
+            )}
 
-              <button
-                onClick={() => setActiveTab('dashboard')}
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all cursor-pointer ${
-                  activeTab === 'dashboard'
-                    ? 'bg-[#FF5401] text-white shadow-xs'
-                    : 'text-slate-600 hover:bg-[#F5F5F5] hover:text-[#2B2B2B]'
-                }`}
-              >
-                <LayoutDashboard className="w-4 h-4 shrink-0" />
+            <button
+              type="button"
+              onClick={() => setActiveTab('dashboard')}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-[13px] font-semibold transition-all cursor-pointer ${
+                activeTab === 'dashboard'
+                  ? 'bg-[#FF5401] text-white shadow-xs'
+                  : 'text-slate-600 hover:bg-slate-50/80 hover:text-[#2B2B2B]'
+              }`}
+            >
+              <div className="flex items-center gap-3.5">
+                <LayoutDashboard className="w-5 h-5 shrink-0" />
                 <span>Home</span>
-              </button>
+              </div>
+            </button>
 
-              <button
-                onClick={() => setActiveTab('billing')}
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all cursor-pointer ${
-                  activeTab === 'billing'
-                    ? 'bg-[#FF5401] text-white shadow-xs'
-                    : 'text-slate-600 hover:bg-[#F5F5F5] hover:text-[#2B2B2B]'
-                }`}
-              >
-                <CreditCard className="w-4 h-4 shrink-0" />
+            <button
+              type="button"
+              onClick={() => setActiveTab('billing')}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-[13px] font-semibold transition-all cursor-pointer ${
+                activeTab === 'billing'
+                  ? 'bg-[#FF5401] text-white shadow-xs'
+                  : 'text-slate-600 hover:bg-slate-50/80 hover:text-[#2B2B2B]'
+              }`}
+            >
+              <div className="flex items-center gap-3.5">
+                <CreditCard className="w-5 h-5 shrink-0" />
                 <span>Billing</span>
-              </button>
+              </div>
+            </button>
 
-              <button
-                onClick={() => setActiveTab('consumption')}
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all cursor-pointer ${
-                  activeTab === 'consumption'
-                    ? 'bg-[#FF5401] text-white shadow-xs'
-                    : 'text-slate-600 hover:bg-[#F5F5F5] hover:text-[#2B2B2B]'
-                }`}
-              >
-                <Zap className="w-4 h-4 shrink-0" />
+            <button
+              type="button"
+              onClick={() => setActiveTab('consumption')}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-[13px] font-semibold transition-all cursor-pointer ${
+                activeTab === 'consumption'
+                  ? 'bg-[#FF5401] text-white shadow-xs'
+                  : 'text-slate-600 hover:bg-slate-50/80 hover:text-[#2B2B2B]'
+              }`}
+            >
+              <div className="flex items-center gap-3.5">
+                <Zap className="w-5 h-5 shrink-0" />
                 <span>Consumption</span>
-              </button>
+              </div>
+            </button>
 
-              <button
-                onClick={() => setActiveTab('support')}
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all cursor-pointer ${
-                  activeTab === 'support'
-                    ? 'bg-[#FF5401] text-white shadow-xs'
-                    : 'text-slate-600 hover:bg-[#F5F5F5] hover:text-[#2B2B2B]'
-                }`}
-              >
-                <HelpCircle className="w-4 h-4 shrink-0" />
+            <button
+              type="button"
+              onClick={() => setActiveTab('support')}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-[13px] font-semibold transition-all cursor-pointer ${
+                activeTab === 'support'
+                  ? 'bg-[#FF5401] text-white shadow-xs'
+                  : 'text-slate-600 hover:bg-slate-50/80 hover:text-[#2B2B2B]'
+              }`}
+            >
+              <div className="flex items-center gap-3.5">
+                <HelpCircle className="w-5 h-5 shrink-0" />
                 <span>Support</span>
-              </button>
+              </div>
+            </button>
 
-              <button
-                onClick={() => setActiveTab('profile')}
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all cursor-pointer ${
-                  activeTab === 'profile' || activeTab === 'settings'
-                    ? 'bg-[#FF5401] text-white shadow-xs'
-                    : 'text-slate-600 hover:bg-[#F5F5F5] hover:text-[#2B2B2B]'
-                }`}
-              >
-                <MeterIcon className="w-4 h-4 shrink-0" />
+            <button
+              type="button"
+              onClick={() => setActiveTab('profile')}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-[13px] font-semibold transition-all cursor-pointer ${
+                activeTab === 'profile' || activeTab === 'settings'
+                  ? 'bg-[#FF5401] text-white shadow-xs'
+                  : 'text-slate-600 hover:bg-slate-50/80 hover:text-[#2B2B2B]'
+              }`}
+            >
+              <div className="flex items-center gap-3.5">
+                <MeterIcon className="w-5 h-5 shrink-0" />
                 <span>Service Account</span>
-              </button>
-            </nav>
+              </div>
+            </button>
           </div>
         </aside>
       )}
 
       {/* Top Header Bar with Notifications Icon and User Profile on the Right */}
       {isAuthenticated && (
-        <header className="bg-white/95 backdrop-blur-md border-b border-[#E5E7EB] px-4 md:px-8 py-3 flex items-center justify-between fixed top-0 left-0 md:left-64 right-0 z-30 shadow-xs h-16">
+        <header className="bg-white/95 backdrop-blur-md border-b border-[#E5E7EB] px-4 md:px-8 py-3 flex items-center justify-between fixed top-0 left-0 md:left-80 right-0 z-30 shadow-xs h-16">
           {/* Left Side: Section Title / Breadcrumbs */}
           <div className="flex items-center gap-3">
             <div className="md:hidden flex items-center gap-2">
@@ -229,7 +245,7 @@ export const MobileFrame: React.FC = () => {
       {/* Main Content Area */}
       <main
         className={`flex-1 w-full min-h-screen ${
-          isAuthenticated ? 'bg-[#F5F5F5] md:pl-64 pt-20 md:pt-20 pb-24 md:pb-16' : 'bg-[#FDFBF7]'
+          isAuthenticated ? 'bg-[#F5F5F5] md:pl-80 pt-20 md:pt-20 pb-24 md:pb-16' : 'bg-[#FDFBF7]'
         }`}
       >
         {!isAuthenticated ? (

@@ -83,34 +83,13 @@ const INITIAL_SENT_EMAILS: SentEmail[] = [
     id: 'MSG-2026-9082',
     to: 'p.manalo@clarkelectric.ph',
     recipientName: 'Engr. Patrick Manalo',
-    subject: '[CECAp] Admin Account Created - Set Up Your Password & MFA',
+    subject: 'Admin Account Created - Set Up Your Password & MFA',
     sender: 'CECAp Admin Security <admin-security@clarkelectric.ph>',
-    body: `Dear Engr. Patrick Manalo,
+    body: `Hello,
 
-An administrator account has been created for you in the Clark Electric Distribution Corporation (CEDC) CECAp Enterprise System.
+An admin account has been created for you in CECAp (Customer Engagement Platform).
 
-Account Provisioning Information:
-- Full Name: Engr. Patrick Manalo
-- Email: p.manalo@clarkelectric.ph
-- Role: Admin (Grid Operations & Automation)
-- Status: Pending Setup (No initial password assigned)
-
-SECURITY MANDATE:
-To activate your administrator credentials, you must access the time-limited single-use link below, establish your private password, and configure Multi-Factor Authentication (MFA).
-
-Secure Activation Link:
-https://cecap.clarkelectric.ph/login?action=admin-setup&token=SEC-ADM-984210-CFZ7&email=p.manalo%40clarkelectric.ph
-
-Link Security Parameters:
-- Single-use token: Valid for 15 minutes only.
-- Strict CECAP Password Policy: 9+ characters, uppercase, lowercase, numbers, and special characters.
-- Mandatory MFA: 6-digit OTP verification is required to complete enrollment.
-- Upon successful setup, your status will immediately change to Active.
-
-If this link expires or was not requested by you, please notify our Cyber Defense Center at (045) 599-7000.
-
-Best regards,
-CECAP Enterprise Administration Hub`,
+To get started, please set up your password and configure multi-factor authentication (MFA) to access the Admin Console.`,
     sentAt: 'Aug 05, 2026, 04:00 PM',
     type: 'ADMIN_SETUP_INVITE',
     status: 'DELIVERED',
@@ -126,23 +105,16 @@ CECAP Enterprise Administration Hub`,
     id: 'MSG-2026-9081',
     to: 'eleanor.vance@philexcel.ph',
     recipientName: 'Eleanor Vance',
-    subject: '[CECAp] Registration Request Approved - Your Portal Credentials',
+    subject: 'Registration Approved - Portal Credentials',
     sender: 'CECAp Official <noreply@clarkelectric.ph>',
-    body: `Dear Eleanor Vance,
+    body: `Hello,
 
-Great news! Your online customer portal registration for CECAp (Clark Electric Corporation Application) has been verified and approved by our Customer Relationship Services (CRS) Administrator.
-
-Below are your assigned login credentials to access your billing dashboard and online services:
+Your CECAp customer portal registration has been verified and approved.
 
 Customer Account Code: 0421-9012-34
 Temporary Password: CedcTemp#7419
 
-For security purposes, you will be prompted to set a new personal password upon your first sign-in.
-
-Thank you for choosing CECAp as your trusted electric utility portal.
-
-Best regards,
-CECAp Customer Care Team`,
+Please sign in and set your new password.`,
     sentAt: 'Aug 05, 2026, 03:45 PM',
     type: 'REGISTRATION_APPROVED',
     status: 'DELIVERED',
@@ -156,18 +128,13 @@ CECAp Customer Care Team`,
     id: 'MSG-2026-9080',
     to: 'm.reyes@fontanaclark.ph',
     recipientName: 'Mark Anthony Reyes',
-    subject: '[CECAp] Registration Request Received - Verification in Progress',
+    subject: 'Registration Request Received',
     sender: 'CECAp Official <noreply@clarkelectric.ph>',
-    body: `Dear Mark Anthony Reyes,
+    body: `Hello,
 
-We have successfully received your customer portal registration request (ID: REG-2026-002) for service address: Block 5 Lot 18, Fontana Residential Enclave, Clark Freeport Zone.
+We have received your CECAp customer portal registration request.
 
-Our CRS team is currently verifying your records against our central billing database. Once verified, you will receive another email containing your portal temporary password.
-
-Thank you for your patience.
-
-Best regards,
-CECAp Customer Care Team`,
+Our team is currently verifying your details. You will receive an update once approved.`,
     sentAt: 'Aug 05, 2026, 01:20 PM',
     type: 'REGISTRATION_RECEIVED',
     status: 'DELIVERED',
@@ -880,18 +847,13 @@ CECAp Cybersecurity Operations`,
     sendEmail({
       to: req.email,
       recipientName: req.fullName,
-      subject: '[CECAp] Registration Request Received - Verification Pending',
+      subject: 'Registration Request Received',
       sender: 'CECAp Official <noreply@clarkelectric.ph>',
-      body: `Dear ${req.fullName},
+      body: `Hello,
 
-We have successfully received your customer portal registration request (ID: ${newReq.id}) for Account Code: ${assignedAccountCode}.
+We have received your CECAp customer portal registration request.
 
-Our CRS Administrator is currently verifying your details against our central billing system database. Once verified, an auto-generated temporary password will be dispatched to your email address.
-
-Service Address: ${req.serviceAddress}
-Mobile Number: ${req.mobileNumber}
-
-Thank you for choosing CECAp!`,
+Our team is currently verifying your details. You will receive an update once approved.`,
       type: 'REGISTRATION_RECEIVED',
       data: {
         accountCode: assignedAccountCode,
@@ -938,20 +900,16 @@ Thank you for choosing CECAp!`,
       sendEmail({
         to: approvedReq.email,
         recipientName: approvedReq.fullName,
-        subject: '[CECAp] Registration Approved - Your Portal Login Credentials',
+        subject: 'Registration Approved - Portal Credentials',
         sender: 'CECAp Official <noreply@clarkelectric.ph>',
-        body: `Dear ${approvedReq.fullName},
+        body: `Hello,
 
-Great news! Your online customer portal registration for CECAp (Clark Electric Corporation Application) has been verified and approved by our Customer Relationship Services (CRS) Administrator.
-
-Below are your assigned login credentials to access your billing dashboard and online services:
+Your CECAp customer portal registration has been verified and approved.
 
 Customer Account Code: ${accountCode}
 Temporary Password: ${tempPassword}
 
-For security purposes, you will be prompted to set a new personal password upon your first sign-in.
-
-Thank you for choosing CECAp as your trusted electric utility portal.`,
+Please sign in and set your new password.`,
         type: 'REGISTRATION_APPROVED',
         data: {
           accountCode,
@@ -996,15 +954,15 @@ Thank you for choosing CECAp as your trusted electric utility portal.`,
       sendEmail({
         to: rejectedReq.email,
         recipientName: rejectedReq.fullName,
-        subject: '[CECAp] Registration Request Status Update',
+        subject: 'Registration Status Update',
         sender: 'CECAp Official <noreply@clarkelectric.ph>',
-        body: `Dear ${rejectedReq.fullName},
+        body: `Hello,
 
-Your customer portal registration request (ID: ${id}) was reviewed by our CRS Administrator and could not be verified at this time.
+Your customer registration request could not be approved at this time.
 
-Reason for Rejection: ${reason}
+Reason: ${reason}
 
-If you believe this was in error, please re-check your Account Code and service address or contact our Customer Care hotline at (045) 599-7000.`,
+Please verify your details or contact CECAp support.`,
         type: 'REGISTRATION_REJECTED',
         data: {
           requestId: id,
@@ -1076,34 +1034,13 @@ If you believe this was in error, please re-check your Account Code and service 
     sendEmail({
       to: cleanEmail,
       recipientName: userData.name,
-      subject: '[CECAp] Admin Account Created - Set Up Your Password & MFA',
+      subject: 'Admin Account Created - Set Up Your Password & MFA',
       sender: 'CECAp Admin Security <admin-security@clarkelectric.ph>',
-      body: `Dear ${userData.name},
+      body: `Hello,
 
-An administrator account has been provisioned for you in the Clark Electric Distribution Corporation (CEDC) CECAp Enterprise System.
+An admin account has been created for you in CECAp (Customer Engagement Platform).
 
-Account Provisioning Information:
-- Full Name: ${userData.name}
-- Email: ${cleanEmail}
-- Role: ${userData.role || 'Admin'}
-- Status: Pending Setup (No initial password assigned)
-
-SECURITY MANDATE:
-To activate your administrator credentials, you must access the time-limited single-use link below, establish your private password, and configure Multi-Factor Authentication (MFA).
-
-Secure Activation Link:
-${setupUrl}
-
-Link Security Parameters:
-- Single-use token: Valid for 15 minutes only.
-- Strict CECAP Password Policy: 9+ characters, uppercase, lowercase, numbers, and special characters.
-- Mandatory MFA: 6-digit OTP verification is required to complete enrollment.
-- Upon successful setup, your status will immediately change to Active.
-
-If this link expires or was not requested by you, please notify our Cyber Defense Center at (045) 599-7000.
-
-Best regards,
-CECAP Enterprise Administration Hub`,
+To get started, please set up your password and configure multi-factor authentication (MFA) to access the Admin Console.`,
       type: 'ADMIN_SETUP_INVITE',
       data: {
         setupToken: tokenString,
@@ -1174,26 +1111,13 @@ CECAP Enterprise Administration Hub`,
     sendEmail({
       to: cleanEmail,
       recipientName: existingUser.name,
-      subject: '[CECAp] New Single-Use Setup Link - Admin Password & MFA',
+      subject: 'Admin Account Created - Set Up Your Password & MFA',
       sender: 'CECAp Admin Security <admin-security@clarkelectric.ph>',
-      body: `Dear ${existingUser.name},
+      body: `Hello,
 
-A new single-use, time-limited security link has been generated for your pending CECAP administrator account.
+An admin account has been created for you in CECAp (Customer Engagement Platform).
 
-Previous setup links for this account have been invalidated.
-
-Secure Activation Link:
-${setupUrl}
-
-Security Parameters:
-- Validity: 15 minutes from dispatch
-- Single-use policy: Once submitted, this token cannot be reused
-- Requires: 9+ character password satisfying CECAP complexity policy, followed by mandatory MFA setup.
-
-If you did not request this email, please contact our 24/7 Security Operations at (045) 599-7000.
-
-Best regards,
-CECAP Cybersecurity Unit`,
+To get started, please set up your password and configure multi-factor authentication (MFA) to access the Admin Console.`,
       type: 'ADMIN_SETUP_INVITE',
       data: {
         setupToken: tokenString,

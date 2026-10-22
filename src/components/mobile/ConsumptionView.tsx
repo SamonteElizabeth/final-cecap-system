@@ -96,10 +96,6 @@ export const ConsumptionView: React.FC = () => {
     return Math.round(sum / chartData.length);
   }, [chartData]);
 
-  const dailyAverageUsage = useMemo(() => {
-    return (averageUsage / 30).toFixed(1);
-  }, [averageUsage]);
-
   const peakDemand = useMemo(() => {
     if (!chartData.length) return { kw: selectedAccount?.currentBill.peakKw || 4.2, month: 'Current' };
     const highest = chartData.reduce((prev, current) => (prev.peakKw > current.peakKw ? prev : current), chartData[0]);
@@ -111,11 +107,6 @@ export const ConsumptionView: React.FC = () => {
     const latest = consumptionList[consumptionList.length - 1];
     return latest.amount || selectedAccount?.currentBill.amountDue || 4850.75;
   }, [consumptionList, selectedAccount]);
-
-  const effectiveRatePerKwh = useMemo(() => {
-    if (!currentConsumption) return 12.6;
-    return (estimatedBill / currentConsumption).toFixed(2);
-  }, [estimatedBill, currentConsumption]);
 
   if (!selectedAccount) return null;
 
@@ -191,11 +182,6 @@ export const ConsumptionView: React.FC = () => {
               <span className="text-2xl md:text-3xl font-semibold text-[#2B2B2B]">{averageUsage}</span>
               <span className="text-xs font-medium text-slate-500">kWh / mo</span>
             </div>
-            <div className="flex items-center gap-1.5 mt-2">
-              <span className="inline-flex items-center text-[10px] font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">
-                ~{dailyAverageUsage} kWh per day
-              </span>
-            </div>
           </div>
           <p className="text-[10px] text-slate-400 pt-1 border-t border-slate-100">
             Full annual billing period ({chartData.length} months)
@@ -236,11 +222,6 @@ export const ConsumptionView: React.FC = () => {
             <div className="flex items-baseline gap-1">
               <span className="text-2xl md:text-3xl font-semibold text-[#FF5401]">
                 ₱{estimatedBill.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5 mt-2">
-              <span className="inline-flex items-center text-[10px] font-medium text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                Effective rate: ₱{effectiveRatePerKwh}/kWh
               </span>
             </div>
           </div>
@@ -522,8 +503,8 @@ export const ConsumptionView: React.FC = () => {
               </div>
             </div>
 
-            {/* 4 Detail Metrics for Clicked Month */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* 3 Detail Metrics for Clicked Month */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="bg-white p-3.5 rounded-xl border border-[#E5E7EB] shadow-2xs">
                 <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400 block">Total Energy</span>
                 <div className="flex items-baseline gap-1 mt-1">
@@ -560,19 +541,6 @@ export const ConsumptionView: React.FC = () => {
                   <span className="text-xs font-medium text-slate-500">kW</span>
                 </div>
                 <span className="text-[10px] text-slate-400 mt-1 block">Max 15-min peak</span>
-              </div>
-
-              <div className="bg-white p-3.5 rounded-xl border border-[#E5E7EB] shadow-2xs">
-                <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400 block">Effective Rate & Daily</span>
-                <div className="flex items-baseline gap-1 mt-1">
-                  <span className="text-xl md:text-2xl font-semibold text-emerald-600">
-                    ₱{(selectedMonthData.amount / selectedMonthData.kwh).toFixed(2)}
-                  </span>
-                  <span className="text-xs font-medium text-slate-500">/kWh</span>
-                </div>
-                <span className="text-[10px] text-slate-500 mt-1 block">
-                  ~{(selectedMonthData.kwh / 30).toFixed(1)} kWh per day
-                </span>
               </div>
             </div>
 

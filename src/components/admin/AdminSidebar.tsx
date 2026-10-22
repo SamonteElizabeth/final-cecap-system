@@ -49,35 +49,35 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   return (
     <aside
       style={{ background: 'linear-gradient(180deg, #FFF3DF 0%, #FFD08A 100%)' }}
-      className="w-64 bg-gradient-to-b from-[#FFF3DF] to-[#FFD08A] border-r border-[#E5E7EB] flex flex-col h-full shrink-0 shadow-xs select-none"
+      className="w-80 bg-gradient-to-b from-[#FFF3DF] to-[#FFD08A] border-r border-[#E5E7EB] flex flex-col h-full shrink-0 shadow-xs select-none"
     >
       {/* Brand Header */}
-      <div className="p-5 border-b border-[#E5E7EB] flex flex-col items-center justify-center bg-transparent">
-        <img src={cecapLogo} alt="Clark Electric Logo" className="h-12 object-contain" />
-        <div className="mt-2.5 flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-orange-50 border border-[#FF5401]/25 text-[#FF5401]">
+      <div className="p-6 border-b border-[#E5E7EB] flex flex-col items-center justify-center bg-transparent">
+        <img src={cecapLogo} alt="Clark Electric Logo" className="h-16 object-contain" />
+        <div className="mt-3 flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-orange-50 border border-[#FF5401]/25 text-[#FF5401]">
           <ShieldCheck className="w-3.5 h-3.5" />
-          <span className="text-[10px] font-extrabold uppercase tracking-wider">Admin Portal</span>
+          <span className="text-[11px] font-semibold uppercase tracking-wider">Admin Portal</span>
         </div>
       </div>
 
       {/* Navigation Menu Links */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-1.5 custom-scrollbar">
-        <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider px-3 mb-2">
+      <div className="flex-1 overflow-y-auto p-4 md:p-5 space-y-2 custom-scrollbar">
+        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider px-3.5 block mb-2.5">
           Operations Hub
-        </div>
+        </span>
 
         {/* Analytics (Dashboard) */}
         <button
           type="button"
           onClick={() => handleParentClick('analytics')}
-          className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+          className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-[13px] font-semibold transition-all cursor-pointer ${
             activeTab === 'analytics'
               ? 'bg-[#FF5401] text-white shadow-xs'
-              : 'text-slate-600 hover:bg-slate-50 hover:text-[#2B2B2B]'
+              : 'text-slate-600 hover:bg-slate-50/80 hover:text-[#2B2B2B]'
           }`}
         >
-          <div className="flex items-center gap-3">
-            <BarChart3 className="w-4 h-4 shrink-0" />
+          <div className="flex items-center gap-3.5">
+            <BarChart3 className="w-5 h-5 shrink-0" />
             <span>Analytics</span>
           </div>
         </button>
@@ -86,14 +86,14 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
         <button
           type="button"
           onClick={() => handleParentClick('customer')}
-          className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+          className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-[13px] font-semibold transition-all cursor-pointer ${
             activeTab === 'customer'
               ? 'bg-[#FF5401] text-white shadow-xs'
-              : 'text-slate-600 hover:bg-slate-50 hover:text-[#2B2B2B]'
+              : 'text-slate-600 hover:bg-slate-50/80 hover:text-[#2B2B2B]'
           }`}
         >
-          <div className="flex items-center gap-3">
-            <Users className="w-4 h-4 shrink-0" />
+          <div className="flex items-center gap-3.5">
+            <Users className="w-5 h-5 shrink-0" />
             <span>Customer</span>
           </div>
         </button>
@@ -102,19 +102,19 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
         <button
           type="button"
           onClick={() => handleParentClick('support')}
-          className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+          className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-[13px] font-semibold transition-all cursor-pointer ${
             activeTab === 'support'
               ? 'bg-[#FF5401] text-white shadow-xs'
-              : 'text-slate-600 hover:bg-slate-50 hover:text-[#2B2B2B]'
+              : 'text-slate-600 hover:bg-slate-50/80 hover:text-[#2B2B2B]'
           }`}
         >
-          <div className="flex items-center gap-3">
-            <HelpCircle className="w-4 h-4 shrink-0" />
+          <div className="flex items-center gap-3.5">
+            <HelpCircle className="w-5 h-5 shrink-0" />
             <span>Support</span>
           </div>
           {openTicketsCount > 0 && (
             <span
-              className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+              className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
                 activeTab === 'support' ? 'bg-white text-[#FF5401]' : 'bg-[#FF5401] text-white'
               }`}
             >
@@ -127,14 +127,14 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
         <button
           type="button"
           onClick={() => handleParentClick('advisories')}
-          className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+          className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-[13px] font-semibold transition-all cursor-pointer ${
             activeTab === 'advisories'
               ? 'bg-[#FF5401] text-white shadow-xs'
-              : 'text-slate-600 hover:bg-slate-50 hover:text-[#2B2B2B]'
+              : 'text-slate-600 hover:bg-slate-50/80 hover:text-[#2B2B2B]'
           }`}
         >
-          <div className="flex items-center gap-3">
-            <Megaphone className="w-4 h-4 shrink-0" />
+          <div className="flex items-center gap-3.5">
+            <Megaphone className="w-5 h-5 shrink-0" />
             <span>Advisories</span>
           </div>
         </button>
@@ -143,37 +143,37 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
         <button
           type="button"
           onClick={() => handleParentClick('payments')}
-          className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+          className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-[13px] font-semibold transition-all cursor-pointer ${
             activeTab === 'payments'
               ? 'bg-[#FF5401] text-white shadow-xs'
-              : 'text-slate-600 hover:bg-slate-50 hover:text-[#2B2B2B]'
+              : 'text-slate-600 hover:bg-slate-50/80 hover:text-[#2B2B2B]'
           }`}
         >
-          <div className="flex items-center gap-3">
-            <CreditCard className="w-4 h-4 shrink-0" />
+          <div className="flex items-center gap-3.5">
+            <CreditCard className="w-5 h-5 shrink-0" />
             <span>Payments</span>
           </div>
         </button>
 
         {/* System Setup Section Divider */}
         <div className="pt-3 pb-1">
-          <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider px-3 mb-1.5">
+          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider px-3.5 block mb-2.5">
             System Config
-          </div>
+          </span>
         </div>
 
         {/* Maintenance */}
         <button
           type="button"
           onClick={() => handleParentClick('maintenance')}
-          className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+          className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-[13px] font-semibold transition-all cursor-pointer ${
             activeTab === 'maintenance'
               ? 'bg-[#FF5401] text-white shadow-xs'
-              : 'text-slate-600 hover:bg-slate-50 hover:text-[#2B2B2B]'
+              : 'text-slate-600 hover:bg-slate-50/80 hover:text-[#2B2B2B]'
           }`}
         >
-          <div className="flex items-center gap-3">
-            <Settings className="w-4 h-4 shrink-0" />
+          <div className="flex items-center gap-3.5">
+            <Settings className="w-5 h-5 shrink-0" />
             <span>Maintenance</span>
           </div>
         </button>
@@ -182,14 +182,14 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
         <button
           type="button"
           onClick={() => handleParentClick('user-management')}
-          className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+          className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-[13px] font-semibold transition-all cursor-pointer ${
             activeTab === 'user-management'
               ? 'bg-[#FF5401] text-white shadow-xs'
-              : 'text-slate-600 hover:bg-slate-50 hover:text-[#2B2B2B]'
+              : 'text-slate-600 hover:bg-slate-50/80 hover:text-[#2B2B2B]'
           }`}
         >
-          <div className="flex items-center gap-3">
-            <UserCheck className="w-4 h-4 shrink-0" />
+          <div className="flex items-center gap-3.5">
+            <UserCheck className="w-5 h-5 shrink-0" />
             <span>User Management</span>
           </div>
         </button>

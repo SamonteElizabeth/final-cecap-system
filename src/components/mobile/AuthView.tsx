@@ -254,7 +254,9 @@ export const AuthView: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Registration Form State (Customer Request for CRS Admin Review)
-  const [regFullName, setRegFullName] = useState('');
+  const [regLastName, setRegLastName] = useState('');
+  const [regFirstName, setRegFirstName] = useState('');
+  const [regMiddleName, setRegMiddleName] = useState('');
   const [regAccountCode, setRegAccountCode] = useState('0421-9012-34');
   const [regServiceAddress, setRegServiceAddress] = useState('');
   const [regMobile, setRegMobile] = useState('');
@@ -262,6 +264,20 @@ export const AuthView: React.FC = () => {
   const [regChannel, setRegChannel] = useState<'Email' | 'SMS'>('Email');
   const [regError, setRegError] = useState('');
   const [submittedRegRequest, setSubmittedRegRequest] = useState<any>(null);
+
+  const getCustomerFullName = () => {
+    const last = regLastName.trim();
+    const first = regFirstName.trim();
+    const middle = regMiddleName.trim();
+    if (!last && !first) return '';
+    if (last && first && middle) {
+      return `${last}, ${first} ${middle}`;
+    }
+    if (last && first) {
+      return `${last}, ${first}`;
+    }
+    return last || first;
+  };
 
   // -------------------------------------------------------------
   // CUSTOMER CREDENTIALS SUBMISSION (Step 1 -> MFA OTP)
@@ -330,18 +346,15 @@ export const AuthView: React.FC = () => {
       sendEmail({
         to: customerEmail,
         recipientName: customerName,
-        subject: '[CECAp] Two-Factor Authentication (MFA) Security Verification Code',
-        sender: 'CECAp Security Hub <security@clarkelectric.ph>',
-        body: `Dear ${customerName},
+        subject: 'Two-Factor Authentication Code',
+        sender: 'CECAp Security <security@clarkelectric.ph>',
+        body: `Hello,
 
-Your 6-digit Two-Factor Authentication (MFA) security code to access your CECAp Customer Portal account (${targetAccount}) is:
+Your 6-digit verification code is:
 
 ${otpCode}
 
-This One-Time Password is valid for 5 minutes. If you did not initiate this sign-in request, please immediately contact our 24/7 Clark Electric Security Hotline at (045) 599-7000.
-
-Thank you,
-CECAp Cybersecurity Operations`,
+Valid for 5 minutes.`,
         type: 'OTP_CODE',
         data: {
           otpCode,
@@ -426,15 +439,15 @@ CECAp Cybersecurity Operations`,
     sendEmail({
       to: customerEmail,
       recipientName: customerName,
-      subject: '[CECAp] New Two-Factor Authentication (MFA) Verification Code',
-      sender: 'CECAp Security Hub <security@clarkelectric.ph>',
-      body: `Dear ${customerName},
+      subject: 'Verification Code',
+      sender: 'CECAp Security <security@clarkelectric.ph>',
+      body: `Hello,
 
-Your new 6-digit Multi-Factor Authentication (MFA) security code is:
+Your new 6-digit verification code is:
 
 ${code}
 
-Please enter this verification code to complete your customer sign-in.`,
+Valid for 5 minutes.`,
       type: 'OTP_CODE',
       data: {
         otpCode: code,
@@ -523,19 +536,15 @@ Please enter this verification code to complete your customer sign-in.`,
       sendEmail({
         to: forgotEmail,
         recipientName: user?.name || 'Valued Customer',
-        subject: '[CECAp] Account Recovery & Password Reset Verification Code',
+        subject: 'Password Reset Verification Code',
         sender: 'CECAp Security <security@clarkelectric.ph>',
-        body: `Dear Valued Customer,
+        body: `Hello,
 
-A request was initiated to recover access or reset the password for CECAp Customer Account Code ${forgotIdentifier}.
-
-Your 6-digit security verification code is:
+Your password reset verification code is:
 
 ${code}
 
-This code expires in 5 minutes. Enter this code to verify your identity and set a new password complying with CECAP authentication policies.
-
-If you did not request this recovery, please notify our Customer Care hotline at (045) 599-7000 immediately.`,
+Valid for 5 minutes.`,
         type: 'PASSWORD_RESET',
         data: {
           otpCode: code,
@@ -783,20 +792,15 @@ If you did not request this recovery, please notify our Customer Care hotline at
     sendEmail({
       to: setupEmailInput,
       recipientName: validatedAdminUser?.name || 'Administrator',
-      subject: '[CECAp Admin] Multi-Factor Authentication (MFA) Setup Code',
+      subject: 'Admin Setup Verification Code',
       sender: 'CECAp Admin Security <admin-security@clarkelectric.ph>',
-      body: `Dear ${validatedAdminUser?.name || 'Administrator'},
+      body: `Hello,
 
-You are completing first-time password setup for your CECAP Administrator account.
-
-Your 6-digit Multi-Factor Authentication (MFA) verification code is:
+Your admin verification code is:
 
 ${mfaCode}
 
-This code expires in 5 minutes. Enter this code on the setup screen to finalize your enrollment and activate your account.
-
-Best regards,
-CECAP Systems Security Team`,
+Valid for 5 minutes.`,
       type: 'ADMIN_MFA_SETUP',
       data: {
         otpCode: mfaCode,
@@ -856,15 +860,15 @@ CECAP Systems Security Team`,
     sendEmail({
       to: setupEmailInput,
       recipientName: validatedAdminUser?.name || 'Administrator',
-      subject: '[CECAp Admin] New Multi-Factor Authentication (MFA) Setup Code',
+      subject: 'New Admin Verification Code',
       sender: 'CECAp Admin Security <admin-security@clarkelectric.ph>',
-      body: `Dear ${validatedAdminUser?.name || 'Administrator'},
+      body: `Hello,
 
-Your new 6-digit MFA verification code for administrator activation is:
+Your new 6-digit verification code is:
 
 ${code}
 
-Please enter this verification code to complete your setup.`,
+Valid for 5 minutes.`,
       type: 'ADMIN_MFA_SETUP',
       data: {
         otpCode: code,
@@ -916,11 +920,15 @@ Please enter this verification code to complete your setup.`,
     setRegError('');
 
     if (!regAccountCode.trim()) {
-      setRegError('Customer Account Code is required.');
+      setRegError('Account Number is required.');
       return;
     }
-    if (!regFullName.trim()) {
-      setRegError('Full Name is required.');
+    if (!regLastName.trim()) {
+      setRegError('Lastname is required.');
+      return;
+    }
+    if (!regFirstName.trim()) {
+      setRegError('Firstname is required.');
       return;
     }
     if (!regServiceAddress.trim()) {
@@ -936,6 +944,7 @@ Please enter this verification code to complete your setup.`,
       return;
     }
 
+    const customerFullName = getCustomerFullName();
     setIsSubmitting(true);
 
     setTimeout(() => {
@@ -949,16 +958,16 @@ Please enter this verification code to complete your setup.`,
       // Dispatch Email with OTP Code
       sendEmail({
         to: regEmail,
-        recipientName: regFullName,
-        subject: '[CECAp] Registration Verification Code',
+        recipientName: customerFullName,
+        subject: 'Registration Verification Code',
         sender: 'CECAp Official <noreply@clarkelectric.ph>',
-        body: `Dear ${regFullName},
+        body: `Hello,
 
-Your 6-digit email & SMS verification security code for CECAp portal registration is:
+Your registration verification code is:
 
 ${code}
 
-Please enter this verification code on the registration screen to finalize your application submission.`,
+Valid for 5 minutes.`,
         type: 'OTP_CODE',
         data: {
           otpCode: code,
@@ -985,10 +994,11 @@ Please enter this verification code on the registration screen to finalize your 
     setIsSubmitting(true);
 
     setTimeout(() => {
+      const customerFullName = getCustomerFullName();
       const regId = `REG-2026-${Math.floor(100 + Math.random() * 900)}`;
       const requestData = {
         id: regId,
-        fullName: regFullName,
+        fullName: customerFullName,
         accountCode: regAccountCode,
         serviceAddress: regServiceAddress,
         mobileNumber: regMobile,
@@ -999,7 +1009,7 @@ Please enter this verification code on the registration screen to finalize your 
       };
 
       submitRegistration({
-        fullName: regFullName,
+        fullName: customerFullName,
         accountCode: regAccountCode,
         serviceAddress: regServiceAddress,
         mobileNumber: regMobile,
@@ -1452,7 +1462,7 @@ Please enter this verification code on the registration screen to finalize your 
                     )}
 
                     <div>
-                      <label className="block text-xs font-bold text-[#2B2B2B] mb-1">Customer Account Code *</label>
+                      <label className="block text-xs font-bold text-[#2B2B2B] mb-1">Account Number *</label>
                       <div className="relative">
                         <FileText className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
                         <input
@@ -1467,17 +1477,43 @@ Please enter this verification code on the registration screen to finalize your 
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-[#2B2B2B] mb-1">Full Name *</label>
-                      <div className="relative">
-                        <UserCheck className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
-                        <input
-                          type="text"
-                          value={regFullName}
-                          onChange={e => setRegFullName(e.target.value)}
-                          placeholder="e.g. Maria Clara Santos"
-                          className="w-full bg-[#FAF8F5] border border-[#EBE5DC] rounded-2xl pl-10 pr-4 py-2.5 text-xs font-medium text-[#2B2B2B] focus:outline-none focus:border-[#FF5401] focus:bg-white transition-all"
-                          required
-                        />
+                      <label className="block text-xs font-bold text-[#2B2B2B] mb-1.5 flex items-center gap-1.5">
+                        <UserCheck className="w-4 h-4 text-[#FF5401]" />
+                        <span>Customer Name *</span>
+                      </label>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <div>
+                          <label className="block text-[10px] font-semibold text-slate-500 mb-1">Lastname *</label>
+                          <input
+                            type="text"
+                            value={regLastName}
+                            onChange={e => setRegLastName(e.target.value)}
+                            placeholder="Lastname"
+                            className="w-full bg-[#FAF8F5] border border-[#EBE5DC] rounded-2xl px-3.5 py-2.5 text-xs font-medium text-[#2B2B2B] focus:outline-none focus:border-[#FF5401] focus:bg-white transition-all"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-semibold text-slate-500 mb-1">Firstname *</label>
+                          <input
+                            type="text"
+                            value={regFirstName}
+                            onChange={e => setRegFirstName(e.target.value)}
+                            placeholder="Firstname"
+                            className="w-full bg-[#FAF8F5] border border-[#EBE5DC] rounded-2xl px-3.5 py-2.5 text-xs font-medium text-[#2B2B2B] focus:outline-none focus:border-[#FF5401] focus:bg-white transition-all"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-semibold text-slate-500 mb-1">Middle Name</label>
+                          <input
+                            type="text"
+                            value={regMiddleName}
+                            onChange={e => setRegMiddleName(e.target.value)}
+                            placeholder="Middle Name"
+                            className="w-full bg-[#FAF8F5] border border-[#EBE5DC] rounded-2xl px-3.5 py-2.5 text-xs font-medium text-[#2B2B2B] focus:outline-none focus:border-[#FF5401] focus:bg-white transition-all"
+                          />
+                        </div>
                       </div>
                     </div>
 

@@ -159,9 +159,9 @@ export const AccountInfoView: React.FC = () => {
   const [isCheckingDb, setIsCheckingDb] = useState(false);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
 
-  // Collapsible Dropdown Accordion States
-  const [isAccountSpecOpen, setIsAccountSpecOpen] = useState(true);
-  const [isLinkedAccountsOpen, setIsLinkedAccountsOpen] = useState(true);
+  // Collapsible Dropdown Accordion States (default: not opened, displays when clicked)
+  const [isAccountSpecOpen, setIsAccountSpecOpen] = useState(false);
+  const [isLinkedAccountsOpen, setIsLinkedAccountsOpen] = useState(false);
 
   const maskMobile = (mobile?: string) => {
     if (!mobile) return '';
@@ -434,7 +434,17 @@ This code is valid for 5 minutes. Once verified, your service account will be li
         <div className="bg-white rounded-3xl p-5 md:p-6 border border-[#E5E7EB] shadow-xs space-y-4">
           <div
             onClick={() => setIsAccountSpecOpen(!isAccountSpecOpen)}
-            className={`flex items-center justify-between cursor-pointer select-none transition-all ${
+            role="button"
+            tabIndex={0}
+            onKeyDown={e => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setIsAccountSpecOpen(!isAccountSpecOpen);
+              }
+            }}
+            aria-expanded={isAccountSpecOpen}
+            title={isAccountSpecOpen ? "Click to collapse Service Account details" : "Click to view Service Account details"}
+            className={`flex items-center justify-between cursor-pointer select-none transition-all p-2 -m-2 rounded-2xl hover:bg-slate-50/80 ${
               isAccountSpecOpen ? 'border-b border-[#E5E7EB] pb-3' : ''
             }`}
           >
@@ -443,7 +453,12 @@ This code is valid for 5 minutes. Once verified, your service account will be li
                 <img src={cecapLogo} alt="CECAP Logo" className="w-full h-full object-contain" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-[#2B2B2B]">Service Account</h3>
+                <h3 className="text-sm font-semibold text-[#2B2B2B] flex items-center gap-2">
+                  <span>Service Account</span>
+                  <span className="text-[10px] text-slate-400 font-normal">
+                    {isAccountSpecOpen ? '(Click to collapse)' : '(Click to view)'}
+                  </span>
+                </h3>
                 <p className="text-[11px] text-slate-500 font-medium">
                   Currently Viewing: #{selectedAccount.accountNumber}
                 </p>
@@ -453,7 +468,11 @@ This code is valid for 5 minutes. Once verified, your service account will be li
               <span className="bg-[#2B2B2B] text-white text-[10px] font-semibold px-2.5 py-1 rounded-lg uppercase">
                 {selectedAccount.serviceType}
               </span>
-              <button type="button" className="text-slate-400 hover:text-[#FF5401] transition-colors p-1 cursor-pointer">
+              <button
+                type="button"
+                className="text-slate-400 hover:text-[#FF5401] transition-colors p-1 cursor-pointer"
+                aria-label={isAccountSpecOpen ? 'Collapse Service Account' : 'Expand Service Account'}
+              >
                 {isAccountSpecOpen ? <ChevronUp className="w-5 h-5 text-[#FF5401]" /> : <ChevronDown className="w-5 h-5" />}
               </button>
             </div>
@@ -513,20 +532,37 @@ This code is valid for 5 minutes. Once verified, your service account will be li
         <div className="bg-white rounded-3xl p-5 md:p-6 border border-[#E5E7EB] shadow-xs space-y-4">
           <div
             onClick={() => setIsLinkedAccountsOpen(!isLinkedAccountsOpen)}
-            className={`flex items-center justify-between cursor-pointer select-none transition-all ${
+            role="button"
+            tabIndex={0}
+            onKeyDown={e => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setIsLinkedAccountsOpen(!isLinkedAccountsOpen);
+              }
+            }}
+            aria-expanded={isLinkedAccountsOpen}
+            title={isLinkedAccountsOpen ? "Click to collapse Linked Service Accounts" : "Click to view Linked Service Accounts"}
+            className={`flex items-center justify-between cursor-pointer select-none transition-all p-2 -m-2 rounded-2xl hover:bg-slate-50/80 ${
               isLinkedAccountsOpen ? 'border-b border-[#E5E7EB] pb-3' : ''
             }`}
           >
             <div>
-              <h3 className="text-sm font-semibold text-[#2B2B2B]">
-                Linked Service Accounts ({linkedAccounts.length})
+              <h3 className="text-sm font-semibold text-[#2B2B2B] flex items-center gap-2">
+                <span>Linked Service Accounts ({linkedAccounts.length})</span>
+                <span className="text-[10px] text-slate-400 font-normal">
+                  {isLinkedAccountsOpen ? '(Click to collapse)' : '(Click to view)'}
+                </span>
               </h3>
               <p className="text-[11px] text-slate-500">
                 Select any linked service account below to switch your active view
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <button type="button" className="text-slate-400 hover:text-[#FF5401] transition-colors p-1 cursor-pointer">
+              <button
+                type="button"
+                className="text-slate-400 hover:text-[#FF5401] transition-colors p-1 cursor-pointer"
+                aria-label={isLinkedAccountsOpen ? 'Collapse Linked Service Accounts' : 'Expand Linked Service Accounts'}
+              >
                 {isLinkedAccountsOpen ? <ChevronUp className="w-5 h-5 text-[#FF5401]" /> : <ChevronDown className="w-5 h-5" />}
               </button>
             </div>
@@ -541,6 +577,7 @@ This code is valid for 5 minutes. Once verified, your service account will be li
                     key={acc.accountNumber}
                     onClick={() => {
                       setSelectedAccount(acc);
+                      setIsAccountSpecOpen(true);
                       setSavedSuccessMsg(`Switched active service account to #${acc.accountNumber}`);
                       setTimeout(() => setSavedSuccessMsg(''), 3000);
                     }}
@@ -576,6 +613,7 @@ This code is valid for 5 minutes. Once verified, your service account will be li
                             onClick={e => {
                               e.stopPropagation();
                               setSelectedAccount(acc);
+                              setIsAccountSpecOpen(true);
                               setSavedSuccessMsg(`Switched active service account to #${acc.accountNumber}`);
                               setTimeout(() => setSavedSuccessMsg(''), 3000);
                             }}

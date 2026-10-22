@@ -199,130 +199,212 @@ export const EmailOutboxModal: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Body Text */}
-                <div className="text-xs sm:text-sm text-[#2B2B2B] leading-relaxed whitespace-pre-line font-normal">
-                  {currentEmail.body}
-                </div>
-
-                {/* Credentials Highlighting Card (If Approved) */}
-                {currentEmail.type === 'REGISTRATION_APPROVED' && currentEmail.data && (
-                  <div className="bg-orange-50/70 border border-[#FF5401]/25 rounded-2xl p-4 space-y-3">
-                    <div className="flex items-center gap-2 text-[#FF5401] font-semibold text-xs">
-                      <KeyRound className="w-4 h-4" />
-                      <span>Portal Credentials</span>
+                {/* Email Content Body */}
+                {currentEmail.type === 'ADMIN_SETUP_INVITE' ? (
+                  <div className="py-2 space-y-6">
+                    <div>
+                      <h1 className="text-2xl sm:text-3xl font-bold text-[#0B192C] tracking-tight">
+                        Admin Account Created
+                      </h1>
+                      <p className="text-base sm:text-lg text-slate-500 font-normal mt-1">
+                        Set Up Your Password & MFA
+                      </p>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                      <div className="bg-white p-3 rounded-xl border border-orange-200/80">
-                        <span className="text-[10px] font-semibold text-slate-400 block uppercase">Account Code</span>
-                        <span className="text-sm font-mono font-semibold text-[#FF5401]">
-                          {currentEmail.data.accountCode || '0421-9012-34'}
-                        </span>
-                      </div>
+                    <div className="space-y-4 text-sm sm:text-base text-slate-700 leading-relaxed font-normal">
+                      <p>Hello,</p>
+                      <p>
+                        An admin account has been created for you in CECAp (Customer Engagement Platform).
+                      </p>
+                      <p>
+                        To get started, please set up your password and configure multi-factor authentication (MFA) to access the Admin Console.
+                      </p>
+                    </div>
 
-                      <div className="bg-white p-3 rounded-xl border border-orange-200/80">
-                        <span className="text-[10px] font-semibold text-slate-400 block uppercase">Temporary Password</span>
-                        <div className="flex items-center justify-between mt-0.5">
-                          <span className="text-sm font-mono font-semibold text-[#2B2B2B]">
-                            {currentEmail.data.tempPassword || 'CedcTemp#7419'}
-                          </span>
+                    <div className="pt-2">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenAdminSetupLink(currentEmail)}
+                        className="bg-[#0066FF] hover:bg-[#0052CC] text-white font-medium text-sm sm:text-base px-8 py-3.5 rounded-xl shadow-xs transition-all cursor-pointer inline-flex items-center justify-center gap-2"
+                      >
+                        <span>Set Up Your Account</span>
+                      </button>
+                    </div>
+
+                    <hr className="border-t border-slate-200 pt-2" />
+
+                    <p className="text-xs text-slate-400 text-center leading-relaxed">
+                      If you did not expect this email or need assistance,
+                      <br />
+                      please contact the CECAp support team.
+                    </p>
+
+                    {/* Discreet Security Token & Testing Row */}
+                    {currentEmail.data?.setupToken && (
+                      <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400">
+                        <span className="font-mono text-slate-500">
+                          Token: {currentEmail.data.setupToken}
+                        </span>
+                        <div className="flex items-center gap-2">
                           <button
                             type="button"
-                            onClick={() => handleCopy(currentEmail.data?.tempPassword || 'CedcTemp#7419', 'pass')}
-                            className="text-[10px] font-semibold text-[#FF5401] hover:underline flex items-center gap-1 cursor-pointer"
+                            onClick={() => handleCopy(currentEmail.data?.setupToken || '', 'adm_token')}
+                            className="text-[#0066FF] hover:underline font-semibold flex items-center gap-1 cursor-pointer"
                           >
-                            {copiedField === 'pass' ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                            <span>{copiedField === 'pass' ? 'Copied' : 'Copy'}</span>
+                            {copiedField === 'adm_token' ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                            <span>{copiedField === 'adm_token' ? 'Copied' : 'Copy Token'}</span>
+                          </button>
+                          <span className="text-slate-300">•</span>
+                          <button
+                            type="button"
+                            onClick={() => currentEmail.data?.setupToken && simulateExpireToken(currentEmail.data.setupToken)}
+                            className="text-amber-600 hover:underline"
+                            title="Test expired token"
+                          >
+                            Expire
+                          </button>
+                          <span className="text-slate-300">•</span>
+                          <button
+                            type="button"
+                            onClick={() => currentEmail.data?.setupToken && simulateUseToken(currentEmail.data.setupToken)}
+                            className="text-rose-600 hover:underline"
+                            title="Test used token"
+                          >
+                            Mark Used
                           </button>
                         </div>
                       </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => handleAutoFillLogin(currentEmail)}
-                      className="w-full bg-[#FF5401] hover:bg-[#E54A00] text-white font-semibold text-xs py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                      <UserCheck className="w-4 h-4" />
-                      <span>Use Credentials to Sign In</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
+                    )}
                   </div>
-                )}
-
-                {/* Admin First-Time Setup Link Card */}
-                {(currentEmail.type === 'ADMIN_SETUP_INVITE' || currentEmail.data?.setupToken) && (
-                  <div className="bg-gradient-to-r from-orange-50 via-amber-50 to-orange-50 border border-[#FF5401]/30 rounded-2xl p-4 sm:p-5 space-y-3.5 shadow-xs">
-                    <div className="flex items-center justify-between flex-wrap gap-2">
-                      <div className="flex items-center gap-2 text-[#FF5401] font-extrabold text-xs">
-                        <Shield className="w-4 h-4" />
-                        <span>Admin First-Time Setup Link</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-100/80 border border-amber-300 text-amber-900 text-[10px] font-bold">
-                        <Clock className="w-3 h-3 text-[#FF5401]" />
-                        <span>Valid 15 Mins • Single-Use</span>
-                      </div>
+                ) : currentEmail.type === 'REGISTRATION_APPROVED' ? (
+                  <div className="py-2 space-y-6">
+                    <div>
+                      <h1 className="text-2xl sm:text-3xl font-bold text-[#0B192C] tracking-tight">
+                        Registration Approved
+                      </h1>
+                      <p className="text-base sm:text-lg text-slate-500 font-normal mt-1">
+                        Your CECAp Login Credentials
+                      </p>
                     </div>
 
-                    <div className="bg-white p-3 rounded-xl border border-orange-200/80 space-y-1.5">
-                      <div className="flex items-center justify-between text-[10px] text-slate-500 font-bold uppercase">
-                        <span>Single-Use Security Token</span>
-                        <button
-                          type="button"
-                          onClick={() => handleCopy(currentEmail.data?.setupToken || '', 'adm_token')}
-                          className="text-[#FF5401] hover:underline flex items-center gap-1 cursor-pointer"
-                        >
-                          {copiedField === 'adm_token' ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                          <span>{copiedField === 'adm_token' ? 'Copied' : 'Copy Token'}</span>
-                        </button>
-                      </div>
-                      <div className="font-mono text-xs font-bold text-[#FF5401] bg-[#FAF8F5] p-2 rounded-lg border border-[#EBE5DC] break-all select-all">
-                        {currentEmail.data?.setupToken}
-                      </div>
+                    <div className="space-y-4 text-sm sm:text-base text-slate-700 leading-relaxed font-normal">
+                      <p>Hello,</p>
+                      <p>
+                        Your CECAp customer portal registration has been verified and approved.
+                      </p>
+                      <p>
+                        Below are your login credentials to access your billing and services:
+                      </p>
                     </div>
 
-                    {/* Primary Action Button */}
-                    <button
-                      type="button"
-                      onClick={() => handleOpenAdminSetupLink(currentEmail)}
-                      className="w-full bg-[#FF5401] hover:bg-[#E54A00] text-white font-extrabold text-xs py-3 rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                      <ShieldCheck className="w-4 h-4" />
-                      <span>Open Secure Setup Link in CECAP Login</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
+                    {currentEmail.data && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                        <div className="bg-white p-3 rounded-xl border border-slate-200">
+                          <span className="text-[10px] font-semibold text-slate-400 block uppercase">Account Code</span>
+                          <span className="text-sm font-mono font-semibold text-[#FF5401]">
+                            {currentEmail.data.accountCode || '0421-9012-34'}
+                          </span>
+                        </div>
 
-                    {/* Simulation / Verification Helper for Testing Expired & Used Link Requirements */}
-                    <div className="pt-2 border-t border-orange-200/60 flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-500 font-semibold">
-                      <span>Requirement Testing Tools:</span>
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => currentEmail.data?.setupToken && simulateExpireToken(currentEmail.data.setupToken)}
-                          className="px-2 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 font-bold transition-all cursor-pointer"
-                          title="Simulate token expiration (>15 mins) to test expired link rejection"
-                        >
-                          Simulate Expired Token
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => currentEmail.data?.setupToken && simulateUseToken(currentEmail.data.setupToken)}
-                          className="px-2 py-1 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-900 border border-rose-300 font-bold transition-all cursor-pointer"
-                          title="Mark token as used to test single-use rejection"
-                        >
-                          Simulate Used Token
-                        </button>
+                        <div className="bg-white p-3 rounded-xl border border-slate-200">
+                          <span className="text-[10px] font-semibold text-slate-400 block uppercase">Temporary Password</span>
+                          <div className="flex items-center justify-between mt-0.5">
+                            <span className="text-sm font-mono font-semibold text-[#2B2B2B]">
+                              {currentEmail.data.tempPassword || 'CedcTemp#7419'}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleCopy(currentEmail.data?.tempPassword || 'CedcTemp#7419', 'pass')}
+                              className="text-[10px] font-semibold text-[#0066FF] hover:underline flex items-center gap-1 cursor-pointer"
+                            >
+                              {copiedField === 'pass' ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                              <span>{copiedField === 'pass' ? 'Copied' : 'Copy'}</span>
+                            </button>
+                          </div>
+                        </div>
                       </div>
+                    )}
+
+                    <div className="pt-2">
+                      <button
+                        type="button"
+                        onClick={() => handleAutoFillLogin(currentEmail)}
+                        className="bg-[#0066FF] hover:bg-[#0052CC] text-white font-medium text-sm sm:text-base px-8 py-3.5 rounded-xl shadow-xs transition-all cursor-pointer inline-flex items-center justify-center gap-2"
+                      >
+                        <UserCheck className="w-4 h-4" />
+                        <span>Sign In to Your Account</span>
+                      </button>
                     </div>
+
+                    <hr className="border-t border-slate-200 pt-2" />
+
+                    <p className="text-xs text-slate-400 text-center leading-relaxed">
+                      If you did not expect this email or need assistance,
+                      <br />
+                      please contact the CECAp support team.
+                    </p>
                   </div>
-                )}
+                ) : currentEmail.type === 'OTP_CODE' || currentEmail.type === 'ADMIN_MFA_SETUP' || currentEmail.type === 'PASSWORD_RESET' ? (
+                  <div className="py-2 space-y-6">
+                    <div>
+                      <h1 className="text-2xl sm:text-3xl font-bold text-[#0B192C] tracking-tight">
+                        {currentEmail.type === 'PASSWORD_RESET'
+                          ? 'Password Reset Code'
+                          : currentEmail.type === 'ADMIN_MFA_SETUP'
+                          ? 'Admin Verification Code'
+                          : 'Security Verification Code'}
+                      </h1>
+                      <p className="text-base sm:text-lg text-slate-500 font-normal mt-1">
+                        {currentEmail.type === 'PASSWORD_RESET'
+                          ? 'Account Recovery'
+                          : currentEmail.type === 'ADMIN_MFA_SETUP'
+                          ? 'Admin MFA Authentication'
+                          : 'One-Time Security Code'}
+                      </p>
+                    </div>
 
-                {/* OTP Code Box (If OTP) */}
-                {currentEmail.type === 'OTP_CODE' && currentEmail.data?.otpCode && (
-                  <div className="bg-orange-50/70 border border-[#FF5401]/25 rounded-2xl p-4 text-center space-y-1">
-                    <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Verification Code</span>
-                    <p className="text-2xl font-mono font-semibold tracking-widest text-[#FF5401]">
-                      {currentEmail.data.otpCode}
+                    <div className="space-y-4 text-sm sm:text-base text-slate-700 leading-relaxed font-normal">
+                      <p>Hello,</p>
+                      <p>
+                        Your 6-digit security verification code is:
+                      </p>
+                    </div>
+
+                    <div className="py-2">
+                      <div className="inline-block bg-slate-50 border border-slate-200 rounded-2xl px-8 py-4 text-center">
+                        <span className="text-3xl sm:text-4xl font-mono font-bold tracking-widest text-[#0066FF]">
+                          {currentEmail.data?.otpCode || (currentEmail.body.match(/\b\d{6}\b/) ? currentEmail.body.match(/\b\d{6}\b/)![0] : '123456')}
+                        </span>
+                        <p className="text-[11px] text-slate-400 mt-1">Valid for 5 minutes</p>
+                      </div>
+                    </div>
+
+                    <hr className="border-t border-slate-200 pt-2" />
+
+                    <p className="text-xs text-slate-400 text-center leading-relaxed">
+                      If you did not request this verification code,
+                      <br />
+                      please contact the CECAp support team immediately.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="py-2 space-y-6">
+                    <div>
+                      <h1 className="text-2xl sm:text-3xl font-bold text-[#0B192C] tracking-tight">
+                        {currentEmail.subject.replace(/\[CECAp\]\s*/i, '')}
+                      </h1>
+                    </div>
+
+                    <div className="text-sm sm:text-base text-slate-700 leading-relaxed whitespace-pre-line font-normal">
+                      {currentEmail.body}
+                    </div>
+
+                    <hr className="border-t border-slate-200 pt-2" />
+
+                    <p className="text-xs text-slate-400 text-center leading-relaxed">
+                      If you have questions or need assistance,
+                      <br />
+                      please contact the CECAp support team.
                     </p>
                   </div>
                 )}

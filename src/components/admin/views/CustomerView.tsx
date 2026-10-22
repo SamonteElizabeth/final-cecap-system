@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   Search,
-  Filter,
   Download,
   Eye,
   Building2,
@@ -11,27 +10,19 @@ import {
   CheckCircle2,
   XCircle,
   AlertTriangle,
-  ChevronRight,
   X,
-  ExternalLink,
-  ShieldAlert,
-  UserCheck,
   Clock,
   KeyRound,
-  Send,
-  Check,
   Sparkles,
   ShieldCheck,
   MapPin,
   RefreshCw,
   FileText,
-  SlidersHorizontal,
   LayoutGrid,
   List,
   Database,
 } from 'lucide-react';
-import { Customer, RegistrationRequest } from '../../../types';
-import { ADMIN_CUSTOMERS_LIST } from '../../../data/adminMockData';
+import { RegistrationRequest } from '../../../types';
 import { useApp } from '../../../context/AppContext';
 
 interface CustomerViewProps {
@@ -41,12 +32,10 @@ interface CustomerViewProps {
 export const CustomerView: React.FC<CustomerViewProps> = ({ searchQuery = '' }) => {
   const { registrationRequests, approveRegistration, rejectRegistration } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'PENDING_REGISTRATIONS' | 'REGISTERED_CUSTOMERS' | 'REGISTRATION_AUDIT'>('PENDING_REGISTRATIONS');
+  type RegistrationFilter = 'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED';
+  const [activeFilter, setActiveFilter] = useState<RegistrationFilter>('ALL');
   const [viewMode, setViewMode] = useState<'card' | 'list'>('list');
-  const [customers, setCustomers] = useState<Customer[]>(ADMIN_CUSTOMERS_LIST);
   const [localSearch, setLocalSearch] = useState(searchQuery);
-  const [typeFilter, setTypeFilter] = useState<'All' | 'Residential' | 'Commercial' | 'Industrial'>('All');
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
   // Verification & Review state for CRS Admin
   const [selectedRequest, setSelectedRequest] = useState<RegistrationRequest | null>(null);
@@ -61,40 +50,38 @@ export const CustomerView: React.FC<CustomerViewProps> = ({ searchQuery = '' }) 
 
   const query = (localSearch || searchQuery).toLowerCase();
 
-  // Filter pending registration requests
-  const pendingRequests = registrationRequests.filter(r => r.status === 'Pending' && (
-    r.fullName.toLowerCase().includes(query) ||
-    r.email.toLowerCase().includes(query) ||
-    r.serviceAddress.toLowerCase().includes(query) ||
-    r.mobileNumber.toLowerCase().includes(query)
-  ));
+  // Counts for the 4 filter cards
+  const allCount = registrationRequests.length;
+  const pendingCount = registrationRequests.filter(r => r.status === 'Pending').length;
+  const approvedCount = registrationRequests.filter(r => r.status === 'Approved').length;
+  const rejectedCount = registrationRequests.filter(r => r.status === 'Rejected').length;
 
-  // Filter audit registration requests (Approved / Rejected)
-  const auditRequests = registrationRequests.filter(r => r.status !== 'Pending' && (
-    r.fullName.toLowerCase().includes(query) ||
-    r.email.toLowerCase().includes(query) ||
-    r.serviceAddress.toLowerCase().includes(query) ||
-    (r.accountCode && r.accountCode.toLowerCase().includes(query))
-  ));
+  // Filter registration requests based on active card filter and search query
+  const filteredRequests = registrationRequests.filter(r => {
+    if (activeFilter === 'PENDING' && r.status !== 'Pending') return false;
+    if (activeFilter === 'APPROVED' && r.status !== 'Approved') return false;
+    if (activeFilter === 'REJECTED' && r.status !== 'Rejected') return false;
 
-  // Filter registered active customers
-  const filteredCustomers = customers.filter(c => {
-    const matchesQuery =
-      c.name.toLowerCase().includes(query) ||
-      c.accountNumber.toLowerCase().includes(query) ||
-      c.email.toLowerCase().includes(query) ||
-      c.mobileNumber.toLowerCase().includes(query) ||
-      c.meterNumber.toLowerCase().includes(query);
-
-    const matchesType = typeFilter === 'All' || c.serviceType === typeFilter;
-    return matchesQuery && matchesType;
+    if (!query) return true;
+    return (
+      r.fullName.toLowerCase().includes(query) ||
+      r.email.toLowerCase().includes(query) ||
+      r.serviceAddress.toLowerCase().includes(query) ||
+      r.mobileNumber.toLowerCase().includes(query) ||
+      (r.accountCode && r.accountCode.toLowerCase().includes(query)) ||
+      r.id.toLowerCase().includes(query)
+    );
   });
 
   const handleOpenReview = (req: RegistrationRequest) => {
     setSelectedRequest(req);
     setCustomAccountCode('');
     setRejectionReason('');
-    setVerificationStatus('idle'); // Reset verification status
+    if (req.status === 'Approved' || req.status === 'Rejected') {
+      setVerificationStatus(req.matchingBillingRecord ? 'found' : 'not_found');
+    } else {
+      setVerificationStatus('idle'); // Reset verification status for pending
+    }
     setShowReviewModal(true);
   };
 
@@ -147,10 +134,10 @@ export const CustomerView: React.FC<CustomerViewProps> = ({ searchQuery = '' }) 
   const handleExport = () => {
     const csvContent =
       'data:text/csv;charset=utf-8,' +
-      ['Name,Account Number,Service Type,Mobile,Email,Registration Date']
+      ['Request ID,Applicant Name,Status,Mobile Number,Email,Service Address,Submitted Date,Assigned Account / Rejection Reason']
         .concat(
-          filteredCustomers.map(
-            c => `"${c.name}","${c.accountNumber}","${c.serviceType}","${c.mobileNumber}","${c.email}","${c.registeredDate}"`
+          filteredRequests.map(
+            r => `"${r.id}","${r.fullName}","${r.status}","${r.mobileNumber}","${r.email}","${r.serviceAddress}","${r.submittedAt}","${r.accountCode || r.rejectionReason || '-'}"`
           )
         )
         .join('\n');
@@ -158,16 +145,14 @@ export const CustomerView: React.FC<CustomerViewProps> = ({ searchQuery = '' }) 
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `CEDC_Customers_Export_${Date.now()}.csv`);
+    link.setAttribute('download', `CEDC_Registrations_${activeFilter}_${Date.now()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
 
-    setToastMsg(`✅ Exported ${filteredCustomers.length} customer records to CSV!`);
+    setToastMsg(`✅ Exported ${filteredRequests.length} registration records to CSV!`);
     setTimeout(() => setToastMsg(''), 3000);
   };
-
-  const pendingCount = registrationRequests.filter(r => r.status === 'Pending').length;
 
   return (
     <div className="space-y-6 animate-fade-in pb-8">
@@ -179,55 +164,140 @@ export const CustomerView: React.FC<CustomerViewProps> = ({ searchQuery = '' }) 
         </div>
       )}
 
-      {/* Sub-Navigation Tabs */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-[#E5E7EB] pb-3">
+      {/* Sub-Navigation Card Filter View: 4 Registration Filter Cards */}
+      <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Card 1: All Registrations */}
         <button
-          onClick={() => setActiveTab('PENDING_REGISTRATIONS')}
-          className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
-            activeTab === 'PENDING_REGISTRATIONS'
-              ? 'bg-[#FF5401] text-white shadow-sm'
-              : 'bg-white text-slate-600 hover:text-[#2B2B2B] border border-[#E5E7EB]'
+          type="button"
+          onClick={() => setActiveFilter('ALL')}
+          className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between group ${
+            activeFilter === 'ALL'
+              ? 'bg-orange-50/80 border-[#FF5401] ring-2 ring-[#FF5401] shadow-sm'
+              : 'bg-white border-[#E5E7EB] hover:border-[#FF5401]/50 hover:shadow-2xs'
           }`}
         >
-          <Clock className="w-4 h-4" />
-          <span>Pending Customer Registrations</span>
-          {pendingCount > 0 && (
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-              activeTab === 'PENDING_REGISTRATIONS' ? 'bg-white text-[#FF5401]' : 'bg-[#FF5401] text-white'
+          <div className="space-y-1">
+            <span className={`text-[10px] font-bold uppercase tracking-wider block ${
+              activeFilter === 'ALL' ? 'text-[#FF5401]' : 'text-slate-500'
             }`}>
-              {pendingCount}
+              All Registrations
             </span>
-          )}
+            <div className="text-2xl font-black text-[#2B2B2B] flex items-baseline gap-2">
+              <span>{allCount}</span>
+              <span className="text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">
+                Total
+              </span>
+            </div>
+          </div>
+          <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-colors ${
+            activeFilter === 'ALL'
+              ? 'bg-[#FF5401] text-white shadow-xs'
+              : 'bg-orange-50 text-[#FF5401] group-hover:bg-orange-100'
+          }`}>
+            <FileText className="w-5 h-5" />
+          </div>
         </button>
 
+        {/* Card 2: Pending Registration */}
         <button
-          onClick={() => setActiveTab('REGISTERED_CUSTOMERS')}
-          className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
-            activeTab === 'REGISTERED_CUSTOMERS'
-              ? 'bg-[#FF5401] text-white shadow-sm'
-              : 'bg-white text-slate-600 hover:text-[#2B2B2B] border border-[#E5E7EB]'
+          type="button"
+          onClick={() => setActiveFilter('PENDING')}
+          className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between group ${
+            activeFilter === 'PENDING'
+              ? 'bg-orange-50/80 border-[#FF5401] ring-2 ring-[#FF5401] shadow-sm'
+              : 'bg-white border-[#E5E7EB] hover:border-[#FF5401]/50 hover:shadow-2xs'
           }`}
         >
-          <UserCheck className="w-4 h-4" />
-          <span>Registered Customers</span>
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">
-            {customers.length}
-          </span>
+          <div className="space-y-1">
+            <span className={`text-[10px] font-bold uppercase tracking-wider block ${
+              activeFilter === 'PENDING' ? 'text-[#FF5401]' : 'text-slate-500'
+            }`}>
+              Pending Registration
+            </span>
+            <div className="text-2xl font-black text-[#2B2B2B] flex items-baseline gap-2">
+              <span>{pendingCount}</span>
+              {pendingCount > 0 ? (
+                <span className="text-[10px] font-bold text-[#FF5401] bg-orange-100 px-2 py-0.5 rounded-full">
+                  Needs Review
+                </span>
+              ) : (
+                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">
+                  Up to date
+                </span>
+              )}
+            </div>
+          </div>
+          <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-colors ${
+            activeFilter === 'PENDING'
+              ? 'bg-[#FF5401] text-white shadow-xs'
+              : 'bg-orange-50 text-[#FF5401] group-hover:bg-orange-100'
+          }`}>
+            <Clock className="w-5 h-5" />
+          </div>
         </button>
 
+        {/* Card 3: Approve Registration */}
         <button
-          onClick={() => setActiveTab('REGISTRATION_AUDIT')}
-          className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
-            activeTab === 'REGISTRATION_AUDIT'
-              ? 'bg-[#FF5401] text-white shadow-sm'
-              : 'bg-white text-slate-600 hover:text-[#2B2B2B] border border-[#E5E7EB]'
+          type="button"
+          onClick={() => setActiveFilter('APPROVED')}
+          className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between group ${
+            activeFilter === 'APPROVED'
+              ? 'bg-orange-50/80 border-[#FF5401] ring-2 ring-[#FF5401] shadow-sm'
+              : 'bg-white border-[#E5E7EB] hover:border-[#FF5401]/50 hover:shadow-2xs'
           }`}
         >
-          <FileText className="w-4 h-4" />
-          <span>Registration List</span>
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">
-            {auditRequests.length}
-          </span>
+          <div className="space-y-1">
+            <span className={`text-[10px] font-bold uppercase tracking-wider block ${
+              activeFilter === 'APPROVED' ? 'text-[#FF5401]' : 'text-slate-500'
+            }`}>
+              Approve Registration
+            </span>
+            <div className="text-2xl font-black text-[#2B2B2B] flex items-baseline gap-2">
+              <span>{approvedCount}</span>
+              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                Approved
+              </span>
+            </div>
+          </div>
+          <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-colors ${
+            activeFilter === 'APPROVED'
+              ? 'bg-[#FF5401] text-white shadow-xs'
+              : 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100'
+          }`}>
+            <CheckCircle2 className="w-5 h-5" />
+          </div>
+        </button>
+
+        {/* Card 4: Rejected Registration */}
+        <button
+          type="button"
+          onClick={() => setActiveFilter('REJECTED')}
+          className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between group ${
+            activeFilter === 'REJECTED'
+              ? 'bg-orange-50/80 border-[#FF5401] ring-2 ring-[#FF5401] shadow-sm'
+              : 'bg-white border-[#E5E7EB] hover:border-[#FF5401]/50 hover:shadow-2xs'
+          }`}
+        >
+          <div className="space-y-1">
+            <span className={`text-[10px] font-bold uppercase tracking-wider block ${
+              activeFilter === 'REJECTED' ? 'text-[#FF5401]' : 'text-slate-500'
+            }`}>
+              Rejected Registration
+            </span>
+            <div className="text-2xl font-black text-[#2B2B2B] flex items-baseline gap-2">
+              <span>{rejectedCount}</span>
+              <span className="text-[10px] font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full">
+                Rejected
+              </span>
+            </div>
+          </div>
+          <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-colors ${
+            activeFilter === 'REJECTED'
+              ? 'bg-[#FF5401] text-white shadow-xs'
+              : 'bg-rose-50 text-rose-600 group-hover:bg-rose-100'
+          }`}>
+            <XCircle className="w-5 h-5" />
+          </div>
         </button>
       </div>
 
@@ -235,35 +305,19 @@ export const CustomerView: React.FC<CustomerViewProps> = ({ searchQuery = '' }) 
       <div className="bg-white p-4 md:p-5 rounded-2xl border border-[#E5E7EB] shadow-2xs">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
           {/* Search Field */}
-          <div className={`${activeTab === 'REGISTERED_CUSTOMERS' ? 'md:col-span-5' : 'md:col-span-6'} relative`}>
+          <div className="md:col-span-8 relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={localSearch}
               onChange={e => setLocalSearch(e.target.value)}
-              placeholder="Search by customer name, address, email, mobile number..."
+              placeholder="Search registrations by applicant name, account code, address, email, phone..."
               className="w-full bg-[#F8FAFC] border border-[#E2E8F0] focus:border-[#FF5401] focus:bg-white rounded-xl pl-10 pr-4 py-2 text-xs font-medium text-[#2B2B2B] focus:outline-none"
             />
           </div>
 
-          {/* Service Type Filter (When in Active Customers) */}
-          {activeTab === 'REGISTERED_CUSTOMERS' && (
-            <div className="md:col-span-3">
-              <select
-                value={typeFilter}
-                onChange={e => setTypeFilter(e.target.value as any)}
-                className="w-full bg-[#F8FAFC] border border-[#E2E8F0] focus:border-[#FF5401] focus:bg-white rounded-xl px-3 py-2 text-xs font-medium text-[#2B2B2B] focus:outline-none"
-              >
-                <option value="All">All Service Types</option>
-                <option value="Residential">Residential</option>
-                <option value="Commercial">Commercial</option>
-                <option value="Industrial">Industrial</option>
-              </select>
-            </div>
-          )}
-
           {/* View Mode Toggle & Export Button */}
-          <div className={`${activeTab === 'REGISTERED_CUSTOMERS' ? 'md:col-span-4' : 'md:col-span-6'} flex items-center justify-end gap-2.5`}>
+          <div className="md:col-span-4 flex items-center justify-end gap-2.5">
             {/* Card & List Layout Toggle */}
             <div className="flex items-center bg-[#F8FAFC] border border-[#E2E8F0] p-1 rounded-xl">
               <button
@@ -305,317 +359,140 @@ export const CustomerView: React.FC<CustomerViewProps> = ({ searchQuery = '' }) 
         </div>
       </div>
 
-      {/* TAB 1: PENDING REGISTRATION REQUESTS (CRS ADMIN VERIFICATION) */}
-      {activeTab === 'PENDING_REGISTRATIONS' && (
-        <div className="space-y-4">
-          <div className="bg-orange-50/80 p-4 rounded-2xl border border-[#FF5401]/20 flex items-start gap-3">
-            <ShieldCheck className="w-5 h-5 text-[#FF5401] shrink-0 mt-0.5" />
-            <div className="text-xs text-[#2B2B2B] leading-relaxed">
-              <span className="font-bold">CRS Administrator Verification Queue:</span> Review submitted customer registration requests below. Compare applicant details side-by-side with records retrieved from the existing CEDC Billing System before approving or rejecting.
-            </div>
-          </div>
-
-          {pendingRequests.length === 0 ? (
-            <div className="bg-white p-12 rounded-2xl border border-[#E5E7EB] text-center space-y-3">
-              <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto" />
-              <h3 className="text-sm font-bold text-[#2B2B2B]">No Pending Customer Registrations</h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                All submitted customer registration requests have been reviewed and verified by the CRS Administrator.
-              </p>
-            </div>
-          ) : viewMode === 'card' ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-4">
-              {pendingRequests.map(req => (
-                <div
-                  key={req.id}
-                  className="bg-white rounded-2xl border border-[#E5E7EB] p-4 space-y-3 hover:border-[#FF5401]/50 transition-all shadow-2xs hover:shadow-md flex flex-col justify-between"
-                >
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <span className="text-[10px] font-mono font-bold text-[#FF5401] bg-orange-50 px-2 py-0.5 rounded-md border border-orange-200">
-                          {req.id}
-                        </span>
-                        <h4 className="text-sm font-bold text-[#2B2B2B] mt-1">{req.fullName}</h4>
-                      </div>
-                      <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-300 flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        <span>Pending Review</span>
-                      </span>
-                    </div>
-
-                    <div className="text-xs space-y-1.5 pt-1 text-slate-600">
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span className="truncate">{req.serviceAddress}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span>{req.mobileNumber}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span className="truncate">{req.email}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-[11px] text-slate-400 pt-1">
-                        <Calendar className="w-3 h-3 text-slate-400 shrink-0" />
-                        <span>Submitted: {req.submittedAt}</span>
-                      </div>
-                    </div>
-
-                    {/* Matching Billing System indicator */}
-                    {req.matchingBillingRecord ? (
-                      <div className="bg-emerald-50/80 p-2.5 rounded-xl border border-emerald-200 text-[11px] text-emerald-900 space-y-1">
-                        <div className="flex justify-between items-center font-bold">
-                          <span className="flex items-center gap-1">
-                            <Sparkles className="w-3 h-3 text-emerald-600" />
-                            Billing System Match
-                          </span>
-                          <span className="bg-emerald-200 text-emerald-900 px-1.5 py-0.5 rounded text-[10px]">
-                            {req.matchingBillingRecord.matchConfidence}% Match
-                          </span>
-                        </div>
-                        <p className="text-[10px] text-emerald-800 truncate">
-                          Matched Acc #: <strong>{req.matchingBillingRecord.accountNumber}</strong> ({req.matchingBillingRecord.customerName})
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="bg-rose-50/80 p-2.5 rounded-xl border border-rose-200 text-[11px] text-rose-900 space-y-1">
-                        <div className="flex justify-between items-center font-bold">
-                          <span className="flex items-center gap-1">
-                            <XCircle className="w-3 h-3 text-rose-600" />
-                            No Billing Match
-                          </span>
-                          <span className="bg-rose-200 text-rose-900 px-1.5 py-0.5 rounded text-[10px]">
-                            Unindexed
-                          </span>
-                        </div>
-                        <p className="text-[10px] text-rose-700">
-                          Will return NOT FOUND during database verification.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="pt-2 border-t border-[#E5E7EB] flex gap-2">
-                    <button
-                      onClick={() => handleOpenReview(req)}
-                      className="w-full bg-[#FF5401] hover:bg-[#E54A00] text-white font-bold text-xs py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                      <span>Review</span>
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-2xs overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-[#F8FAFC] border-b border-[#E5E7EB] text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                      <th className="p-4">Request ID</th>
-                      <th className="p-4">Applicant Name</th>
-                      <th className="p-4">Service Address</th>
-                      <th className="p-4">Mobile / Email</th>
-                      <th className="p-4">Submitted Date</th>
-                      <th className="p-4">Billing Record Match</th>
-                      <th className="p-4 text-center">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#E5E7EB] text-xs font-medium text-[#2B2B2B]">
-                    {pendingRequests.map(req => (
-                      <tr key={req.id} className="hover:bg-[#F8FAFC] transition-all">
-                        <td className="p-4 font-mono font-bold text-[#FF5401]">{req.id}</td>
-                        <td className="p-4 font-bold text-[#2B2B2B]">{req.fullName}</td>
-                        <td className="p-4 text-slate-600 max-w-xs truncate">{req.serviceAddress}</td>
-                        <td className="p-4">
-                          <div>{req.mobileNumber}</div>
-                          <div className="text-[10px] text-slate-400">{req.email}</div>
-                        </td>
-                        <td className="p-4 text-slate-500 text-[11px]">{req.submittedAt}</td>
-                        <td className="p-4">
-                          {req.matchingBillingRecord ? (
-                            <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                              <Sparkles className="w-3 h-3 text-emerald-600" />
-                              {req.matchingBillingRecord.matchConfidence}% Match ({req.matchingBillingRecord.accountNumber})
-                            </span>
-                          ) : (
-                            <span className="bg-rose-100 text-rose-800 text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                              <XCircle className="w-3 h-3 text-rose-600" />
-                              No Match (Not Found)
-                            </span>
-                          )}
-                        </td>
-                        <td className="p-4 text-center">
-                          <button
-                            onClick={() => handleOpenReview(req)}
-                            className="bg-[#FF5401] hover:bg-[#E54A00] text-white font-bold text-xs px-3 py-1.5 rounded-xl transition-all inline-flex items-center gap-1 cursor-pointer shadow-xs"
-                          >
-                            <Eye className="w-3.5 h-3.5" />
-                            <span>Review</span>
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
+      {/* REGISTRATION LIST OR CARDS VIEW */}
+      {filteredRequests.length === 0 ? (
+        <div className="bg-white p-12 rounded-2xl border border-[#E5E7EB] text-center space-y-3">
+          <FileText className="w-12 h-12 text-slate-300 mx-auto" />
+          <h3 className="text-sm font-bold text-[#2B2B2B]">No Registrations Found</h3>
+          <p className="text-xs text-slate-500 max-w-sm mx-auto">
+            No customer registration requests match your current filter or search criteria.
+          </p>
         </div>
-      )}
-
-      {/* TAB 2: REGISTERED ACTIVE CUSTOMERS */}
-      {activeTab === 'REGISTERED_CUSTOMERS' && (
-        viewMode === 'card' ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-4">
-            {filteredCustomers.length === 0 ? (
-              <div className="col-span-full bg-white p-12 rounded-2xl border border-[#E5E7EB] text-center text-slate-500 text-xs">
-                No customer records match your search filter.
-              </div>
-            ) : (
-              filteredCustomers.map(cust => (
-                <div
-                  key={cust.id}
-                  className="bg-white rounded-2xl border border-[#E5E7EB] p-4 space-y-3 hover:border-[#FF5401]/50 transition-all shadow-2xs hover:shadow-md flex flex-col justify-between"
-                >
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-start">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-10 h-10 rounded-2xl bg-orange-100 text-[#FF5401] flex items-center justify-center font-extrabold text-sm shrink-0 border border-orange-200">
-                          {cust.name.charAt(0)}
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-bold text-[#2B2B2B]">{cust.name}</h4>
-                          <span className="font-mono text-xs font-bold text-[#FF5401]">{cust.accountNumber}</span>
-                        </div>
-                      </div>
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                        cust.serviceType === 'Commercial'
-                          ? 'bg-blue-100 text-blue-800'
-                          : cust.serviceType === 'Industrial'
-                          ? 'bg-purple-100 text-purple-800'
-                          : 'bg-emerald-100 text-emerald-800'
-                      }`}>
-                        {cust.serviceType}
-                      </span>
-                    </div>
-
-                    <div className="text-xs space-y-2 p-3 bg-[#F8FAFC] rounded-2xl border border-[#E5E7EB] text-slate-600">
-                      <div className="flex justify-between items-center text-[11px]">
-                        <span className="text-slate-400 font-medium">Meter Serial No:</span>
-                        <span className="font-mono font-bold text-[#2B2B2B]">{cust.meterNumber}</span>
-                      </div>
-                      <div className="flex items-center gap-2 pt-0.5">
-                        <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span>{cust.mobileNumber}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span className="truncate">{cust.email}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span className="truncate">{cust.serviceAddress}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-between items-center text-[11px] text-slate-400 px-1">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" /> Registered: {cust.registeredDate}
-                      </span>
-                      <span className="font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">
-                        {cust.linkedAccounts.length} Account{cust.linkedAccounts.length > 1 ? 's' : ''}
-                      </span>
-                    </div>
+      ) : viewMode === 'card' ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {filteredRequests.map(req => (
+            <div
+              key={req.id}
+              className="bg-white rounded-2xl border border-[#E5E7EB] p-4 space-y-3 hover:border-[#FF5401]/50 transition-all shadow-2xs hover:shadow-md flex flex-col justify-between"
+            >
+              <div className="space-y-2">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <span className="text-[10px] font-mono font-bold text-[#FF5401] bg-orange-50 px-2 py-0.5 rounded-md border border-orange-200">
+                      {req.id}
+                    </span>
+                    <h4 className="text-sm font-bold text-[#2B2B2B] mt-1">{req.fullName}</h4>
                   </div>
+                  {req.status === 'Pending' && (
+                    <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-300 flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      <span>Pending</span>
+                    </span>
+                  )}
+                  {req.status === 'Approved' && (
+                    <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-300 flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" />
+                      <span>Approved</span>
+                    </span>
+                  )}
+                  {req.status === 'Rejected' && (
+                    <span className="bg-rose-100 text-rose-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-rose-300 flex items-center gap-1">
+                      <XCircle className="w-3 h-3" />
+                      <span>Rejected</span>
+                    </span>
+                  )}
+                </div>
 
-                  <div className="pt-2 border-t border-[#E5E7EB]">
-                    <button
-                      onClick={() => setSelectedCustomer(cust)}
-                      className="w-full bg-orange-50 hover:bg-[#FF5401] text-[#FF5401] hover:text-white border border-[#FF5401]/30 font-bold text-xs py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                      <span>View Account Details</span>
-                    </button>
+                <div className="text-xs space-y-1.5 pt-1 text-slate-600">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span className="truncate">{req.serviceAddress}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span>{req.mobileNumber}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span className="truncate">{req.email}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[11px] text-slate-400 pt-1">
+                    <Calendar className="w-3 h-3 text-slate-400 shrink-0" />
+                    <span>Submitted: {req.submittedAt}</span>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
-        ) : (
-          <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-2xs overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-[#F8FAFC] border-b border-[#E5E7EB] text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                    <th className="p-4">Customer Name</th>
-                    <th className="p-4">Account Number</th>
-                    <th className="p-4">Service Type</th>
-                    <th className="p-4">Meter Number</th>
-                    <th className="p-4">Contact Mobile / Email</th>
-                    <th className="p-4">Registration Date</th>
-                    <th className="p-4 text-center">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#E5E7EB] text-xs font-medium text-[#2B2B2B]">
-                  {filteredCustomers.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="p-8 text-center text-slate-500 text-xs">
-                        No customer records match your search filter.
-                      </td>
-                    </tr>
+
+                {/* Status Specific Details */}
+                {req.status === 'Pending' && (
+                  req.matchingBillingRecord ? (
+                    <div className="bg-emerald-50/80 p-2.5 rounded-xl border border-emerald-200 text-[11px] text-emerald-900 space-y-1">
+                      <div className="flex justify-between items-center font-bold">
+                        <span className="flex items-center gap-1">
+                          <Sparkles className="w-3 h-3 text-emerald-600" />
+                          Billing Match
+                        </span>
+                        <span className="bg-emerald-200 text-emerald-900 px-1.5 py-0.5 rounded text-[10px]">
+                          {req.matchingBillingRecord.matchConfidence}% Match
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-emerald-800 truncate">
+                        Matched Acc: <strong>{req.matchingBillingRecord.accountNumber}</strong>
+                      </p>
+                    </div>
                   ) : (
-                    filteredCustomers.map(cust => (
-                      <tr key={cust.id} className="hover:bg-[#F8FAFC] transition-all">
-                        <td className="p-4 font-bold text-[#2B2B2B]">{cust.name}</td>
-                        <td className="p-4 font-mono font-bold text-[#FF5401]">{cust.accountNumber}</td>
-                        <td className="p-4">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                            cust.serviceType === 'Commercial'
-                              ? 'bg-blue-100 text-blue-800'
-                              : cust.serviceType === 'Industrial'
-                              ? 'bg-purple-100 text-purple-800'
-                              : 'bg-emerald-100 text-emerald-800'
-                          }`}>
-                            {cust.serviceType}
-                          </span>
-                        </td>
-                        <td className="p-4 font-mono text-slate-600">{cust.meterNumber}</td>
-                        <td className="p-4">
-                          <div>{cust.mobileNumber}</div>
-                          <div className="text-[10px] text-slate-400">{cust.email}</div>
-                        </td>
-                        <td className="p-4 text-slate-500">{cust.registeredDate}</td>
-                        <td className="p-4 text-center">
-                          <button
-                            onClick={() => setSelectedCustomer(cust)}
-                            className="p-1.5 hover:bg-orange-50 text-[#FF5401] rounded-lg transition-all cursor-pointer inline-flex items-center gap-1 font-bold text-xs"
-                          >
-                            <Eye className="w-3.5 h-3.5" />
-                            <span>View Details</span>
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    <div className="bg-rose-50/80 p-2.5 rounded-xl border border-rose-200 text-[11px] text-rose-900 space-y-1">
+                      <div className="flex justify-between items-center font-bold">
+                        <span className="flex items-center gap-1">
+                          <XCircle className="w-3 h-3 text-rose-600" />
+                          No Billing Match
+                        </span>
+                        <span className="bg-rose-200 text-rose-900 px-1.5 py-0.5 rounded text-[10px]">
+                          Unindexed
+                        </span>
+                      </div>
+                    </div>
+                  )
+                )}
+
+                {req.status === 'Approved' && (
+                  <div className="bg-emerald-50/80 p-2.5 rounded-xl border border-emerald-200 text-[11px] text-emerald-900">
+                    <span className="text-[10px] text-emerald-700 font-bold block uppercase">Assigned Account Code</span>
+                    <span className="font-mono font-bold text-[#FF5401] text-xs">{req.accountCode}</span>
+                  </div>
+                )}
+
+                {req.status === 'Rejected' && (
+                  <div className="bg-rose-50/80 p-2.5 rounded-xl border border-rose-200 text-[11px] text-rose-900">
+                    <span className="text-[10px] text-rose-700 font-bold block uppercase">Rejection Reason</span>
+                    <p className="text-[11px] text-rose-800 line-clamp-2">{req.rejectionReason}</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-2 border-t border-[#E5E7EB]">
+                {req.status === 'Pending' ? (
+                  <button
+                    onClick={() => handleOpenReview(req)}
+                    className="w-full bg-[#FF5401] hover:bg-[#E54A00] text-white font-bold text-xs py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>Review Application</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleOpenReview(req)}
+                    className="w-full bg-slate-100 hover:bg-slate-200 text-[#2B2B2B] font-bold text-xs py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Eye className="w-3.5 h-3.5 text-slate-500" />
+                    <span>View Details</span>
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        )
-      )}
-
-      {/* TAB 3: REGISTRATION AUDIT HISTORY */}
-      {activeTab === 'REGISTRATION_AUDIT' && (
+          ))}
+        </div>
+      ) : (
         <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-2xs overflow-hidden">
-          <div className="p-4 border-b border-[#E5E7EB] bg-[#F8FAFC] flex justify-between items-center">
-            <h3 className="text-xs font-bold text-[#2B2B2B] uppercase tracking-wider">Processed Registration Requests Audit Log</h3>
-            <span className="text-[11px] text-slate-500">{auditRequests.length} total records</span>
-          </div>
-
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -623,53 +500,91 @@ export const CustomerView: React.FC<CustomerViewProps> = ({ searchQuery = '' }) 
                   <th className="p-4">Request ID</th>
                   <th className="p-4">Applicant Name</th>
                   <th className="p-4">Service Address</th>
-                  <th className="p-4">Submitted At</th>
-                  <th className="p-4">Status</th>
-                  <th className="p-4">Assigned Account Code / Rejection Reason</th>
-                  <th className="p-4">Reviewed By</th>
+                  <th className="p-4">Mobile / Email</th>
+                  <th className="p-4">Submitted Date</th>
+                  <th className="p-4">Status & Details</th>
+                  <th className="p-4 text-center">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#E5E7EB] text-xs font-medium text-[#2B2B2B]">
-                {auditRequests.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="p-8 text-center text-slate-500 text-xs">
-                      No processed registration requests in audit log yet.
+                {filteredRequests.map(req => (
+                  <tr key={req.id} className="hover:bg-[#F8FAFC] transition-all">
+                    <td className="p-4 font-mono font-bold text-[#FF5401]">{req.id}</td>
+                    <td className="p-4 font-bold text-[#2B2B2B]">{req.fullName}</td>
+                    <td className="p-4 text-slate-600 max-w-xs truncate">{req.serviceAddress}</td>
+                    <td className="p-4">
+                      <div>{req.mobileNumber}</div>
+                      <div className="text-[10px] text-slate-400">{req.email}</div>
+                    </td>
+                    <td className="p-4 text-slate-500 text-[11px]">{req.submittedAt}</td>
+                    <td className="p-4">
+                      {req.status === 'Pending' && (
+                        <div className="space-y-1">
+                          <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            Pending Review
+                          </span>
+                          {req.matchingBillingRecord ? (
+                            <div className="text-[10px] text-emerald-700 font-semibold flex items-center gap-1">
+                              <Sparkles className="w-3 h-3" />
+                              Match: {req.matchingBillingRecord.accountNumber}
+                            </div>
+                          ) : (
+                            <div className="text-[10px] text-rose-600 flex items-center gap-1">
+                              <XCircle className="w-3 h-3" />
+                              No billing match
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {req.status === 'Approved' && (
+                        <div className="space-y-1">
+                          <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3" />
+                            Approved
+                          </span>
+                          {req.accountCode && (
+                            <div className="font-mono text-[11px] font-bold text-[#FF5401]">
+                              Acc: {req.accountCode}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {req.status === 'Rejected' && (
+                        <div className="space-y-1">
+                          <span className="bg-rose-100 text-rose-800 text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                            <XCircle className="w-3 h-3" />
+                            Rejected
+                          </span>
+                          {req.rejectionReason && (
+                            <div className="text-[10px] text-rose-700 max-w-xs truncate">
+                              {req.rejectionReason}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </td>
+                    <td className="p-4 text-center">
+                      {req.status === 'Pending' ? (
+                        <button
+                          onClick={() => handleOpenReview(req)}
+                          className="bg-[#FF5401] hover:bg-[#E54A00] text-white font-bold text-xs px-3.5 py-1.5 rounded-xl transition-all inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>Review</span>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleOpenReview(req)}
+                          className="bg-slate-100 hover:bg-slate-200 text-[#2B2B2B] font-bold text-xs px-3 py-1.5 rounded-xl transition-all inline-flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Eye className="w-3.5 h-3.5 text-slate-500" />
+                          <span>View Details</span>
+                        </button>
+                      )}
                     </td>
                   </tr>
-                ) : (
-                  auditRequests.map(req => (
-                    <tr key={req.id} className="hover:bg-[#F8FAFC] transition-all">
-                      <td className="p-4 font-mono font-bold text-slate-600">{req.id}</td>
-                      <td className="p-4 font-bold text-[#2B2B2B]">{req.fullName}</td>
-                      <td className="p-4 text-slate-600 max-w-xs truncate">{req.serviceAddress}</td>
-                      <td className="p-4 text-slate-500 text-[11px]">{req.submittedAt}</td>
-                      <td className="p-4">
-                        {req.status === 'Approved' ? (
-                          <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-300 flex items-center gap-1 w-max">
-                            <CheckCircle2 className="w-3 h-3" />
-                            <span>Approved</span>
-                          </span>
-                        ) : (
-                          <span className="bg-red-100 text-red-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-red-300 flex items-center gap-1 w-max">
-                            <XCircle className="w-3 h-3" />
-                            <span>Rejected</span>
-                          </span>
-                        )}
-                      </td>
-                      <td className="p-4 font-mono">
-                        {req.status === 'Approved' ? (
-                          <div className="text-[#FF5401] font-bold">{req.accountCode}</div>
-                        ) : (
-                          <div className="text-red-600 text-[11px] font-sans font-medium">{req.rejectionReason}</div>
-                        )}
-                      </td>
-                      <td className="p-4 text-slate-500 text-[11px]">
-                        <div>{req.reviewedBy || 'CRS Administrator'}</div>
-                        <div className="text-[10px] text-slate-400">{req.reviewedAt}</div>
-                      </td>
-                    </tr>
-                  ))
-                )}
+                ))}
               </tbody>
             </table>
           </div>
@@ -706,7 +621,6 @@ export const CustomerView: React.FC<CustomerViewProps> = ({ searchQuery = '' }) 
 
             {/* Modal Content - Side-by-Side Comparison Grid */}
             <div className="p-5 overflow-y-auto space-y-6 flex-1">
-
               {/* DATABASE VERIFICATION STEP BAR */}
               <div className={`rounded-2xl p-4 shadow-sm border transition-all flex flex-col sm:flex-row items-center justify-between gap-4 ${
                 verificationStatus === 'found'
@@ -772,9 +686,7 @@ export const CustomerView: React.FC<CustomerViewProps> = ({ searchQuery = '' }) 
                         ? 'text-amber-800'
                         : 'text-slate-600'
                     }`}>
-                      {verificationStatus === 'idle' && 'Admin must click "Verify Customer" to query the billing system database first.'}
                       {verificationStatus === 'verifying' && 'Searching central billing database for matching customer account records...'}
-                      {verificationStatus === 'found' && 'Customer record confirmed in billing system! Both Approve and Reject are now available.'}
                       {verificationStatus === 'not_found' && 'No customer record found in billing system. Reject button is now active.'}
                     </p>
                   </div>
@@ -957,66 +869,93 @@ export const CustomerView: React.FC<CustomerViewProps> = ({ searchQuery = '' }) 
                     <KeyRound className="w-4 h-4 text-emerald-600" />
                     <span>Auto-Generated Temporary Password Dispatch</span>
                   </div>
-                  <p className="text-[11px] text-emerald-800 leading-relaxed">
-                    Upon clicking <strong>Approve</strong>, an auto-generated temporary password will be created and automatically sent to <strong>{selectedRequest.fullName}</strong> via <strong>{selectedRequest.notificationChannel}</strong> ({selectedRequest.email} / {selectedRequest.mobileNumber}).
-                  </p>
                 </div>
               )}
             </div>
 
             {/* Modal Actions Footer */}
             <div className="p-4 border-t border-[#E5E7EB] bg-[#F8FAFC] flex flex-wrap justify-between items-center gap-2">
-              <button
-                type="button"
-                disabled={verificationStatus === 'idle' || verificationStatus === 'verifying'}
-                onClick={() => setShowRejectionModal(true)}
-                className={`font-bold text-xs px-4 py-2.5 rounded-xl transition-all flex items-center gap-1.5 ${
-                  verificationStatus === 'idle' || verificationStatus === 'verifying'
-                    ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-60'
-                    : 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 cursor-pointer'
-                }`}
-                title={verificationStatus === 'idle' ? "Please verify customer record first" : "Reject this request"}
-              >
-                <XCircle className="w-4 h-4" />
-                <span>Reject</span>
-              </button>
+              {selectedRequest.status === 'Pending' ? (
+                <>
+                  <button
+                    type="button"
+                    disabled={verificationStatus === 'idle' || verificationStatus === 'verifying'}
+                    onClick={() => setShowRejectionModal(true)}
+                    className={`font-bold text-xs px-4 py-2.5 rounded-xl transition-all flex items-center gap-1.5 ${
+                      verificationStatus === 'idle' || verificationStatus === 'verifying'
+                        ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-60'
+                        : 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 cursor-pointer'
+                    }`}
+                    title={verificationStatus === 'idle' ? "Please verify customer record first" : "Reject this request"}
+                  >
+                    <XCircle className="w-4 h-4" />
+                    <span>Reject</span>
+                  </button>
 
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowReviewModal(false);
-                    setSelectedRequest(null);
-                  }}
-                  className="bg-[#E5E7EB] hover:bg-slate-300 text-[#2B2B2B] font-bold text-xs px-4 py-2.5 rounded-xl transition-all cursor-pointer"
-                >
-                  Cancel
-                </button>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowReviewModal(false);
+                        setSelectedRequest(null);
+                      }}
+                      className="bg-[#E5E7EB] hover:bg-slate-300 text-[#2B2B2B] font-bold text-xs px-4 py-2.5 rounded-xl transition-all cursor-pointer"
+                    >
+                      Cancel
+                    </button>
 
-                <button
-                  type="button"
-                  disabled={verificationStatus !== 'found' || isProcessing}
-                  onClick={() => handleApproveRequest(selectedRequest)}
-                  className={`font-bold text-xs px-5 py-2.5 rounded-xl shadow-md transition-all flex items-center gap-2 ${
-                    verificationStatus !== 'found' || isProcessing
-                      ? 'bg-slate-200 text-slate-400 cursor-not-allowed opacity-60 shadow-none'
-                      : 'bg-[#FF5401] hover:bg-[#E54A00] text-white cursor-pointer'
-                  }`}
-                  title={verificationStatus !== 'found' ? "Customer must be verified and FOUND in billing system to approve" : "Approve registration"}
-                >
-                  {isProcessing ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                      <span>Approving...</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>Approve</span>
-                    </>
-                  )}
-                </button>
-              </div>
+                    <button
+                      type="button"
+                      disabled={verificationStatus !== 'found' || isProcessing}
+                      onClick={() => handleApproveRequest(selectedRequest)}
+                      className={`font-bold text-xs px-5 py-2.5 rounded-xl shadow-md transition-all flex items-center gap-2 ${
+                        verificationStatus !== 'found' || isProcessing
+                          ? 'bg-slate-200 text-slate-400 cursor-not-allowed opacity-60 shadow-none'
+                          : 'bg-[#FF5401] hover:bg-[#E54A00] text-white cursor-pointer'
+                      }`}
+                      title={verificationStatus !== 'found' ? "Customer must be verified and FOUND in billing system to approve" : "Approve registration"}
+                    >
+                      {isProcessing ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          <span>Approving...</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>Approve</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="w-full flex items-center justify-between">
+                  <div className="text-xs text-slate-600 flex items-center gap-2">
+                    <span className="font-bold">Record Status:</span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                      selectedRequest.status === 'Approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                    }`}>
+                      {selectedRequest.status}
+                    </span>
+                    {selectedRequest.accountCode && (
+                      <span className="font-mono text-xs font-bold text-[#FF5401]">
+                        ({selectedRequest.accountCode})
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowReviewModal(false);
+                      setSelectedRequest(null);
+                    }}
+                    className="bg-[#2B2B2B] hover:bg-black text-white font-bold text-xs px-5 py-2.5 rounded-xl transition-all cursor-pointer shadow-xs"
+                  >
+                    Close
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1075,84 +1014,7 @@ export const CustomerView: React.FC<CustomerViewProps> = ({ searchQuery = '' }) 
         </div>
       )}
 
-      {/* VIEW CUSTOMER DETAIL MODAL (FOR ACTIVE CUSTOMERS) */}
-      {selectedCustomer && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-white rounded-3xl border border-[#E5E7EB] shadow-2xl max-w-lg w-full p-5 space-y-4">
-            <div className="flex justify-between items-center border-b border-[#E5E7EB] pb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-orange-100 text-[#FF5401] flex items-center justify-center font-bold text-sm">
-                  {selectedCustomer.name.charAt(0)}
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-[#2B2B2B]">{selectedCustomer.name}</h3>
-                  <p className="text-[11px] font-mono text-[#FF5401] font-bold">{selectedCustomer.accountNumber}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setSelectedCustomer(null)}
-                className="p-1.5 hover:bg-slate-200 rounded-xl transition-all text-slate-500 cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-3 text-xs">
-              <div className="grid grid-cols-2 gap-3 bg-[#F8FAFC] p-3 rounded-2xl border border-[#E5E7EB]">
-                <div>
-                  <span className="text-slate-500 text-[10px] font-bold block uppercase">Service Connection</span>
-                  <span className="font-bold text-[#2B2B2B]">{selectedCustomer.serviceType}</span>
-                </div>
-                <div>
-                  <span className="text-slate-500 text-[10px] font-bold block uppercase">Meter Number</span>
-                  <span className="font-mono font-bold text-slate-700">{selectedCustomer.meterNumber}</span>
-                </div>
-                <div>
-                  <span className="text-slate-500 text-[10px] font-bold block uppercase">Mobile Number</span>
-                  <span className="font-semibold text-slate-700">{selectedCustomer.mobileNumber}</span>
-                </div>
-                <div>
-                  <span className="text-slate-500 text-[10px] font-bold block uppercase">Email Address</span>
-                  <span className="font-semibold text-slate-700 truncate block">{selectedCustomer.email}</span>
-                </div>
-              </div>
-
-              <div>
-                <span className="text-slate-500 text-[10px] font-bold block uppercase mb-1">Service Address</span>
-                <p className="text-slate-700 font-medium bg-[#F8FAFC] p-2.5 rounded-xl border border-[#E5E7EB]">
-                  {selectedCustomer.serviceAddress}
-                </p>
-              </div>
-
-              <div>
-                <span className="text-slate-500 text-[10px] font-bold block uppercase mb-1">Linked Service Accounts ({selectedCustomer.linkedAccounts.length})</span>
-                <div className="space-y-1.5">
-                  {selectedCustomer.linkedAccounts.map(la => (
-                    <div key={la.accountNumber} className="flex justify-between items-center bg-[#F8FAFC] p-2.5 rounded-xl border border-[#E5E7EB]">
-                      <div>
-                        <div className="font-bold text-[#2B2B2B]">{la.nickname}</div>
-                        <div className="font-mono text-[10px] text-slate-500">{la.accountNumber} • Meter: {la.meterNumber}</div>
-                      </div>
-                      <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
-                        Active
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="pt-2 border-t border-[#E5E7EB] flex justify-end">
-              <button
-                onClick={() => setSelectedCustomer(null)}
-                className="bg-[#2B2B2B] hover:bg-black text-white font-bold text-xs px-4 py-2 rounded-xl cursor-pointer"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
+
