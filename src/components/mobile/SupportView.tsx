@@ -99,25 +99,27 @@ export const SupportView: React.FC = () => {
 
   const getStatusBadge = (status: SupportConcern['status']) => {
     switch (status) {
+      case 'Pending':
       case 'Submitted':
         return (
-          <span className="bg-blue-50 text-blue-700 text-[10px] font-semibold px-2.5 py-0.5 rounded-full border border-blue-200 inline-flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-            Submitted
+          <span className="bg-amber-50 text-amber-700 text-[10px] font-semibold px-2.5 py-0.5 rounded-full border border-amber-200 inline-flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+            Pending
           </span>
         );
       case 'In Progress':
         return (
-          <span className="bg-amber-50 text-amber-700 text-[10px] font-semibold px-2.5 py-0.5 rounded-full border border-amber-200 inline-flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+          <span className="bg-blue-50 text-blue-700 text-[10px] font-semibold px-2.5 py-0.5 rounded-full border border-blue-200 inline-flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
             In Progress
           </span>
         );
+      case 'Solved':
       case 'Resolved':
         return (
           <span className="bg-emerald-50 text-emerald-700 text-[10px] font-semibold px-2.5 py-0.5 rounded-full border border-emerald-200 inline-flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-            Resolved
+            Solved
           </span>
         );
       case 'Closed':
@@ -247,47 +249,49 @@ export const SupportView: React.FC = () => {
                 <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="bg-[#F8FAFC] text-slate-500 font-semibold uppercase text-[10px] tracking-wider border-b border-[#E5E7EB]">
-                        <th className="py-3.5 px-4 font-semibold">Reference No.</th>
-                        <th className="py-3.5 px-4 font-semibold">Subject</th>
-                        <th className="py-3.5 px-4 font-semibold">Category</th>
-                        <th className="py-3.5 px-4 font-semibold">Date Submitted</th>
-                        <th className="py-3.5 px-4 font-semibold">Status</th>
-                        <th className="py-3.5 px-4 font-semibold">Last Update</th>
-                        <th className="py-3.5 px-4 text-center font-semibold">View</th>
+                      <tr className="bg-[#F8FAFC] text-slate-500 font-extrabold uppercase text-[10px] tracking-wider border-b border-[#E5E7EB]">
+                        <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap w-[14%]">Reference No.</th>
+                        <th className="py-3.5 px-4 sm:px-5 w-[30%]">Subject</th>
+                        <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap w-[14%]">Category</th>
+                        <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap w-[13%]">Date Submitted</th>
+                        <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap w-[11%]">Status</th>
+                        <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap w-[11%]">Last Update</th>
+                        <th className="py-3.5 px-4 sm:px-5 text-right whitespace-nowrap w-[7%]">View</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 font-medium">
+                    <tbody className="divide-y divide-slate-100 font-medium text-[#2B2B2B]">
                       {customerRequests.map(ticket => {
                         const lastUpdate = ticket.adminRespondedAt || ticket.createdAt;
 
                         return (
                           <tr key={ticket.id} className="hover:bg-slate-50/80 transition-colors">
-                            <td className="py-3.5 px-4 font-mono font-semibold text-[#FF5401]">
+                            <td className="py-3.5 px-4 sm:px-5 align-middle font-mono font-bold text-[#FF5401] whitespace-nowrap">
                               {ticket.ticketNumber}
                             </td>
-                            <td className="py-3.5 px-4 font-semibold text-[#2B2B2B] max-w-md lg:max-w-lg xl:max-w-xl truncate" title={ticket.subject}>
-                              {ticket.subject}
+                            <td className="py-3.5 px-4 sm:px-5 align-middle">
+                              <div className="font-extrabold text-[#2B2B2B] line-clamp-1" title={ticket.subject}>
+                                {ticket.subject}
+                              </div>
                             </td>
-                            <td className="py-3.5 px-4">
-                              <span className="bg-[#F5F5F5] text-slate-700 text-[10px] font-semibold px-2 py-0.5 rounded-md border border-[#E5E7EB]">
+                            <td className="py-3.5 px-4 sm:px-5 align-middle whitespace-nowrap">
+                              <span className="bg-[#F5F5F5] text-slate-700 text-[10px] font-semibold px-2.5 py-0.5 rounded-md border border-[#E5E7EB]">
                                 {ticket.category}
                               </span>
                             </td>
-                            <td className="py-3.5 px-4 text-slate-600">
+                            <td className="py-3.5 px-4 sm:px-5 align-middle text-slate-600 font-bold whitespace-nowrap">
                               {ticket.createdAt}
                             </td>
-                            <td className="py-3.5 px-4">
+                            <td className="py-3.5 px-4 sm:px-5 align-middle whitespace-nowrap">
                               {getStatusBadge(ticket.status)}
                             </td>
-                            <td className="py-3.5 px-4 text-slate-500">
+                            <td className="py-3.5 px-4 sm:px-5 align-middle text-slate-500 whitespace-nowrap">
                               {lastUpdate}
                             </td>
-                            <td className="py-3.5 px-4 text-center">
+                            <td className="py-3.5 px-4 sm:px-5 align-middle text-right whitespace-nowrap">
                               <button
                                 type="button"
                                 onClick={() => setSelectedRequest(ticket)}
-                                className="bg-orange-50 hover:bg-orange-100 text-[#FF5401] px-3 py-1.5 rounded-xl font-semibold text-xs border border-[#FF5401]/20 transition-all inline-flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                                className="bg-orange-50 hover:bg-[#FF5401] text-[#FF5401] hover:text-white px-3 py-1.5 rounded-xl font-bold text-xs border border-[#FF5401]/20 transition-all inline-flex items-center gap-1.5 cursor-pointer shadow-2xs"
                               >
                                 <Eye className="w-3.5 h-3.5" />
                                 <span>View</span>

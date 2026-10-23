@@ -344,14 +344,14 @@ export const AdvisoriesView: React.FC<AdvisoriesViewProps> = ({ subTab, searchQu
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="bg-[#F8FAFC] text-slate-500 font-extrabold uppercase text-[10px] tracking-wider border-b border-[#E5E7EB]">
-                    <th className="py-3.5 px-4">Type</th>
-                    <th className="py-3.5 px-4">Title & Details</th>
-                    <th className="py-3.5 px-4">Urgency</th>
-                    <th className="py-3.5 px-4">Author / Date</th>
-                    <th className="py-3.5 px-4 text-right">Actions</th>
+                    <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap w-[14%]">Type</th>
+                    <th className="py-3.5 px-4 sm:px-5 w-[48%]">Title &amp; Details</th>
+                    <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap w-[12%]">Urgency</th>
+                    <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap w-[14%]">Author / Date</th>
+                    <th className="py-3.5 px-4 sm:px-5 text-right whitespace-nowrap w-[12%]">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 font-medium">
+                <tbody className="divide-y divide-slate-100 font-medium text-[#2B2B2B]">
                   {filteredAnnouncements.length === 0 && filteredOutages.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="text-center py-16 space-y-2 text-slate-400 font-bold">
@@ -365,17 +365,17 @@ export const AdvisoriesView: React.FC<AdvisoriesViewProps> = ({ subTab, searchQu
                       {/* Outage Advisories */}
                       {filteredOutages.map(o => (
                         <tr key={o.id} className="hover:bg-slate-50/80 transition-colors">
-                          <td className="py-3.5 px-4 whitespace-nowrap">
+                          <td className="py-3.5 px-4 sm:px-5 align-middle whitespace-nowrap">
                             <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300/60">
                               <Zap className="w-3 h-3 text-amber-700" />
                               Outage Advisory
                             </span>
                           </td>
-                          <td className="py-3.5 px-4 max-w-md">
+                          <td className="py-3.5 px-4 sm:px-5 align-middle">
                             <div className="font-extrabold text-sm text-[#2B2B2B]">{o.title}</div>
                             <div className="text-xs text-slate-600 leading-relaxed mt-0.5 line-clamp-2">{o.reason}</div>
                           </td>
-                          <td className="py-3.5 px-4 whitespace-nowrap">
+                          <td className="py-3.5 px-4 sm:px-5 align-middle whitespace-nowrap">
                             <span
                               className={`text-[9px] font-extrabold px-2.5 py-0.5 rounded-full ${
                                 o.urgency === 'EMERGENCY'
@@ -388,10 +388,10 @@ export const AdvisoriesView: React.FC<AdvisoriesViewProps> = ({ subTab, searchQu
                               {o.urgency}
                             </span>
                           </td>
-                          <td className="py-3.5 px-4 whitespace-nowrap text-slate-600 text-[11px]">
+                          <td className="py-3.5 px-4 sm:px-5 align-middle whitespace-nowrap text-slate-600 text-[11px]">
                             <div className="font-bold text-[#2B2B2B]">{o.author || 'Admin Lead'}</div>
                           </td>
-                          <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                          <td className="py-3.5 px-4 sm:px-5 align-middle text-right whitespace-nowrap">
                             <div className="flex items-center justify-end gap-1.5">
                               <button
                                 type="button"
@@ -430,17 +430,17 @@ export const AdvisoriesView: React.FC<AdvisoriesViewProps> = ({ subTab, searchQu
                       {/* Broadcast Announcements */}
                       {filteredAnnouncements.map(n => (
                         <tr key={n.id} className="hover:bg-slate-50/80 transition-colors">
-                          <td className="py-3.5 px-4 whitespace-nowrap">
+                          <td className="py-3.5 px-4 sm:px-5 align-middle whitespace-nowrap">
                             <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-blue-100 text-blue-900 border border-blue-300/60">
                               <Megaphone className="w-3 h-3 text-blue-700" />
                               Announcement
                             </span>
                           </td>
-                          <td className="py-3.5 px-4 max-w-md">
+                          <td className="py-3.5 px-4 sm:px-5 align-middle">
                             <div className="font-extrabold text-sm text-[#2B2B2B]">{n.title}</div>
                             <div className="text-xs text-slate-600 leading-relaxed mt-0.5 line-clamp-2">{n.message}</div>
                           </td>
-                          <td className="py-3.5 px-4 whitespace-nowrap">
+                          <td className="py-3.5 px-4 sm:px-5 align-middle whitespace-nowrap">
                             <span
                               className={`text-[9px] font-extrabold px-2.5 py-0.5 rounded-full ${
                                 n.urgency === 'EMERGENCY'
@@ -453,11 +453,11 @@ export const AdvisoriesView: React.FC<AdvisoriesViewProps> = ({ subTab, searchQu
                               {n.urgency || 'NORMAL'}
                             </span>
                           </td>
-                          <td className="py-3.5 px-4 whitespace-nowrap text-slate-600 text-[11px]">
+                          <td className="py-3.5 px-4 sm:px-5 align-middle whitespace-nowrap text-slate-600 text-[11px]">
                             <div className="font-bold text-[#2B2B2B]">{n.authorName || 'Admin Lead'}</div>
                             <div className="text-[10px] text-slate-400">{n.timestamp}</div>
                           </td>
-                          <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                          <td className="py-3.5 px-4 sm:px-5 align-middle text-right whitespace-nowrap">
                             <div className="flex items-center justify-end gap-1.5">
                               <button
                                 type="button"

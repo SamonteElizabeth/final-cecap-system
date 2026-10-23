@@ -29,17 +29,23 @@ export const SupportView: React.FC<SupportViewProps> = ({ searchQuery = '' }) =>
   const { supportConcerns, updateSupportConcernStatus, adminUser, userRole } = useApp();
 
   const [localSearch, setLocalSearch] = useState(searchQuery);
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'Submitted' | 'In Progress' | 'Solved' | 'Closed'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'Pending' | 'In Progress' | 'Solved'>('ALL');
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
   const [selectedTicket, setSelectedTicket] = useState<SupportConcern | null>(null);
 
   // Form State inside Modal
-  const [ticketStatus, setTicketStatus] = useState<SupportConcern['status']>('In Progress');
+  const [ticketStatus, setTicketStatus] = useState<SupportConcern['status']>('Pending');
   const [assignedStaff, setAssignedStaff] = useState('Clarissa Fernandez');
   const [adminResponseText, setAdminResponseText] = useState('');
   const [toastMsg, setToastMsg] = useState('');
 
   const query = (localSearch || searchQuery).toLowerCase();
+
+  const normalizeStatus = (status: string): 'Pending' | 'In Progress' | 'Solved' => {
+    if (status === 'Solved' || status === 'Resolved') return 'Solved';
+    if (status === 'In Progress') return 'In Progress';
+    return 'Pending';
+  };
 
   const getTicketCustomerInfo = (ticket: SupportConcern) => {
     const directName = ticket.customerName;
@@ -68,37 +74,50 @@ export const SupportView: React.FC<SupportViewProps> = ({ searchQuery = '' }) =>
       cust.name.toLowerCase().includes(query) ||
       (t.assignedStaff && t.assignedStaff.toLowerCase().includes(query));
 
+    const currentStatus = normalizeStatus(t.status);
     const matchesStatus =
       statusFilter === 'ALL'
         ? true
-        : statusFilter === 'Solved'
-        ? t.status === 'Solved' || t.status === 'Resolved'
-        : t.status === statusFilter;
+        : currentStatus === statusFilter;
 
     const matchesCategory = categoryFilter === 'ALL' || t.category === categoryFilter;
 
     return matchesQuery && matchesStatus && matchesCategory;
   });
 
-  const openTicketModal = (t: SupportConcern) => {
-    setSelectedTicket(t);
-    setTicketStatus(t.status === 'Resolved' ? 'Solved' : t.status);
-    setAssignedStaff(t.assignedStaff || adminUser?.name || 'Clarissa Fernandez');
-    setAdminResponseText(t.adminResponse || '');
+  // Support Staff Role & Assignment Detection
+  const isSupportStaff = userRole === 'support_staff' || adminUser?.role === 'support_staff' || (adminUser?.role as any) === 'Support Staff';
+  const currentStaffName = adminUser?.name || 'Clarissa Fernandez';
+
+  const isTicketAssignedToMe = (ticket: SupportConcern | null): boolean => {
+    if (!isSupportStaff) return true; // System Admins can manage all tickets
+    if (!ticket) return false;
+    if (!ticket.assignedStaff) return true; // Unassigned tickets can be managed by available staff
+    const assigned = ticket.assignedStaff.trim().toLowerCase();
+    const me = currentStaffName.trim().toLowerCase();
+    return assigned === me || assigned.includes(me) || me.includes(assigned) || assigned.includes('clarissa');
   };
 
-  const handleQuickStatusUpdate = (t: SupportConcern, newStatus: 'In Progress' | 'Solved') => {
-    const staff = t.assignedStaff || adminUser?.name || 'Clarissa Fernandez';
-    updateSupportConcernStatus(t.id, newStatus, t.adminResponse, staff);
-    setToastMsg(`✅ Ticket ${t.ticketNumber} updated to "${newStatus}"${newStatus === 'Solved' ? ' — Completion date recorded!' : ''}`);
-    setTimeout(() => setToastMsg(''), 3500);
+  const openTicketModal = (t: SupportConcern) => {
+    setSelectedTicket(t);
+    setTicketStatus(normalizeStatus(t.status));
+    setAssignedStaff(t.assignedStaff || adminUser?.name || 'Clarissa Fernandez');
+    setAdminResponseText(t.adminResponse || '');
   };
 
   const handleSaveTicket = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedTicket) return;
 
-    updateSupportConcernStatus(selectedTicket.id, ticketStatus, adminResponseText, assignedStaff);
+    // Support staff can only save tickets assigned to them
+    if (isSupportStaff && !isTicketAssignedToMe(selectedTicket)) {
+      return;
+    }
+
+    // Support staff only updates status & optional remarks, preserving assigned agent
+    const finalAssignedStaff = isSupportStaff ? (selectedTicket.assignedStaff || currentStaffName) : assignedStaff;
+
+    updateSupportConcernStatus(selectedTicket.id, ticketStatus, adminResponseText, finalAssignedStaff);
     setSelectedTicket(null);
     setToastMsg(`✅ Ticket ${selectedTicket.ticketNumber} updated successfully! Customer notified.`);
     setTimeout(() => setToastMsg(''), 3500);
@@ -123,9 +142,9 @@ export const SupportView: React.FC<SupportViewProps> = ({ searchQuery = '' }) =>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-2xs space-y-2">
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Pending / Submitted</span>
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Pending</span>
           <div className="text-2xl font-black text-[#FF5401]">
-            {supportConcerns.filter(t => t.status === 'Submitted').length}
+            {supportConcerns.filter(t => normalizeStatus(t.status) === 'Pending').length}
           </div>
           <span className="text-[11px] text-amber-600 font-bold">Needs agent dispatch</span>
         </div>
@@ -133,15 +152,15 @@ export const SupportView: React.FC<SupportViewProps> = ({ searchQuery = '' }) =>
         <div className="bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-2xs space-y-2">
           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">In Progress</span>
           <div className="text-2xl font-black text-blue-600">
-            {supportConcerns.filter(t => t.status === 'In Progress').length}
+            {supportConcerns.filter(t => normalizeStatus(t.status) === 'In Progress').length}
           </div>
           <span className="text-[11px] text-blue-600 font-bold">Active investigation</span>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-2xs space-y-2">
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Solved Tickets</span>
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Solved</span>
           <div className="text-2xl font-black text-emerald-600">
-            {supportConcerns.filter(t => t.status === 'Solved' || t.status === 'Resolved').length}
+            {supportConcerns.filter(t => normalizeStatus(t.status) === 'Solved').length}
           </div>
           <span className="text-[11px] text-emerald-600 font-bold">Recorded with completion date</span>
         </div>
@@ -168,10 +187,9 @@ export const SupportView: React.FC<SupportViewProps> = ({ searchQuery = '' }) =>
               className="w-full bg-[#F8FAFC] border border-[#E2E8F0] focus:border-[#FF5401] focus:bg-white rounded-xl px-3 py-2 text-xs font-bold text-[#2B2B2B] focus:outline-none cursor-pointer"
             >
               <option value="ALL">All Statuses</option>
-              <option value="Submitted">Submitted (Pending)</option>
+              <option value="Pending">Pending</option>
               <option value="In Progress">In Progress</option>
               <option value="Solved">Solved</option>
-              <option value="Closed">Closed</option>
             </select>
           </div>
 
@@ -199,17 +217,17 @@ export const SupportView: React.FC<SupportViewProps> = ({ searchQuery = '' }) =>
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="bg-[#F8FAFC] text-slate-500 font-extrabold uppercase text-[10px] tracking-wider border-b border-[#E5E7EB]">
-                <th className="py-3.5 px-4">Ticket Ref #</th>
-                <th className="py-3.5 px-4">Subject & Customer</th>
-                <th className="py-3.5 px-4">Category</th>
-                <th className="py-3.5 px-4">Date Submitted</th>
-                <th className="py-3.5 px-4">Assigned Staff</th>
-                <th className="py-3.5 px-4">Status</th>
-                <th className="py-3.5 px-4">Completion Date</th>
-                <th className="py-3.5 px-4 text-right">Actions</th>
+                <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap w-[11%]">Ticket Ref #</th>
+                <th className="py-3.5 px-4 sm:px-5 w-[24%]">Subject &amp; Customer</th>
+                <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap w-[13%]">Category</th>
+                <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap w-[11%]">Date Submitted</th>
+                <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap w-[15%]">Assigned Staff</th>
+                <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap w-[10%]">Status</th>
+                <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap w-[9%]">Completion Date</th>
+                <th className="py-3.5 px-4 sm:px-5 text-right whitespace-nowrap w-[7%]">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 font-medium">
+            <tbody className="divide-y divide-slate-100 font-medium text-[#2B2B2B]">
               {filteredTickets.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="text-center py-12 text-slate-400 font-bold">
@@ -219,42 +237,50 @@ export const SupportView: React.FC<SupportViewProps> = ({ searchQuery = '' }) =>
               ) : (
                 filteredTickets.map(t => {
                   const cust = getTicketCustomerInfo(t);
-                  const isSolved = t.status === 'Solved' || t.status === 'Resolved';
                   return (
                     <tr key={t.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-3.5 px-4 font-mono font-bold text-[#FF5401]">{t.ticketNumber}</td>
-                      <td className="py-3.5 px-4 max-w-xs">
-                        <div className="font-extrabold text-[#2B2B2B] truncate">{t.subject}</div>
-                        <div className="text-[10px] text-slate-500 font-medium truncate">
+                      <td className="py-3.5 px-4 sm:px-5 align-middle font-mono font-bold text-[#FF5401] whitespace-nowrap">
+                        {t.ticketNumber}
+                      </td>
+                      <td className="py-3.5 px-4 sm:px-5 align-middle">
+                        <div className="font-extrabold text-[#2B2B2B] line-clamp-1" title={t.subject}>{t.subject}</div>
+                        <div className="text-[10px] text-slate-500 font-medium truncate mt-0.5">
                           {cust.name} • <span className="font-mono">#{t.accountNumber}</span>
                         </div>
                       </td>
-                      <td className="py-3.5 px-4">
+                      <td className="py-3.5 px-4 sm:px-5 align-middle whitespace-nowrap">
                         <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-700">
                           {t.category}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 text-slate-600 font-bold whitespace-nowrap">{t.createdAt}</td>
-                      <td className="py-3.5 px-4 text-slate-700 font-bold whitespace-nowrap">
+                      <td className="py-3.5 px-4 sm:px-5 align-middle text-slate-600 font-bold whitespace-nowrap">
+                        {t.createdAt}
+                      </td>
+                      <td className="py-3.5 px-4 sm:px-5 align-middle text-slate-700 font-bold whitespace-nowrap">
                         <div className="flex items-center gap-1.5">
-                          <UserCheck className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          <UserCheck className={`w-3.5 h-3.5 ${isSupportStaff && isTicketAssignedToMe(t) ? 'text-[#FF5401]' : 'text-slate-400'} shrink-0`} />
                           <span>{t.assignedStaff || 'Clarissa Fernandez'}</span>
+                          {isSupportStaff && isTicketAssignedToMe(t) && (
+                            <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded-md bg-orange-100 text-[#FF5401] border border-[#FF5401]/25">
+                              Assigned to You
+                            </span>
+                          )}
                         </div>
                       </td>
-                      <td className="py-3.5 px-4 whitespace-nowrap">
+                      <td className="py-3.5 px-4 sm:px-5 align-middle whitespace-nowrap">
                         <span
                           className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
-                            isSolved
+                            normalizeStatus(t.status) === 'Solved'
                               ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                              : t.status === 'In Progress'
+                              : normalizeStatus(t.status) === 'In Progress'
                               ? 'bg-blue-50 text-blue-700 border border-blue-200'
                               : 'bg-amber-50 text-amber-700 border border-amber-200'
                           }`}
                         >
-                          {isSolved ? 'Solved' : t.status}
+                          {normalizeStatus(t.status)}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 whitespace-nowrap">
+                      <td className="py-3.5 px-4 sm:px-5 align-middle whitespace-nowrap">
                         {t.completionDate ? (
                           <span className="inline-flex items-center gap-1.5 text-emerald-700 font-bold text-[11px] bg-emerald-50/80 px-2.5 py-0.5 rounded-lg border border-emerald-200">
                             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
@@ -264,39 +290,16 @@ export const SupportView: React.FC<SupportViewProps> = ({ searchQuery = '' }) =>
                           <span className="text-slate-400 font-semibold text-xs">-</span>
                         )}
                       </td>
-                      <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {t.status === 'Submitted' && (
-                            <button
-                              type="button"
-                              onClick={() => handleQuickStatusUpdate(t, 'In Progress')}
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white text-xs font-bold transition-all cursor-pointer shadow-2xs"
-                              title="Update ticket to In Progress"
-                            >
-                              <Clock className="w-3.5 h-3.5" />
-                              <span>In Progress</span>
-                            </button>
-                          )}
-                          {t.status === 'In Progress' && (
-                            <button
-                              type="button"
-                              onClick={() => handleQuickStatusUpdate(t, 'Solved')}
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white text-xs font-bold transition-all cursor-pointer shadow-2xs"
-                              title="Mark ticket as Solved (records completion date)"
-                            >
-                              <CheckCircle2 className="w-3.5 h-3.5" />
-                              <span>Solved</span>
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => openTicketModal(t)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-50 hover:bg-[#FF5401] text-[#FF5401] hover:text-white text-xs font-bold transition-all cursor-pointer"
-                          >
-                            <Eye className="w-3.5 h-3.5" />
-                            <span>Manage</span>
-                          </button>
-                        </div>
+                      <td className="py-3.5 px-4 sm:px-5 align-middle text-right whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() => openTicketModal(t)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-50 hover:bg-[#FF5401] text-[#FF5401] hover:text-white text-xs font-bold transition-all cursor-pointer"
+                          title={isSupportStaff && !isTicketAssignedToMe(t) ? 'View Ticket' : 'Manage Ticket'}
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>{isSupportStaff && !isTicketAssignedToMe(t) ? 'View' : 'Manage'}</span>
+                        </button>
                       </td>
                     </tr>
                   );
@@ -325,15 +328,13 @@ export const SupportView: React.FC<SupportViewProps> = ({ searchQuery = '' }) =>
                     {selectedTicket.category}
                   </span>
                   <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
-                    selectedTicket.status === 'Solved' || selectedTicket.status === 'Resolved'
+                    normalizeStatus(selectedTicket.status) === 'Solved'
                       ? 'bg-emerald-100 text-emerald-800'
-                      : selectedTicket.status === 'In Progress'
+                      : normalizeStatus(selectedTicket.status) === 'In Progress'
                       ? 'bg-blue-100 text-blue-800'
-                      : selectedTicket.status === 'Closed'
-                      ? 'bg-slate-200 text-slate-800'
                       : 'bg-amber-100 text-amber-800'
                   }`}>
-                    {selectedTicket.status}
+                    {normalizeStatus(selectedTicket.status)}
                   </span>
                 </div>
                 <h3 className="font-extrabold text-base text-[#2B2B2B]">{selectedTicket.subject}</h3>
@@ -429,41 +430,76 @@ export const SupportView: React.FC<SupportViewProps> = ({ searchQuery = '' }) =>
 
             {/* Update & Response Form */}
             <form onSubmit={handleSaveTicket} className="space-y-4">
-              <h4 className="font-extrabold text-xs text-[#2B2B2B] uppercase tracking-wider">
-                Support Resolution & Response
-              </h4>
+              <div className="flex items-center justify-between">
+                <h4 className="font-extrabold text-xs text-[#2B2B2B] uppercase tracking-wider">
+                  Support Resolution &amp; Response
+                </h4>
+                {isSupportStaff && (
+                  <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${
+                    isTicketAssignedToMe(selectedTicket)
+                      ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                      : 'bg-amber-50 text-amber-700 border border-amber-200'
+                  }`}>
+                    {isTicketAssignedToMe(selectedTicket) ? 'Assigned to You' : 'Assigned to Other Staff'}
+                  </span>
+                )}
+              </div>
 
+              {/* Informational banner when Support Staff views ticket assigned to another agent */}
+              {isSupportStaff && !isTicketAssignedToMe(selectedTicket) && (
+                <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200/80 text-xs text-amber-900 flex items-start gap-2.5 animate-fade-in">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <div className="space-y-0.5">
+                    <span className="font-bold block">Assigned to Another Agent</span>
+                    <span className="text-[11px] text-amber-800 leading-snug">
+                      This ticket is assigned to <strong>{selectedTicket.assignedStaff || 'another staff member'}</strong>. Only tickets assigned to you can be updated.
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Role-Aware Form Controls */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* 1. Ticket Status */}
                 <div>
                   <label className="block text-[10px] font-extrabold uppercase text-slate-500 mb-1">
                     Update Ticket Status
                   </label>
                   <select
-                    value={ticketStatus}
+                    value={normalizeStatus(ticketStatus)}
                     onChange={e => setTicketStatus(e.target.value as any)}
-                    className="w-full bg-[#F8FAFC] border border-[#E2E8F0] focus:border-[#FF5401] focus:bg-white rounded-xl p-2.5 text-xs font-bold text-[#2B2B2B] focus:outline-none cursor-pointer"
+                    disabled={isSupportStaff && !isTicketAssignedToMe(selectedTicket)}
+                    className="w-full bg-[#F8FAFC] border border-[#E2E8F0] focus:border-[#FF5401] focus:bg-white rounded-xl p-2.5 text-xs font-bold text-[#2B2B2B] focus:outline-none cursor-pointer disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
                   >
-                    <option value="Submitted">Submitted (Pending)</option>
+                    <option value="Pending">Pending</option>
                     <option value="In Progress">In Progress</option>
                     <option value="Solved">Solved</option>
-                    <option value="Closed">Closed</option>
                   </select>
                 </div>
 
+                {/* 2. Assigned Lead Agent */}
                 <div>
                   <label className="block text-[10px] font-extrabold uppercase text-slate-500 mb-1">
                     Assign Lead Agent
                   </label>
-                  <select
-                    value={assignedStaff}
-                    onChange={e => setAssignedStaff(e.target.value)}
-                    className="w-full bg-[#F8FAFC] border border-[#E2E8F0] focus:border-[#FF5401] focus:bg-white rounded-xl p-2.5 text-xs font-bold text-[#2B2B2B] focus:outline-none cursor-pointer"
-                  >
-                    <option value="Clarissa Fernandez">Clarissa Fernandez (Support Staff)</option>
-                    <option value="Engr. Roberto Santos">Engr. Roberto Santos (Admin Lead)</option>
-                    <option value="Maria Teresa Gonzales">Maria Teresa Gonzales (Customer Care)</option>
-                    <option value="Engr. Michael Tan">Engr. Michael Tan (Field Tech Lead)</option>
-                  </select>
+
+                  {isSupportStaff ? (
+                    <div className="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-2.5 text-xs font-bold text-[#2B2B2B] flex items-center gap-2">
+                      <UserCheck className="w-4 h-4 text-[#FF5401] shrink-0" />
+                      <span className="truncate">{assignedStaff || currentStaffName}</span>
+                    </div>
+                  ) : (
+                    <select
+                      value={assignedStaff}
+                      onChange={e => setAssignedStaff(e.target.value)}
+                      className="w-full bg-[#F8FAFC] border border-[#E2E8F0] focus:border-[#FF5401] focus:bg-white rounded-xl p-2.5 text-xs font-bold text-[#2B2B2B] focus:outline-none cursor-pointer"
+                    >
+                      <option value="Clarissa Fernandez">Clarissa Fernandez (Support Staff)</option>
+                      <option value="Engr. Roberto Santos">Engr. Roberto Santos (Admin Lead)</option>
+                      <option value="Maria Teresa Gonzales">Maria Teresa Gonzales (Customer Care)</option>
+                      <option value="Engr. Michael Tan">Engr. Michael Tan (Field Tech Lead)</option>
+                    </select>
+                  )}
                 </div>
               </div>
 
@@ -484,34 +520,49 @@ export const SupportView: React.FC<SupportViewProps> = ({ searchQuery = '' }) =>
                 </div>
               )}
 
+              {/* 3. Solution Remarks & Customer Response */}
               <div>
                 <label className="block text-[10px] font-extrabold uppercase text-slate-500 mb-1">
-                  Customer Response Message
+                  Solution Remarks / Customer Response
                 </label>
                 <textarea
                   rows={4}
                   value={adminResponseText}
                   onChange={e => setAdminResponseText(e.target.value)}
-                  placeholder="Type official response or resolution notes to send to customer..."
-                  className="w-full bg-[#F8FAFC] border border-[#E2E8F0] focus:border-[#FF5401] focus:bg-white rounded-xl p-3 text-xs font-medium text-[#2B2B2B] focus:outline-none"
+                  disabled={isSupportStaff && !isTicketAssignedToMe(selectedTicket)}
+                  placeholder="Input remarks on the solution made or response to send to customer..."
+                  className="w-full bg-[#F8FAFC] border border-[#E2E8F0] focus:border-[#FF5401] focus:bg-white rounded-xl p-3 text-xs font-medium text-[#2B2B2B] focus:outline-none disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
                 />
               </div>
 
+              {/* Form Action Buttons */}
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setSelectedTicket(null)}
                   className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 cursor-pointer"
                 >
-                  Cancel
+                  {isSupportStaff && !isTicketAssignedToMe(selectedTicket) ? 'Close' : 'Cancel'}
                 </button>
-                <button
-                  type="submit"
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#FF5401] hover:bg-[#E54A00] text-white font-bold text-xs shadow-xs cursor-pointer transition-colors"
-                >
-                  <Send className="w-4 h-4" />
-                  <span>Save</span>
-                </button>
+                {(!isSupportStaff || isTicketAssignedToMe(selectedTicket)) ? (
+                  <button
+                    type="submit"
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#FF5401] hover:bg-[#E54A00] text-white font-bold text-xs shadow-xs cursor-pointer transition-colors"
+                  >
+                    <Send className="w-4 h-4" />
+                    <span>Save</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    disabled
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-100 text-slate-400 font-bold text-xs cursor-not-allowed border border-slate-200"
+                    title="Only the assigned agent or Administrator can modify this ticket"
+                  >
+                    <UserCheck className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Assigned to Another Agent</span>
+                  </button>
+                )}
               </div>
             </form>
           </div>

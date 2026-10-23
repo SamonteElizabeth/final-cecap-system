@@ -3,6 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { fetchBillingHistory } from '../../services/api';
 import { BillingHistoryItem } from '../../types';
 import { FileText, Download, CheckCircle2, ChevronRight, ArrowDownToLine, Receipt } from 'lucide-react';
+import { CurrentBillCard } from '../common/CurrentBillCard';
 
 export const BillingView: React.FC = () => {
   const { selectedAccount, setPaymentModalOpen } = useApp();
@@ -54,40 +55,19 @@ export const BillingView: React.FC = () => {
       {activeSubTab === 'CURRENT' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-start">
           <div className="space-y-6">
-            <div className="bg-white rounded-2xl p-6 md:p-7 border border-[#E5E7EB] shadow-xs space-y-4">
-              <div className="flex justify-between items-start border-b border-[#E5E7EB] pb-4">
-                <div>
-                  <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Statement of Account</span>
-                  <h3 className="text-2xl md:text-3xl font-semibold text-[#FF5401] mt-1">
-                    ₱{currentBill.amountDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                  </h3>
-                </div>
-                <div className="text-right">
-                  <span className="text-[10px] text-slate-400 block mb-0.5">Due Date</span>
-                  <span className="text-xs font-semibold text-[#2B2B2B]">{currentBill.dueDate}</span>
-                </div>
-              </div>
+            <CurrentBillCard
+              currentBill={currentBill}
+              onPayBill={() => setPaymentModalOpen(true)}
+              accountNumber={selectedAccount.accountNumber}
+            />
 
-              <div className="text-xs space-y-2 text-slate-600">
-                <div className="flex justify-between">
-                  <span>Billing Period:</span>
-                  <span className="text-[#2B2B2B] font-semibold">{currentBill.billingPeriod}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Total Consumption:</span>
-                  <span className="text-[#2B2B2B] font-semibold">{currentBill.kwhConsumed} kWh ({currentBill.peakKw} kW Peak)</span>
-                </div>
-              </div>
+            {/* Consumption quick stat card */}
+            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#E5E7EB] shadow-2xs flex items-center justify-between text-xs">
+              <span className="text-slate-500 font-semibold">Total Metered Consumption</span>
+              <span className="font-extrabold text-[#2B2B2B] text-sm">
+                {currentBill.kwhConsumed} kWh <span className="text-slate-400 text-xs font-normal">({currentBill.peakKw} kW Peak)</span>
+              </span>
             </div>
-
-            {currentBill.status !== 'Paid' && (
-              <button
-                onClick={() => setPaymentModalOpen(true)}
-                className="w-full bg-[#FF5401] hover:bg-[#E54A00] text-white font-semibold text-sm py-3.5 px-6 rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span>Pay Bill Online Now</span>
-              </button>
-            )}
           </div>
 
           {/* Unbundled Rate Breakdown Card */}

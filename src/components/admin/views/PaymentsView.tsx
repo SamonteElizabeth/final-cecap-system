@@ -140,16 +140,16 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({ searchQuery = '' }) 
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="bg-[#F8FAFC] text-slate-500 font-extrabold uppercase text-[10px] tracking-wider border-b border-[#E5E7EB]">
-                <th className="py-3.5 px-4">Receipt Ref #</th>
-                <th className="py-3.5 px-4">Customer & Account</th>
-                <th className="py-3.5 px-4">Amount Paid</th>
-                <th className="py-3.5 px-4">Channel</th>
-                <th className="py-3.5 px-4">Timestamp</th>
-                <th className="py-3.5 px-4">Status</th>
-                <th className="py-3.5 px-4 text-right">Actions</th>
+                <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap w-[14%]">Receipt Ref #</th>
+                <th className="py-3.5 px-4 sm:px-5 w-[26%]">Customer &amp; Account</th>
+                <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap w-[14%]">Amount Paid</th>
+                <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap w-[12%]">Channel</th>
+                <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap w-[16%]">Timestamp</th>
+                <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap w-[10%]">Status</th>
+                <th className="py-3.5 px-4 sm:px-5 text-right whitespace-nowrap w-[8%]">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 font-medium">
+            <tbody className="divide-y divide-slate-100 font-medium text-[#2B2B2B]">
               {filteredTxns.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="text-center py-12 text-slate-400 font-bold">
@@ -159,21 +159,25 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({ searchQuery = '' }) 
               ) : (
                 filteredTxns.map(t => (
                   <tr key={t.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3.5 px-4 font-mono font-bold text-[#FF5401]">{t.transactionRef}</td>
-                    <td className="py-3.5 px-4">
-                      <div className="font-extrabold text-[#2B2B2B]">{t.customerName}</div>
-                      <div className="text-[10px] text-slate-500">Acc #{t.accountNumber}</div>
+                    <td className="py-3.5 px-4 sm:px-5 align-middle font-mono font-bold text-[#FF5401] whitespace-nowrap">
+                      {t.transactionRef}
                     </td>
-                    <td className="py-3.5 px-4 font-black text-slate-800 text-sm">
+                    <td className="py-3.5 px-4 sm:px-5 align-middle">
+                      <div className="font-extrabold text-[#2B2B2B]">{t.customerName}</div>
+                      <div className="text-[10px] text-slate-500 mt-0.5">Acc #{t.accountNumber}</div>
+                    </td>
+                    <td className="py-3.5 px-4 sm:px-5 align-middle font-black text-slate-800 text-sm whitespace-nowrap">
                       ₱{t.amountPaid.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </td>
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-4 sm:px-5 align-middle whitespace-nowrap">
                       <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-700">
                         {t.paymentChannel}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 text-slate-600 font-bold">{t.paymentDate}</td>
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-4 sm:px-5 align-middle text-slate-600 font-bold whitespace-nowrap">
+                      {t.paymentDate}
+                    </td>
+                    <td className="py-3.5 px-4 sm:px-5 align-middle whitespace-nowrap">
                       <span
                         className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
                           t.status === 'SUCCESS'
@@ -186,7 +190,7 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({ searchQuery = '' }) 
                         {t.status}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 text-right">
+                    <td className="py-3.5 px-4 sm:px-5 align-middle text-right whitespace-nowrap">
                       <button
                         type="button"
                         onClick={() => setSelectedTxn(t)}

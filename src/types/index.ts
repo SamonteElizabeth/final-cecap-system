@@ -119,7 +119,7 @@ export interface SupportConcern {
   category: 'Billing Concern' | 'Service Complaint' | 'Payment Concern' | 'Meter Concern' | 'Power Outage' | 'Others';
   subject: string;
   description: string;
-  status: 'Submitted' | 'In Progress' | 'Solved' | 'Resolved' | 'Closed';
+  status: 'Pending' | 'In Progress' | 'Solved' | 'Submitted' | 'Resolved' | 'Closed';
   createdAt: string;
   attachmentName?: string;
   ticketNumber: string;

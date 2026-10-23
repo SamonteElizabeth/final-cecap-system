@@ -80,7 +80,7 @@ const INITIAL_SUPPORT_CONCERNS: SupportConcern[] = [
     category: 'Power Outage',
     subject: 'Voltage dip reported at Philexcel Business Park',
     description: 'Brief 3-second voltage sag affected server room UPS equipment.',
-    status: 'Submitted',
+    status: 'Pending',
     createdAt: '2026-08-04 08:10 AM',
     assignedStaff: 'Clarissa Fernandez',
   },

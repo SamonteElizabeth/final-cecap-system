@@ -1,6 +1,7 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { Zap, CreditCard, History, BarChart3, HelpCircle, AlertTriangle, ChevronDown, Bell, CheckCircle2, MapPin, Gauge, Calendar, Megaphone, ChevronRight, ShieldAlert, KeyRound } from 'lucide-react';
+import { CurrentBillCard } from '../common/CurrentBillCard';
 
 export const DashboardView: React.FC = () => {
   const {
@@ -106,59 +107,13 @@ export const DashboardView: React.FC = () => {
       {/* Main Dashboard Responsive Grid */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8">
         {/* HERO CURRENT BILL CARD */}
-        <div className="md:col-span-6 lg:col-span-5 xl:col-span-5 bg-[#FF5401] text-white rounded-[24px] p-6 md:p-7 shadow-lg shadow-orange-500/20 relative overflow-hidden flex flex-col justify-between space-y-6">
-          {/* Sleek radial background glow */}
-          <div className="absolute -right-6 -bottom-6 w-36 h-36 bg-amber-300/30 rounded-full blur-2xl pointer-events-none"></div>
-
-          <div className="space-y-4">
-            <div className="flex justify-between items-start mb-2">
-              <div>
-                <span className="text-[10px] md:text-[11px] font-semibold text-orange-100 uppercase tracking-widest opacity-90">Current Outstanding Balance</span>
-                <div className="text-3xl md:text-4xl font-semibold tracking-tight mt-1.5">
-                  ₱{currentBill.amountDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                </div>
-              </div>
-              <span
-                className={`px-3 py-1.5 rounded-xl text-[10px] font-semibold tracking-wider uppercase backdrop-blur-md flex items-center gap-1 shadow-xs ${
-                  isPaid
-                    ? 'bg-[#22C55E] text-white border border-emerald-300/40'
-                    : currentBill.status === 'Partially Paid'
-                    ? 'bg-[#F59E0B] text-[#2B2B2B] font-semibold'
-                    : 'bg-white/20 text-white border border-white/30 font-medium'
-                }`}
-              >
-                {isPaid ? <CheckCircle2 className="w-3 h-3" /> : null}
-                {currentBill.status}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 pt-4 pb-2 border-t border-white/20 text-xs">
-              <div>
-                <span className="text-orange-100/80 text-[10px] uppercase font-medium tracking-wider block mb-1">Due Date</span>
-                <span className="font-semibold text-white text-xs md:text-sm">{currentBill.dueDate}</span>
-              </div>
-              <div>
-                <span className="text-orange-100/80 text-[10px] uppercase font-medium tracking-wider block mb-1">Account Number</span>
-                <span className="font-semibold font-mono text-white text-xs md:text-sm">{selectedAccount.accountNumber}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Primary Pay Action */}
-          {!isPaid ? (
-            <button
-              onClick={() => setPaymentModalOpen(true)}
-              className="w-full bg-white hover:bg-orange-50 text-[#FF5401] font-semibold text-xs tracking-wider uppercase py-3.5 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 active:scale-98 cursor-pointer mt-2"
-            >
-              <CreditCard className="w-4 h-4 text-[#FF5401]" />
-              <span>PAY BILL NOW</span>
-            </button>
-          ) : (
-            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-3.5 text-center text-xs font-semibold text-emerald-100 flex items-center justify-center gap-2 mt-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-200" />
-              <span>Account paid in full • Zero pending balance</span>
-            </div>
-          )}
+        <div className="md:col-span-6 lg:col-span-5 xl:col-span-5 flex flex-col">
+          <CurrentBillCard
+            currentBill={currentBill}
+            onPayBill={() => setPaymentModalOpen(true)}
+            accountNumber={selectedAccount.accountNumber}
+            className="flex-1"
+          />
         </div>
 
         {/* 6-MONTH CONSUMPTION SNAPSHOT (SLEEK BAR GRAPH) */}

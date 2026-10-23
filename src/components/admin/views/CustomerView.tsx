@@ -494,33 +494,43 @@ export const CustomerView: React.FC<CustomerViewProps> = ({ searchQuery = '' }) 
       ) : (
         <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-2xs overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="bg-[#F8FAFC] border-b border-[#E5E7EB] text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                  <th className="p-4">Request ID</th>
-                  <th className="p-4">Applicant Name</th>
-                  <th className="p-4">Service Address</th>
-                  <th className="p-4">Mobile / Email</th>
-                  <th className="p-4">Submitted Date</th>
-                  <th className="p-4">Status & Details</th>
-                  <th className="p-4 text-center">Action</th>
+                <tr className="bg-[#F8FAFC] border-b border-[#E5E7EB] text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
+                  <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap w-[11%]">Request ID</th>
+                  <th className="py-3.5 px-4 sm:px-5 w-[18%]">Applicant Name</th>
+                  <th className="py-3.5 px-4 sm:px-5 w-[25%]">Service Address</th>
+                  <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap w-[16%]">Mobile / Email</th>
+                  <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap w-[12%]">Submitted Date</th>
+                  <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap w-[10%]">Status &amp; Details</th>
+                  <th className="py-3.5 px-4 sm:px-5 text-right whitespace-nowrap w-[8%]">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E5E7EB] text-xs font-medium text-[#2B2B2B]">
+              <tbody className="divide-y divide-slate-100 font-medium text-[#2B2B2B]">
                 {filteredRequests.map(req => (
                   <tr key={req.id} className="hover:bg-[#F8FAFC] transition-all">
-                    <td className="p-4 font-mono font-bold text-[#FF5401]">{req.id}</td>
-                    <td className="p-4 font-bold text-[#2B2B2B]">{req.fullName}</td>
-                    <td className="p-4 text-slate-600 max-w-xs truncate">{req.serviceAddress}</td>
-                    <td className="p-4">
-                      <div>{req.mobileNumber}</div>
-                      <div className="text-[10px] text-slate-400">{req.email}</div>
+                    <td className="py-3.5 px-4 sm:px-5 align-middle font-mono font-bold text-[#FF5401] whitespace-nowrap">
+                      {req.id}
                     </td>
-                    <td className="p-4 text-slate-500 text-[11px]">{req.submittedAt}</td>
-                    <td className="p-4">
+                    <td className="py-3.5 px-4 sm:px-5 align-middle font-extrabold text-[#2B2B2B]">
+                      {req.fullName}
+                    </td>
+                    <td className="py-3.5 px-4 sm:px-5 align-middle text-slate-600">
+                      <div className="line-clamp-2 leading-relaxed" title={req.serviceAddress}>
+                        {req.serviceAddress}
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-4 sm:px-5 align-middle whitespace-nowrap">
+                      <div className="font-semibold text-slate-700">{req.mobileNumber}</div>
+                      <div className="text-[10px] text-slate-400 truncate max-w-[150px]" title={req.email}>{req.email}</div>
+                    </td>
+                    <td className="py-3.5 px-4 sm:px-5 align-middle text-slate-500 text-[11px] whitespace-nowrap">
+                      {req.submittedAt}
+                    </td>
+                    <td className="py-3.5 px-4 sm:px-5 align-middle whitespace-nowrap">
                       {req.status === 'Pending' && (
                         <div className="space-y-1">
-                          <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                          <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
                             <Clock className="w-3 h-3" />
                             Pending Review
                           </span>
@@ -539,7 +549,7 @@ export const CustomerView: React.FC<CustomerViewProps> = ({ searchQuery = '' }) 
                       )}
                       {req.status === 'Approved' && (
                         <div className="space-y-1">
-                          <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                          <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
                             <CheckCircle2 className="w-3 h-3" />
                             Approved
                           </span>
@@ -552,19 +562,19 @@ export const CustomerView: React.FC<CustomerViewProps> = ({ searchQuery = '' }) 
                       )}
                       {req.status === 'Rejected' && (
                         <div className="space-y-1">
-                          <span className="bg-rose-100 text-rose-800 text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                          <span className="bg-rose-100 text-rose-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
                             <XCircle className="w-3 h-3" />
                             Rejected
                           </span>
                           {req.rejectionReason && (
-                            <div className="text-[10px] text-rose-700 max-w-xs truncate">
+                            <div className="text-[10px] text-rose-700 max-w-[140px] truncate" title={req.rejectionReason}>
                               {req.rejectionReason}
                             </div>
                           )}
                         </div>
                       )}
                     </td>
-                    <td className="p-4 text-center">
+                    <td className="py-3.5 px-4 sm:px-5 align-middle text-right whitespace-nowrap">
                       {req.status === 'Pending' ? (
                         <button
                           onClick={() => handleOpenReview(req)}
@@ -576,7 +586,7 @@ export const CustomerView: React.FC<CustomerViewProps> = ({ searchQuery = '' }) 
                       ) : (
                         <button
                           onClick={() => handleOpenReview(req)}
-                          className="bg-slate-100 hover:bg-slate-200 text-[#2B2B2B] font-bold text-xs px-3 py-1.5 rounded-xl transition-all inline-flex items-center gap-1.5 cursor-pointer"
+                          className="bg-slate-100 hover:bg-slate-200 text-[#2B2B2B] font-bold text-xs px-3.5 py-1.5 rounded-xl transition-all inline-flex items-center gap-1.5 cursor-pointer"
                         >
                           <Eye className="w-3.5 h-3.5 text-slate-500" />
                           <span>View Details</span>

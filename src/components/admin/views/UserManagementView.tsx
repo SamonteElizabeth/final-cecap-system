@@ -222,7 +222,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({ searchQu
       {activeTab === 'STAFF' ? (
         <>
           {/* Summary KPI Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-2xs space-y-2">
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Administrators</span>
               <div className="text-2xl font-black text-[#2B2B2B]">{adminStaffUsers.length} Users</div>
@@ -243,12 +243,6 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({ searchQu
                 {adminStaffUsers.filter(u => u.status === 'Pending').length} Pending
               </div>
               <span className="text-[11px] text-amber-600 font-bold">Awaiting Link &amp; MFA</span>
-            </div>
-
-            <div className="bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-2xs space-y-2">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Security Policy</span>
-              <div className="text-2xl font-black text-blue-600">MFA &amp; Single-Use</div>
-              <span className="text-[11px] text-blue-600 font-bold">15-Minute Link Expiry</span>
             </div>
           </div>
 
@@ -303,96 +297,96 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({ searchQu
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="bg-[#F8FAFC] text-slate-500 font-extrabold uppercase text-[10px] tracking-wider border-b border-[#E5E7EB]">
-                    <th className="py-3.5 px-4">Administrator</th>
-                    <th className="py-3.5 px-4">Assigned Role</th>
-                    <th className="py-3.5 px-4">Last Login</th>
-                    <th className="py-3.5 px-4">Account Status</th>
-                    <th className="py-3.5 px-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 font-medium">
-                  {filteredUsers.map(u => (
-                    <tr key={u.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="py-3.5 px-4">
-                        <div className="font-extrabold text-[#2B2B2B]">{u.name}</div>
-                        <div className="text-[10px] text-slate-400">{u.email}</div>
-                      </td>
-                      <td className="py-3.5 px-4">
+              <tr className="bg-[#F8FAFC] text-slate-500 font-extrabold uppercase text-[10px] tracking-wider border-b border-[#E5E7EB]">
+                <th className="py-3.5 px-4 sm:px-5 w-[30%]">Administrator</th>
+                <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap w-[18%]">Assigned Role</th>
+                <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap w-[20%]">Last Login</th>
+                <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap w-[20%]">Account Status</th>
+                <th className="py-3.5 px-4 sm:px-5 text-right whitespace-nowrap w-[12%]">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 font-medium text-[#2B2B2B]">
+              {filteredUsers.map(u => (
+                <tr key={u.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="py-3.5 px-4 sm:px-5 align-middle">
+                    <div className="font-extrabold text-[#2B2B2B]">{u.name}</div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">{u.email}</div>
+                  </td>
+                  <td className="py-3.5 px-4 sm:px-5 align-middle whitespace-nowrap">
+                    <span
+                      className={`inline-block font-extrabold px-2.5 py-1 rounded-md text-[10px] uppercase border ${
+                        u.role === 'Support Staff'
+                          ? 'text-blue-700 bg-blue-50 border-blue-200'
+                          : 'text-[#FF5401] bg-orange-50 border-[#FF5401]/20'
+                      }`}
+                    >
+                      {u.role}
+                    </span>
+                  </td>
+                  <td className="py-3.5 px-4 sm:px-5 align-middle text-slate-600 font-bold whitespace-nowrap">{u.lastLogin}</td>
+                  <td className="py-3.5 px-4 sm:px-5 align-middle whitespace-nowrap">
+                    {u.status === 'Pending' ? (
+                      <div className="flex flex-col gap-1 items-start">
                         <span
-                          className={`inline-block font-extrabold px-2.5 py-1 rounded-md text-[10px] uppercase border ${
-                            u.role === 'Support Staff'
-                              ? 'text-blue-700 bg-blue-50 border-blue-200'
-                              : 'text-[#FF5401] bg-orange-50 border-[#FF5401]/20'
-                          }`}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-300"
+                          title="Single-use setup link dispatched via email. Awaiting password creation and MFA."
                         >
-                          {u.role}
+                          <Clock className="w-3 h-3 text-amber-600 animate-pulse" />
+                          <span>Pending Setup</span>
                         </span>
-                      </td>
-                      <td className="py-3.5 px-4 text-slate-600 font-bold">{u.lastLogin}</td>
-                      <td className="py-3.5 px-4">
-                        {u.status === 'Pending' ? (
-                          <div className="flex flex-col gap-1 items-start">
-                            <span
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-300"
-                              title="Single-use setup link dispatched via email. Awaiting password creation and MFA."
-                            >
-                              <Clock className="w-3 h-3 text-amber-600 animate-pulse" />
-                              <span>Pending Setup</span>
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => handleResendSetup(u.email)}
-                              className="text-[10px] text-[#FF5401] hover:underline font-bold inline-flex items-center gap-1 cursor-pointer"
-                              title="Dispatches a fresh single-use time-limited link (15 mins)"
-                            >
-                              <Mail className="w-3 h-3" />
-                              <span>Resend link</span>
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleToggleStatus(u)}
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold cursor-pointer transition-all ${
-                              u.status === 'Active'
-                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
-                                : 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
-                            }`}
-                          >
-                            <Power className="w-3 h-3" />
-                            <span>{u.status}</span>
-                          </button>
-                        )}
-                      </td>
-                      <td className="py-3.5 px-4 text-right space-x-1">
-                        {u.status === 'Pending' && (
-                          <button
-                            onClick={() => handleResendSetup(u.email)}
-                            className="p-1.5 rounded-lg text-[#FF5401] hover:bg-orange-50 cursor-pointer inline-flex items-center"
-                            title="Resend Secure Single-Use Setup Email (15-min expiry)"
-                          >
-                            <Mail className="w-4 h-4" />
-                          </button>
-                        )}
                         <button
-                          onClick={() => openEditModal(u)}
-                          className="p-1.5 rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer inline-flex items-center"
-                          title="Edit User & Permissions"
+                          type="button"
+                          onClick={() => handleResendSetup(u.email)}
+                          className="text-[10px] text-[#FF5401] hover:underline font-bold inline-flex items-center gap-1 cursor-pointer"
+                          title="Dispatches a fresh single-use time-limited link (15 mins)"
                         >
-                          <Edit2 className="w-4 h-4" />
+                          <Mail className="w-3 h-3" />
+                          <span>Resend link</span>
                         </button>
-                        <button
-                          onClick={() => handleTriggerResetPwd(u)}
-                          className="p-1.5 rounded-lg text-amber-600 hover:bg-amber-50 cursor-pointer inline-flex items-center"
-                          title={u.status === 'Pending' ? 'Resend Setup Link' : 'Reset Password'}
-                        >
-                          <KeyRound className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleToggleStatus(u)}
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold cursor-pointer transition-all ${
+                          u.status === 'Active'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                            : 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
+                        }`}
+                      >
+                        <Power className="w-3 h-3" />
+                        <span>{u.status}</span>
+                      </button>
+                    )}
+                  </td>
+                  <td className="py-3.5 px-4 sm:px-5 align-middle text-right whitespace-nowrap space-x-1">
+                    {u.status === 'Pending' && (
+                      <button
+                        onClick={() => handleResendSetup(u.email)}
+                        className="p-1.5 rounded-lg text-[#FF5401] hover:bg-orange-50 cursor-pointer inline-flex items-center"
+                        title="Resend Secure Single-Use Setup Email (15-min expiry)"
+                      >
+                        <Mail className="w-4 h-4" />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => openEditModal(u)}
+                      className="p-1.5 rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer inline-flex items-center"
+                      title="Edit User & Permissions"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleTriggerResetPwd(u)}
+                      className="p-1.5 rounded-lg text-amber-600 hover:bg-amber-50 cursor-pointer inline-flex items-center"
+                      title={u.status === 'Pending' ? 'Resend Setup Link' : 'Reset Password'}
+                    >
+                      <KeyRound className="w-4 h-4" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
               </table>
             </div>
           </div>
@@ -400,38 +394,6 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({ searchQu
       ) : (
         /* AUDIT TRAIL TAB */
         <>
-          {/* Audit KPI Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-2xs space-y-2">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Audit Events</span>
-              <div className="text-2xl font-black text-[#2B2B2B]">{auditLogs.length} Events</div>
-              <span className="text-[11px] text-slate-500 font-medium">Immutable security logging</span>
-            </div>
-
-            <div className="bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-2xs space-y-2">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Failed Login Attempts</span>
-              <div className="text-2xl font-black text-rose-600">
-                {auditLogs.filter(l => l.eventType === 'LOGIN_FAILED').length} Recorded
-              </div>
-              <span className="text-[11px] text-rose-600 font-bold">5-Attempt Lockout Monitored</span>
-            </div>
-
-            <div className="bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-2xs space-y-2">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Account Lockouts</span>
-              <div className="text-2xl font-black text-amber-600">
-                {auditLogs.filter(l => l.eventType === 'ACCOUNT_LOCKED').length} Lockouts
-              </div>
-              <span className="text-[11px] text-amber-600 font-bold">30-Minute Enforced Freeze</span>
-            </div>
-
-            <div className="bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-2xs space-y-2">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">MFA / OTP Activities</span>
-              <div className="text-2xl font-black text-[#FF5401]">
-                {auditLogs.filter(l => l.eventType.startsWith('MFA')).length} Dispatched
-              </div>
-              <span className="text-[11px] text-[#FF5401] font-bold">Mandatory 2FA Policy</span>
-            </div>
-          </div>
 
           {/* Audit Filter Toolbar */}
           <div className="bg-white p-4 md:p-5 rounded-2xl border border-[#E5E7EB] shadow-2xs">
@@ -472,18 +434,18 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({ searchQu
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="bg-[#F8FAFC] text-slate-500 font-extrabold uppercase text-[10px] tracking-wider border-b border-[#E5E7EB]">
-                    <th className="py-3.5 px-4">Event ID & Timestamp</th>
-                    <th className="py-3.5 px-4">Event Type</th>
-                    <th className="py-3.5 px-4">Target Account</th>
-                    <th className="py-3.5 px-4">Status</th>
-                    <th className="py-3.5 px-4">Policy Enforcement Details</th>
-                    <th className="py-3.5 px-4 text-right">Client / IP Address</th>
+                    <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap w-[16%]">Event ID &amp; Timestamp</th>
+                    <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap w-[15%]">Event Type</th>
+                    <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap w-[15%]">Target Account</th>
+                    <th className="py-3.5 px-4 sm:px-5 whitespace-nowrap w-[10%]">Status</th>
+                    <th className="py-3.5 px-4 sm:px-5 w-[30%]">Policy Enforcement Details</th>
+                    <th className="py-3.5 px-4 sm:px-5 text-right whitespace-nowrap w-[14%]">Client / IP Address</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 font-medium">
+                <tbody className="divide-y divide-slate-100 font-medium text-[#2B2B2B]">
                   {filteredAuditLogs.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-slate-400">
+                      <td colSpan={6} className="py-12 text-center text-slate-400 font-bold">
                         No audit events matching criteria.
                       </td>
                     </tr>
@@ -492,23 +454,22 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({ searchQu
                       const isSuccess = log.status === 'SUCCESS';
                       const isFailure = log.status === 'FAILURE';
                       const isSecurityAlert = log.status === 'SECURITY_ALERT';
-                      const isWarning = log.status === 'WARNING';
 
                       return (
                         <tr key={log.id} className="hover:bg-slate-50 transition-colors">
-                          <td className="py-3 px-4">
+                          <td className="py-3.5 px-4 sm:px-5 align-middle whitespace-nowrap">
                             <div className="font-mono font-bold text-[#FF5401] text-[11px]">{log.id}</div>
-                            <div className="text-[10px] text-slate-500 font-medium">{log.timestamp}</div>
+                            <div className="text-[10px] text-slate-500 font-medium mt-0.5">{log.timestamp}</div>
                           </td>
-                          <td className="py-3 px-4">
-                            <span className="font-bold text-[10px] uppercase font-mono px-2 py-0.5 rounded-md bg-slate-100 text-slate-800">
+                          <td className="py-3.5 px-4 sm:px-5 align-middle whitespace-nowrap">
+                            <span className="font-bold text-[10px] uppercase font-mono px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-800">
                               {log.eventType.replace(/_/g, ' ')}
                             </span>
                           </td>
-                          <td className="py-3 px-4 font-mono font-bold text-[#2B2B2B]">
+                          <td className="py-3.5 px-4 sm:px-5 align-middle font-mono font-bold text-[#2B2B2B] whitespace-nowrap">
                             {log.accountIdentifier}
                           </td>
-                          <td className="py-3 px-4">
+                          <td className="py-3.5 px-4 sm:px-5 align-middle whitespace-nowrap">
                             <span
                               className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                                 isSuccess
@@ -523,10 +484,12 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({ searchQu
                               {log.status}
                             </span>
                           </td>
-                          <td className="py-3 px-4 text-slate-700 font-medium max-w-sm truncate" title={log.details}>
-                            {log.details}
+                          <td className="py-3.5 px-4 sm:px-5 align-middle text-slate-700 font-medium">
+                            <div className="line-clamp-2 leading-relaxed" title={log.details}>
+                              {log.details}
+                            </div>
                           </td>
-                          <td className="py-3 px-4 text-right text-[11px] font-mono text-slate-500">
+                          <td className="py-3.5 px-4 sm:px-5 align-middle text-right text-[11px] font-mono text-slate-500 whitespace-nowrap">
                             <div>{log.ipAddress}</div>
                           </td>
                         </tr>

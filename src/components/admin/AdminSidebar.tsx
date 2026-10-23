@@ -50,23 +50,19 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
 }) => {
   const { userRole, adminUser } = useApp();
   const isSupportStaff = userRole === 'support_staff' || adminUser?.role === 'support_staff';
-  const [advisoriesOpen, setAdvisoriesOpen] = useState(true);
+  const [advisoriesOpen, setAdvisoriesOpen] = useState(false);
 
   const handleParentClick = (tab: AdminNavigationTab) => {
     setActiveTab(tab);
     if (tab === 'advisories') {
-      setAdvisoriesOpen(true);
+      setAdvisoriesOpen(prev => !prev);
     }
   };
 
   const handleToggleAdvisories = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (activeTab !== 'advisories') {
-      setActiveTab('advisories');
-      setAdvisoriesOpen(true);
-    } else {
-      setAdvisoriesOpen(prev => !prev);
-    }
+    setActiveTab('advisories');
+    setAdvisoriesOpen(prev => !prev);
   };
 
   return (
