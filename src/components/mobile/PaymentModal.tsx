@@ -109,7 +109,7 @@ export const PaymentModal: React.FC = () => {
                   paymentType === 'FULL' ? 'bg-[#FF5401] text-white shadow-xs' : 'text-slate-600'
                 }`}
               >
-                Full Payment (₱{currentBill.amountDue.toLocaleString('en-US', { minimumFractionDigits: 2 })})
+                Full
               </button>
               <button
                 onClick={() => setPaymentType('PARTIAL')}
@@ -117,7 +117,7 @@ export const PaymentModal: React.FC = () => {
                   paymentType === 'PARTIAL' ? 'bg-[#FF5401] text-white shadow-xs' : 'text-slate-600'
                 }`}
               >
-                Partial Payment
+                Partial
               </button>
             </div>
 
@@ -151,10 +151,7 @@ export const PaymentModal: React.FC = () => {
                     <div className="w-10 h-10 rounded-xl bg-blue-600 text-white font-semibold flex items-center justify-center text-xs">
                       G
                     </div>
-                    <div>
-                      <p className="text-xs font-semibold text-[#2B2B2B]">GCash Wallet</p>
-                      <p className="text-[10px] text-slate-500">Instant posting • Zero convenience fee</p>
-                    </div>
+                    <p className="text-xs font-semibold text-[#2B2B2B]">GCash Wallet</p>
                   </div>
                   <input
                     type="radio"
@@ -178,10 +175,7 @@ export const PaymentModal: React.FC = () => {
                     <div className="w-10 h-10 rounded-xl bg-[#22C55E] text-white font-semibold flex items-center justify-center text-xs">
                       M
                     </div>
-                    <div>
-                      <p className="text-xs font-semibold text-[#2B2B2B]">Maya E-Wallet / Card</p>
-                      <p className="text-[10px] text-slate-500">Real-time payment gateway sync</p>
-                    </div>
+                    <p className="text-xs font-semibold text-[#2B2B2B]">Maya E-Wallet / Card</p>
                   </div>
                   <input
                     type="radio"
@@ -205,10 +199,7 @@ export const PaymentModal: React.FC = () => {
                     <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white font-semibold flex items-center justify-center text-xs">
                       EC
                     </div>
-                    <div>
-                      <p className="text-xs font-semibold text-[#2B2B2B]">ECPay Digital Center</p>
-                      <p className="text-[10px] text-slate-500">Over-the-counter & digital reference</p>
-                    </div>
+                    <p className="text-xs font-semibold text-[#2B2B2B]">ECPay Digital Center</p>
                   </div>
                   <input
                     type="radio"
@@ -226,7 +217,7 @@ export const PaymentModal: React.FC = () => {
               disabled={isLoading || payAmount <= 0}
               className="w-full bg-[#FF5401] hover:bg-[#E54A00] text-white font-semibold text-sm py-3.5 rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
-              {isLoading ? 'Connecting to Gateway...' : `Proceed to Pay ₱${payAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+              {isLoading ? 'Connecting…' : 'Pay'}
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -248,7 +239,6 @@ export const PaymentModal: React.FC = () => {
                 {selectedChannel.substring(0, 2)}
               </div>
               <h3 className="font-semibold text-[#2B2B2B] text-base">{selectedChannel} Secure Gateway</h3>
-              <p className="text-xs text-slate-500">Merchant: Clark Electric Distribution Corp</p>
             </div>
 
             <div className="bg-[#F5F5F5] p-3 rounded-2xl border border-[#E5E7EB] text-xs space-y-1">
@@ -285,7 +275,7 @@ export const PaymentModal: React.FC = () => {
               disabled={isLoading}
               className="w-full bg-[#22C55E] hover:bg-emerald-600 text-white font-bold text-sm py-3.5 rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
-              {isLoading ? 'Verifying Gateway Authorization...' : 'Authorize & Complete Payment'}
+              {isLoading ? 'Authorizing…' : 'Authorize'}
             </button>
           </form>
         )}
@@ -297,10 +287,7 @@ export const PaymentModal: React.FC = () => {
               <CheckCircle2 className="w-10 h-10 animate-bounce" />
             </div>
 
-            <div>
-              <h3 className="text-lg font-semibold text-[#2B2B2B]">Payment Successful!</h3>
-              <p className="text-xs text-slate-500">Updated in CEDC Billing System</p>
-            </div>
+            <h3 className="text-lg font-semibold text-[#2B2B2B]">Payment Successful!</h3>
 
             {/* Receipt Summary Card */}
             <div className="bg-[#F5F5F5] rounded-2xl p-4 border border-[#E5E7EB] text-xs text-left space-y-2">
@@ -340,7 +327,7 @@ export const PaymentModal: React.FC = () => {
               onClick={handleClose}
               className="w-full bg-[#FF5401] hover:bg-[#E54A00] text-white font-bold text-sm py-3.5 rounded-2xl shadow-md transition-all cursor-pointer"
             >
-              Done & Return to Dashboard
+              Done
             </button>
           </div>
         )}

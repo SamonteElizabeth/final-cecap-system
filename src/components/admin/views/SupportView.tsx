@@ -138,7 +138,6 @@ export const SupportView: React.FC<SupportViewProps> = ({ searchQuery = '' }) =>
         <div className="bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-2xs space-y-2">
           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Support Tickets</span>
           <div className="text-2xl font-black text-[#2B2B2B]">{supportConcerns.length}</div>
-          <span className="text-[11px] text-slate-500 font-medium">Logged in portal</span>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-2xs space-y-2">
@@ -146,7 +145,6 @@ export const SupportView: React.FC<SupportViewProps> = ({ searchQuery = '' }) =>
           <div className="text-2xl font-black text-[#FF5401]">
             {supportConcerns.filter(t => normalizeStatus(t.status) === 'Pending').length}
           </div>
-          <span className="text-[11px] text-amber-600 font-bold">Needs agent dispatch</span>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-2xs space-y-2">
@@ -154,7 +152,6 @@ export const SupportView: React.FC<SupportViewProps> = ({ searchQuery = '' }) =>
           <div className="text-2xl font-black text-blue-600">
             {supportConcerns.filter(t => normalizeStatus(t.status) === 'In Progress').length}
           </div>
-          <span className="text-[11px] text-blue-600 font-bold">Active investigation</span>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-2xs space-y-2">
@@ -162,7 +159,6 @@ export const SupportView: React.FC<SupportViewProps> = ({ searchQuery = '' }) =>
           <div className="text-2xl font-black text-emerald-600">
             {supportConcerns.filter(t => normalizeStatus(t.status) === 'Solved').length}
           </div>
-          <span className="text-[11px] text-emerald-600 font-bold">Recorded with completion date</span>
         </div>
       </div>
 
@@ -503,16 +499,12 @@ export const SupportView: React.FC<SupportViewProps> = ({ searchQuery = '' }) =>
                 </div>
               </div>
 
-              {/* Completion Date Auto-Notice when Solved */}
-              {(ticketStatus === 'Solved' || selectedTicket.status === 'Solved' || selectedTicket.status === 'Resolved') && (
+              {/* Completion Date when Solved */}
+              {selectedTicket.completionDate && (ticketStatus === 'Solved' || selectedTicket.status === 'Solved' || selectedTicket.status === 'Resolved') && (
                 <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-200/80 text-xs text-emerald-800 flex items-center justify-between animate-fade-in">
                   <div className="flex items-center gap-2 font-bold">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span>
-                      {selectedTicket.completionDate
-                        ? `Completion Date: ${selectedTicket.completionDate}`
-                        : 'Completion date will be automatically recorded upon saving.'}
-                    </span>
+                    <span>Completion Date: {selectedTicket.completionDate}</span>
                   </div>
                   <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-900 border border-emerald-300 shrink-0">
                     Auto-Recorded
@@ -560,7 +552,7 @@ export const SupportView: React.FC<SupportViewProps> = ({ searchQuery = '' }) =>
                     title="Only the assigned agent or Administrator can modify this ticket"
                   >
                     <UserCheck className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Assigned to Another Agent</span>
+                    <span>Locked</span>
                   </button>
                 )}
               </div>

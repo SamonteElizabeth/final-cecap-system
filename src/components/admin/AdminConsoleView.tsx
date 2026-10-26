@@ -138,7 +138,7 @@ export const AdminConsoleView: React.FC = () => {
             className="flex flex-col items-center justify-center py-1 px-4 rounded-xl transition-all cursor-pointer text-[#FF5401] font-extrabold"
           >
             <HelpCircle className="w-5 h-5" />
-            <span className="text-[10px] mt-0.5">Support Desk</span>
+            <span className="text-[10px] mt-0.5">Support</span>
           </button>
         ) : (
           <>
@@ -188,7 +188,7 @@ export const AdminConsoleView: React.FC = () => {
               }`}
             >
               <ShieldCheck className="w-5 h-5" />
-              <span className="text-[10px] mt-0.5">User Mgmt</span>
+              <span className="text-[10px] mt-0.5">Users</span>
             </button>
           </>
         )}

@@ -111,14 +111,11 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({ searchQuery = 
           <div className="w-10 h-10 rounded-2xl bg-orange-50 border border-orange-200/80 flex items-center justify-center text-[#FF5401] shrink-0">
             <Tag className="w-5 h-5" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm font-extrabold text-[#2B2B2B]">Ticket Categories</h2>
-              <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-orange-100 text-[#FF5401]">
-                {filteredItems.length}
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-500 font-medium">Manage support ticket categories and active status</p>
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-extrabold text-[#2B2B2B]">Ticket Categories</h2>
+            <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-orange-100 text-[#FF5401]">
+              {filteredItems.length}
+            </span>
           </div>
         </div>
 
@@ -129,7 +126,7 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({ searchQuery = 
           className="flex items-center justify-center gap-2 bg-[#FF5401] hover:bg-[#E54A00] text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-xs transition-all cursor-pointer shrink-0 w-full sm:w-auto"
         >
           <Plus className="w-4 h-4" />
-          <span>Add New Entry</span>
+          <span>Add</span>
         </button>
       </div>
 
@@ -255,7 +252,7 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({ searchQuery = 
                   type="submit"
                   className="px-5 py-2.5 rounded-xl bg-[#FF5401] hover:bg-[#E54A00] text-white font-bold text-xs shadow-xs cursor-pointer"
                 >
-                  {editingItem ? 'Save Changes' : 'Save Entry'}
+                  Save
                 </button>
               </div>
             </form>

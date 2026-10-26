@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { sendOtp, verifyOtp } from '../../services/api';
 import { ServiceAccount } from '../../types';
-import cecapLogo from '../../assets/CECAp_Logo.png';
+import cecapLogo from '../../assets/cecap-emblem.png';
 import {
   MapPin,
   Plus,
@@ -422,7 +422,7 @@ This code is valid for 5 minutes. Once verified, your service account will be li
               className="bg-[#FF5401] hover:bg-[#E54A00] text-white font-semibold text-xs px-4 py-2.5 rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              <span>Link Service Account</span>
+              <span>Link</span>
             </button>
           </div>
         </div>
@@ -448,17 +448,10 @@ This code is valid for 5 minutes. Once verified, your service account will be li
               isAccountSpecOpen ? 'border-b border-[#E5E7EB] pb-3' : ''
             }`}
           >
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 flex items-center justify-center shrink-0">
-                <img src={cecapLogo} alt="CECAP Logo" className="w-full h-full object-contain" />
-              </div>
+            <div className="flex items-center gap-3">
+              <img src={cecapLogo} alt="CECAp Logo" className="w-9 h-9 object-contain shrink-0" />
               <div>
-                <h3 className="text-sm font-semibold text-[#2B2B2B] flex items-center gap-2">
-                  <span>Service Account</span>
-                  <span className="text-[10px] text-slate-400 font-normal">
-                    {isAccountSpecOpen ? '(Click to collapse)' : '(Click to view)'}
-                  </span>
-                </h3>
+                <h3 className="text-sm font-semibold text-[#2B2B2B]">Service Account</h3>
                 <p className="text-[11px] text-slate-500 font-medium">
                   Currently Viewing: #{selectedAccount.accountNumber}
                 </p>
@@ -546,17 +539,9 @@ This code is valid for 5 minutes. Once verified, your service account will be li
               isLinkedAccountsOpen ? 'border-b border-[#E5E7EB] pb-3' : ''
             }`}
           >
-            <div>
-              <h3 className="text-sm font-semibold text-[#2B2B2B] flex items-center gap-2">
-                <span>Linked Service Accounts ({linkedAccounts.length})</span>
-                <span className="text-[10px] text-slate-400 font-normal">
-                  {isLinkedAccountsOpen ? '(Click to collapse)' : '(Click to view)'}
-                </span>
-              </h3>
-              <p className="text-[11px] text-slate-500">
-                Select any linked service account below to switch your active view
-              </p>
-            </div>
+            <h3 className="text-sm font-semibold text-[#2B2B2B]">
+              Linked Service Accounts ({linkedAccounts.length})
+            </h3>
             <div className="flex items-center gap-3">
               <button
                 type="button"
@@ -653,14 +638,7 @@ This code is valid for 5 minutes. Once verified, your service account will be li
               <X className="w-5 h-5" />
             </button>
 
-            <div className="pr-8">
-              <h3 className="font-semibold text-[#2B2B2B] text-lg sm:text-xl">Link Service Account</h3>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                {linkStep === 'INPUT'
-                  ? 'Enter your Meter Serial Number to validate against the Central Billing Database.'
-                  : 'Verify ownership via the 6-digit OTP sent to the registered contact.'}
-              </p>
-            </div>
+            <h3 className="pr-8 font-semibold text-[#2B2B2B] text-lg sm:text-xl">Link Service Account</h3>
 
             {linkError && (
               <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm font-semibold flex items-start gap-2.5">
@@ -704,7 +682,7 @@ This code is valid for 5 minutes. Once verified, your service account will be li
                       className="text-left px-3 py-2 rounded-xl bg-white hover:bg-orange-50 border border-[#E5E7EB] flex items-center justify-between transition-all cursor-pointer"
                     >
                       <span className="font-mono font-bold text-[#FF5401]">MTR-2026-30419</span>
-                      <span className="text-[11px] font-bold text-emerald-600">Valid & Active (Residential)</span>
+                      <span className="text-[11px] font-bold text-emerald-600">Residential</span>
                     </button>
                     <button
                       type="button"
@@ -715,7 +693,7 @@ This code is valid for 5 minutes. Once verified, your service account will be li
                       className="text-left px-3 py-2 rounded-xl bg-white hover:bg-orange-50 border border-[#E5E7EB] flex items-center justify-between transition-all cursor-pointer"
                     >
                       <span className="font-mono font-bold text-[#FF5401]">MTR-2025-88123</span>
-                      <span className="text-[11px] font-bold text-emerald-600">Valid & Active (Commercial)</span>
+                      <span className="text-[11px] font-bold text-emerald-600">Commercial</span>
                     </button>
                     <button
                       type="button"
@@ -726,7 +704,7 @@ This code is valid for 5 minutes. Once verified, your service account will be li
                       className="text-left px-3 py-2 rounded-xl bg-white hover:bg-rose-50 border border-[#E5E7EB] flex items-center justify-between transition-all cursor-pointer"
                     >
                       <span className="font-mono font-bold text-slate-700">MTR-2023-11029</span>
-                      <span className="text-[11px] font-semibold text-rose-600">Linked to Another User</span>
+                      <span className="text-[11px] font-semibold text-rose-600">Linked</span>
                     </button>
                     <button
                       type="button"
@@ -737,7 +715,7 @@ This code is valid for 5 minutes. Once verified, your service account will be li
                       className="text-left px-3 py-2 rounded-xl bg-white hover:bg-rose-50 border border-[#E5E7EB] flex items-center justify-between transition-all cursor-pointer"
                     >
                       <span className="font-mono font-bold text-slate-700">MTR-2021-10492</span>
-                      <span className="text-[11px] font-semibold text-amber-600">Inactive Account</span>
+                      <span className="text-[11px] font-semibold text-amber-600">Inactive</span>
                     </button>
                     <button
                       type="button"
@@ -748,7 +726,7 @@ This code is valid for 5 minutes. Once verified, your service account will be li
                       className="text-left px-3 py-2 rounded-xl bg-white hover:bg-rose-50 border border-[#E5E7EB] flex items-center justify-between transition-all cursor-pointer"
                     >
                       <span className="font-mono font-bold text-slate-700">MTR-2020-00841</span>
-                      <span className="text-[11px] font-semibold text-rose-600">No Contact Info</span>
+                      <span className="text-[11px] font-semibold text-rose-600">Unreachable</span>
                     </button>
                   </div>
                 </div>
@@ -758,7 +736,7 @@ This code is valid for 5 minutes. Once verified, your service account will be li
                   disabled={isCheckingDb}
                   className="w-full bg-[#FF5401] hover:bg-[#E54A00] disabled:opacity-60 text-white font-semibold text-xs sm:text-sm py-3.5 rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <span>{isCheckingDb ? 'Checking Central Billing Database...' : 'Continue'}</span>
+                  <span>{isCheckingDb ? 'Checking…' : 'Continue'}</span>
                   {!isCheckingDb && <ArrowRight className="w-4 h-4" />}
                 </button>
               </form>
@@ -820,7 +798,7 @@ This code is valid for 5 minutes. Once verified, your service account will be li
                       }}
                       className="text-xs font-semibold text-slate-500 hover:text-[#FF5401] cursor-pointer"
                     >
-                      Change Meter #
+                      Change
                     </button>
                   </div>
 
@@ -847,7 +825,7 @@ This code is valid for 5 minutes. Once verified, your service account will be li
                       className="flex-1 bg-[#F5F5F5] hover:bg-slate-200 text-[#2B2B2B] font-semibold text-xs sm:text-sm py-3.5 rounded-2xl border border-[#E5E7EB] transition-all flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <RefreshCw className="w-4 h-4" />
-                      <span>Resend OTP</span>
+                      <span>Resend</span>
                     </button>
 
                     <button
@@ -856,7 +834,7 @@ This code is valid for 5 minutes. Once verified, your service account will be li
                       className="flex-1 bg-[#FF5401] hover:bg-[#E54A00] disabled:opacity-60 text-white font-semibold text-xs sm:text-sm py-3.5 rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <CheckCircle2 className="w-4 h-4" />
-                      <span>{isVerifyingOtp ? 'Verifying...' : 'Verify'}</span>
+                      <span>{isVerifyingOtp ? 'Verifying…' : 'Verify'}</span>
                     </button>
                   </div>
                 </form>

@@ -13,6 +13,7 @@ export interface AdminUser {
 export interface Customer {
   id: string;
   accountNumber: string; // Master Primary Account
+  username?: string; // Login username
   name: string;
   email: string;
   mobileNumber: string;
@@ -276,6 +277,7 @@ export interface RegistrationRequest {
   reviewedAt?: string;
   reviewedBy?: string;
   accountCode?: string;
+  username?: string;
   tempPassword?: string;
   rejectionReason?: string;
   notificationChannel: 'Email' | 'SMS';
@@ -303,6 +305,7 @@ export interface SentEmail {
   status: 'DELIVERED' | 'SENT';
   data?: {
     accountCode?: string;
+    username?: string;
     tempPassword?: string;
     otpCode?: string;
     requestId?: string;

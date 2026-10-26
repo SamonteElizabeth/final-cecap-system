@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { fetchBillingHistory } from '../../services/api';
 import { BillingHistoryItem } from '../../types';
-import { FileText, Download, CheckCircle2, ChevronRight, ArrowDownToLine, Receipt } from 'lucide-react';
+import { FileText, Download, CheckCircle2, ChevronRight, ArrowDownToLine, Receipt, ChevronDown } from 'lucide-react';
 import { CurrentBillCard } from '../common/CurrentBillCard';
 
 export const BillingView: React.FC = () => {
@@ -11,6 +11,7 @@ export const BillingView: React.FC = () => {
 
   const [historyList, setHistoryList] = useState<BillingHistoryItem[]>([]);
   const [selectedHistoryReceipt, setSelectedHistoryReceipt] = useState<BillingHistoryItem | null>(null);
+  const [isBreakdownOpen, setIsBreakdownOpen] = useState(false);
 
   useEffect(() => {
     if (!selectedAccount) return;
@@ -22,6 +23,9 @@ export const BillingView: React.FC = () => {
   if (!selectedAccount) return null;
 
   const currentBill = selectedAccount.currentBill;
+  const isPaid = currentBill.status === 'Paid';
+  // A settled bill's breakdown is reference-only, so it starts collapsed
+  const showBreakdown = !isPaid || isBreakdownOpen;
 
   return (
     <div className="space-y-6 md:space-y-8 animate-fade-in pb-20 md:pb-12 w-full">
@@ -72,31 +76,54 @@ export const BillingView: React.FC = () => {
 
           {/* Unbundled Rate Breakdown Card */}
           <div className="bg-white rounded-2xl p-6 md:p-7 border border-[#E5E7EB] shadow-xs space-y-4">
-            <h3 className="text-xs font-semibold text-[#2B2B2B] uppercase tracking-wider flex items-center gap-1.5">
-              <FileText className="w-4 h-4 text-[#FF5401]" />
-              Unbundled Rate Breakdown
-            </h3>
+            {isPaid ? (
+              <button
+                type="button"
+                onClick={() => setIsBreakdownOpen(open => !open)}
+                aria-expanded={isBreakdownOpen}
+                className="w-full flex items-center justify-between gap-3 cursor-pointer group"
+              >
+                <span className="text-xs font-semibold text-[#2B2B2B] uppercase tracking-wider flex items-center gap-1.5">
+                  <FileText className="w-4 h-4 text-[#FF5401]" />
+                  Unbundled Rate Breakdown
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    Paid
+                  </span>
+                  <ChevronDown
+                    className={`w-4 h-4 text-slate-400 group-hover:text-[#FF5401] transition-transform ${isBreakdownOpen ? 'rotate-180' : ''}`}
+                  />
+                </span>
+              </button>
+            ) : (
+              <h3 className="text-xs font-semibold text-[#2B2B2B] uppercase tracking-wider flex items-center gap-1.5">
+                <FileText className="w-4 h-4 text-[#FF5401]" />
+                Unbundled Rate Breakdown
+              </h3>
+            )}
 
-            <div className="divide-y divide-[#E5E7EB] text-xs">
-              {currentBill.breakdown.map((item, idx) => (
-                <div key={idx} className="py-2.5 flex justify-between items-center">
-                  <div>
-                    <p className="font-medium text-[#2B2B2B]">{item.category}</p>
-                    <p className="text-[10px] text-slate-500">{item.description}</p>
-                  </div>
-                  <span className="font-medium text-[#2B2B2B] font-mono">
-                    ₱{item.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            {showBreakdown && (
+              <>
+                <div className="divide-y divide-[#E5E7EB] text-xs">
+                  {currentBill.breakdown.map((item, idx) => (
+                    <div key={idx} className="py-2.5 flex justify-between items-center">
+                      <p className="font-medium text-[#2B2B2B]">{item.category}</p>
+                      <span className="font-medium text-[#2B2B2B] font-mono">
+                        ₱{item.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+    
+                <div className="pt-3 border-t border-[#E5E7EB] flex justify-between items-center text-sm font-semibold text-[#2B2B2B]">
+                  <span>{isPaid ? 'Total Amount Paid' : 'Total Amount Due'}</span>
+                  <span className="text-[#FF5401] text-base font-semibold">
+                    ₱{currentBill.amountDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
-              ))}
-            </div>
-
-            <div className="pt-3 border-t border-[#E5E7EB] flex justify-between items-center text-sm font-semibold text-[#2B2B2B]">
-              <span>Total Amount Due</span>
-              <span className="text-[#FF5401] text-base font-semibold">
-                ₱{currentBill.amountDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-              </span>
-            </div>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -105,12 +132,9 @@ export const BillingView: React.FC = () => {
       {activeSubTab === 'HISTORY' && (
         <div className="space-y-3 w-full">
           <div className="flex items-center justify-between px-1">
-            <div>
-              <h3 className="text-xs font-semibold text-[#2B2B2B] uppercase tracking-wider">
-                Payment & Bill History
-              </h3>
-              <p className="text-[11px] text-slate-500 mt-0.5">Official digital receipts and settled statements</p>
-            </div>
+            <h3 className="text-xs font-semibold text-[#2B2B2B] uppercase tracking-wider">
+              Payment & Bill History
+            </h3>
             <span className="text-[11px] font-medium bg-orange-50 border border-[#FF5401]/20 text-[#FF5401] px-2.5 py-0.5 rounded-full">
               {historyList.length} Records
             </span>
@@ -209,7 +233,7 @@ export const BillingView: React.FC = () => {
                 onClick={() => alert(`Downloaded PDF Receipt: ${selectedHistoryReceipt.receiptNumber}.pdf`)}
                 className="flex-1 bg-orange-50 text-[#FF5401] font-semibold text-xs py-2.5 rounded-xl border border-[#FF5401]/30 flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <ArrowDownToLine className="w-4 h-4" /> Download PDF
+                <ArrowDownToLine className="w-4 h-4" /> Download
               </button>
               <button
                 onClick={() => setSelectedHistoryReceipt(null)}

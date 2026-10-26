@@ -14,7 +14,7 @@ import {
 import { useApp } from '../../context/AppContext';
 import { AdminNavigationTab, AdvisoriesSubTab, MaintenanceSubTab } from './AdminSidebar';
 import { UserProfileDropdown } from '../common/UserProfileDropdown';
-import cecapLogo from '../../assets/CECAp_Logo.png';
+import cecapLogo from '../../assets/cecap-emblem.png';
 
 interface AdminHeaderProps {
   activeTab: AdminNavigationTab;
@@ -23,13 +23,8 @@ interface AdminHeaderProps {
   onSearchQueryChange?: (q: string) => void;
 }
 
-export const AdminHeader: React.FC<AdminHeaderProps> = ({
-  activeTab,
-  advisoriesSubTab,
-  maintenanceSubTab,
-}) => {
-  const { notifications, unreadNotifCount, markNotificationRead, markAllNotificationsRead, sentEmails, setEmailModalOpen, userRole, adminUser } = useApp();
-  const isSupportStaff = userRole === 'support_staff' || adminUser?.role === 'support_staff';
+export const AdminHeader: React.FC<AdminHeaderProps> = () => {
+  const { notifications, unreadNotifCount, markNotificationRead, markAllNotificationsRead, sentEmails, setEmailModalOpen } = useApp();
 
   const [notifDrawerOpen, setNotifDrawerOpen] = useState(false);
   const [filter, setFilter] = useState<'ALL' | 'OUTAGE' | 'BILL' | 'ANNOUNCEMENT'>('ALL');
@@ -60,44 +55,12 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
     }
   };
 
-  const getBreadcrumbTitle = () => {
-    if (isSupportStaff) {
-      return 'Support Desk • Ticket Operations';
-    }
-    switch (activeTab) {
-      case 'analytics':
-        return ' Analytics';
-      case 'customer':
-        return 'Customer';
-      case 'support':
-        return 'Support';
-      case 'advisories':
-        if (advisoriesSubTab === 'announcements') return 'Advisories • Announcement';
-        if (advisoriesSubTab === 'faqs') return 'Advisories • FAQs';
-        if (advisoriesSubTab === 'guides') return 'Advisories • Self Service Guides';
-        return 'Advisories';
-      case 'payments':
-        return 'Payment Transactions & Monitoring';
-      case 'maintenance':
-        return 'Maintenance';
-      case 'user-management':
-        return 'User Management';
-      default:
-        return 'Admin';
-    }
-  };
-
   return (
     <header className="bg-white border-b border-[#E5E7EB] px-3 sm:px-6 py-3 flex items-center justify-between sticky top-0 z-30 shadow-2xs h-16 w-full">
-      {/* Left: Breadcrumbs & Page Title */}
+      {/* Left: Logo (mobile only) */}
       <div className="flex items-center gap-2 sm:gap-3">
         <div className="flex md:hidden items-center shrink-0">
-          <img src={cecapLogo} alt="CECAp Logo" className="h-7 object-contain" />
-        </div>
-        <div>
-          <h1 className="text-xs sm:text-sm md:text-base font-extrabold text-[#2B2B2B] leading-tight truncate max-w-[150px] sm:max-w-none">
-            {getBreadcrumbTitle()}
-          </h1>
+          <img src={cecapLogo} alt="CECAp Logo" className="w-8 h-8 object-contain" />
         </div>
       </div>
 
@@ -107,13 +70,15 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
         <button
           type="button"
           onClick={() => setEmailModalOpen(true)}
-          className="h-9 px-3 rounded-full bg-orange-50 hover:bg-orange-100 border border-[#FF5401]/30 text-[#FF5401] flex items-center gap-2 font-extrabold text-xs transition-all cursor-pointer shadow-2xs relative"
+          className="w-10 h-10 rounded-full bg-white hover:bg-orange-50/50 border border-[#E2E8F0] hover:border-[#FF5401]/50 flex items-center justify-center text-[#FF5401] transition-all relative cursor-pointer shadow-2xs"
           title="View All CECAp System Emails"
         >
-          <Mail className="w-4 h-4 text-[#FF5401]" />
-          <span className="bg-[#FF5401] text-white text-[10px] font-extrabold px-1.5 py-0.2 rounded-full">
-            {sentEmails.length}
-          </span>
+          <Mail className="w-5 h-5 text-[#FF5401]" />
+          {sentEmails.length > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-5 h-5 px-0.5 rounded-full bg-[#FF5C5C] text-white text-[10px] font-black flex items-center justify-center shadow-xs border-2 border-white">
+              {sentEmails.length > 9 ? '9+' : sentEmails.length}
+            </span>
+          )}
         </button>
 
         {/* Notifications Dropdown Toggle */}
@@ -147,7 +112,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
                     className="text-[10px] font-semibold text-[#FF5401] hover:underline flex items-center gap-1 cursor-pointer bg-orange-50 px-2 py-0.5 rounded-lg border border-orange-200/60"
                   >
                     <CheckCheck className="w-3 h-3" />
-                    <span>Mark all read</span>
+                    <span>Read</span>
                   </button>
                 )}
               </div>

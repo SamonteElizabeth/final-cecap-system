@@ -89,14 +89,14 @@ export const ProfileView: React.FC = () => {
                 onClick={() => setIsEditingContact(true)}
                 className="text-xs font-semibold text-[#FF5401] hover:underline flex items-center gap-1 cursor-pointer"
               >
-                <Edit3 className="w-3.5 h-3.5" /> Edit Info
+                <Edit3 className="w-3.5 h-3.5" /> Edit
               </button>
             ) : (
               <button
                 onClick={handleSaveContact}
                 className="text-xs font-semibold text-[#22C55E] hover:underline flex items-center gap-1 cursor-pointer"
               >
-                <CheckCircle2 className="w-3.5 h-3.5" /> Save Changes
+                <CheckCircle2 className="w-3.5 h-3.5" /> Save
               </button>
             )}
           </div>
@@ -146,7 +146,7 @@ export const ProfileView: React.FC = () => {
               onClick={() => setIsLinkingModalOpen(true)}
               className="bg-[#FF5401] hover:bg-[#E54A00] text-white px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
             >
-              <Plus className="w-3.5 h-3.5" /> Link Service Account
+              <Plus className="w-3.5 h-3.5" /> Link
             </button>
           </div>
 
@@ -198,10 +198,7 @@ export const ProfileView: React.FC = () => {
               <X className="w-4 h-4" />
             </button>
 
-            <div>
-              <h3 className="font-bold text-[#2B2B2B] text-base">Link Service Account</h3>
-              <p className="text-xs text-slate-500">Connect another Clark Electric meter to your login</p>
-            </div>
+            <h3 className="font-bold text-[#2B2B2B] text-base">Link Service Account</h3>
 
             {linkMsg && (
               <div className="p-3 rounded-xl bg-orange-50 border border-[#FF5401]/30 text-[#2B2B2B] text-xs font-semibold flex items-center gap-2">
@@ -251,7 +248,7 @@ export const ProfileView: React.FC = () => {
                 disabled={isLinkingLoading}
                 className="w-full bg-[#FF5401] hover:bg-[#E54A00] text-white font-bold text-xs py-3 rounded-xl shadow-md transition-all cursor-pointer"
               >
-                {isLinkingLoading ? 'Verifying Meter Records...' : 'Verify & Link Account'}
+                {isLinkingLoading ? 'Verifying…' : 'Link'}
               </button>
             </form>
           </div>

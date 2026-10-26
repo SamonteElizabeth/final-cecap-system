@@ -83,7 +83,7 @@ export const PasswordChangeModal: React.FC = () => {
           <div>
             <h3 className="text-sm font-semibold text-[#2B2B2B]">CECAP Password Management</h3>
             <p className="text-[11px] text-slate-500">
-              30-day expiration cycle • {passwordExpirationStatus.daysRemaining} days remaining
+              {passwordExpirationStatus.daysRemaining} days remaining
             </p>
           </div>
         </div>
@@ -209,7 +209,7 @@ export const PasswordChangeModal: React.FC = () => {
               disabled={isSubmitting}
               className="w-2/3 bg-[#FF5401] hover:bg-[#E54A00] text-white font-semibold text-xs py-2.5 rounded-2xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5"
             >
-              {isSubmitting ? 'Updating...' : 'Save New Password'}
+              {isSubmitting ? 'Updating…' : 'Save'}
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>

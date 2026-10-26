@@ -74,19 +74,16 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({ searchQuery = '' }) 
         <div className="bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-2xs space-y-2">
           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">GCash Share</span>
           <div className="text-2xl font-black text-emerald-600">62.4%</div>
-          <span className="text-[11px] text-slate-500 font-medium">Digital Gateway Leader</span>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-2xs space-y-2">
           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Maya Share</span>
           <div className="text-2xl font-black text-[#FF5401]">24.1%</div>
-          <span className="text-[11px] text-slate-500 font-medium">Wallet Interoperable</span>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-2xs space-y-2">
           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Transaction Success Rate</span>
           <div className="text-2xl font-black text-blue-600">99.1%</div>
-          <span className="text-[11px] text-emerald-600 font-bold">Zero gateway outages</span>
         </div>
       </div>
 
@@ -197,7 +194,7 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({ searchQuery = '' }) 
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-50 hover:bg-[#FF5401] text-[#FF5401] hover:text-white text-xs font-bold transition-all cursor-pointer"
                       >
                         <Eye className="w-3.5 h-3.5" />
-                        <span>View Receipt</span>
+                        <span>View</span>
                       </button>
                     </td>
                   </tr>
@@ -274,7 +271,7 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({ searchQuery = '' }) 
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer"
               >
                 <Printer className="w-4 h-4" />
-                <span>Print Official Receipt</span>
+                <span>Print</span>
               </button>
             </div>
           </div>

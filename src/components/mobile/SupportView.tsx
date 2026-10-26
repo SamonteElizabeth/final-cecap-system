@@ -6,7 +6,7 @@ import { SELF_SERVICE_GUIDES_LIST } from '../../data/adminMockData';
 import { SupportConcern } from '../../types';
 import { 
   Paperclip, CheckCircle2, Search, Send, Plus, Eye, X, 
-  ChevronRight, ChevronDown, Lock, AlertTriangle, BookOpen, 
+  ChevronRight, ChevronDown, AlertTriangle, BookOpen, 
   Clock, Calendar, FileText, Tag, MessageSquare, ShieldCheck
 } from 'lucide-react';
 
@@ -186,7 +186,7 @@ export const SupportView: React.FC = () => {
               : 'text-slate-600 hover:text-[#2B2B2B] hover:bg-white/50'
           }`}
         >
-          Self-Help
+          Guides
         </button>
         <button
           type="button"
@@ -206,12 +206,7 @@ export const SupportView: React.FC = () => {
         <div className="space-y-5 animate-fade-in">
           {/* Header Bar with “+ Support” Button */}
           <div className="bg-white rounded-3xl p-5 md:p-6 border border-[#E5E7EB] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h2 className="text-base md:text-lg font-semibold text-[#2B2B2B]">Support Requests</h2>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Manage and track submitted support tickets for Account <span className="font-mono font-semibold text-[#FF5401]">#{selectedAccount?.accountNumber}</span>
-              </p>
-            </div>
+            <h2 className="text-base md:text-lg font-semibold text-[#2B2B2B]">Support Requests</h2>
 
             <button
               type="button"
@@ -219,7 +214,7 @@ export const SupportView: React.FC = () => {
               className="bg-[#FF5401] hover:bg-[#E54A00] text-white font-semibold text-xs px-4 py-2.5 rounded-2xl shadow-xs transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              <span>Support</span>
+              <span>New</span>
             </button>
           </div>
 
@@ -232,7 +227,7 @@ export const SupportView: React.FC = () => {
                 </div>
                 <h3 className="text-sm font-semibold text-[#2B2B2B]">No Support Requests Yet</h3>
                 <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                  You haven't submitted any support tickets for this account yet. Click the "+ Support" button above to send a request.
+                  You haven't submitted any support tickets for this account yet. Click the "New" button above to send a request.
                 </p>
                 <button
                   type="button"
@@ -240,7 +235,7 @@ export const SupportView: React.FC = () => {
                   className="bg-[#FF5401] hover:bg-[#E54A00] text-white font-semibold text-xs px-4 py-2 rounded-xl transition-all inline-flex items-center gap-1.5 cursor-pointer mt-2"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>+ Support</span>
+                  <span>New</span>
                 </button>
               </div>
             ) : (
@@ -345,7 +340,7 @@ export const SupportView: React.FC = () => {
                             className="w-full bg-orange-50 hover:bg-orange-100 text-[#FF5401] py-2 px-3 rounded-xl font-semibold text-xs border border-[#FF5401]/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                           >
                             <Eye className="w-3.5 h-3.5" />
-                            <span>View Details</span>
+                            <span>View</span>
                           </button>
                         </div>
                       </div>
@@ -458,12 +453,7 @@ export const SupportView: React.FC = () => {
               <X className="w-5 h-5" />
             </button>
 
-            <div>
-              <h3 className="text-base md:text-lg font-semibold text-[#2B2B2B]">Support Request</h3>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Submit an inquiry or technical ticket for Account <span className="font-mono font-semibold text-[#FF5401]">#{selectedAccount?.accountNumber}</span>
-              </p>
-            </div>
+            <h3 className="text-base md:text-lg font-semibold text-[#2B2B2B]">Support Request</h3>
 
             <form onSubmit={handleSupportSubmit} className="space-y-4">
               {/* Support Category */}
@@ -475,11 +465,11 @@ export const SupportView: React.FC = () => {
                     onChange={e => setCategory(e.target.value as any)}
                     className="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-3 text-xs font-medium text-[#2B2B2B] focus:outline-none focus:border-[#FF5401] focus:bg-white appearance-none pr-10 cursor-pointer"
                   >
-                    <option value="Billing Concern">Billing Concern (Unclear charges, high reading)</option>
-                    <option value="Service Complaint">Service Complaint (Voltage fluctuation, tree trimming)</option>
-                    <option value="Payment Concern">Payment Concern (Unposted payment, OR missing)</option>
-                    <option value="Meter Concern">Meter Concern (Digital meter fault, seal broken)</option>
-                    <option value="Power Outage">Power Outage (Unscheduled blackouts, line trip)</option>
+                    <option value="Billing Concern">Billing Concern</option>
+                    <option value="Service Complaint">Service Complaint</option>
+                    <option value="Payment Concern">Payment Concern</option>
+                    <option value="Meter Concern">Meter Concern</option>
+                    <option value="Power Outage">Power Outage</option>
                     <option value="Others">Others</option>
                   </select>
                   <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">
@@ -524,11 +514,10 @@ export const SupportView: React.FC = () => {
               <div>
                 <label className="block text-xs font-semibold text-[#2B2B2B] mb-1.5">Photo / Document Attachment (Optional)</label>
                 <label className="flex flex-col items-center justify-center p-3.5 border border-slate-200 hover:border-[#FF5401]/60 rounded-xl cursor-pointer bg-[#F8FAFC] hover:bg-orange-50/40 text-xs transition-colors">
-                  <div className="flex items-center gap-2 text-[#FF5401] font-semibold text-xs mb-0.5">
+                  <div className="flex items-center gap-2 text-[#FF5401] font-semibold text-xs">
                     <Paperclip className="w-4 h-4" />
-                    <span>{attachmentName ? attachmentName : 'Attach Photo or Billing Document'}</span>
+                    <span>{attachmentName ? attachmentName : 'Attach'}</span>
                   </div>
-                  <span className="text-[10px] text-slate-400">JPG, PNG, PDF up to 10MB</span>
                   <input type="file" onChange={handleFileChange} className="hidden" accept="image/*,.pdf" />
                 </label>
               </div>
@@ -548,13 +537,8 @@ export const SupportView: React.FC = () => {
                   className="bg-[#FF5401] hover:bg-[#E54A00] disabled:opacity-60 text-white font-semibold text-xs px-5 py-2.5 rounded-2xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  <span>{isSubmitting ? 'Submitting...' : 'Submit Support Request'}</span>
+                  <span>{isSubmitting ? 'Submitting…' : 'Submit'}</span>
                 </button>
-              </div>
-
-              <div className="flex items-center justify-center gap-1.5 text-slate-400 text-[10px] pt-1 border-t border-slate-100">
-                <Lock className="w-3 h-3" />
-                <span>Your information is protected by Clark Electric customer privacy policy.</span>
               </div>
             </form>
           </div>

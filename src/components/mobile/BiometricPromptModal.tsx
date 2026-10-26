@@ -46,14 +46,9 @@ export const BiometricPromptModal: React.FC = () => {
           </div>
         </div>
 
-        <h3 className="font-bold text-slate-900 text-base">
+        <h3 className="font-bold text-slate-900 text-base mb-6">
           {success ? 'Identity Verified' : scanning ? 'Scanning Biometrics...' : 'Clark Electric Biometrics'}
         </h3>
-        <p className="text-xs text-slate-500 mt-1 mb-6">
-          {success
-            ? 'Authentication successful'
-            : 'Touch sensor or align Face ID to confirm authorization'}
-        </p>
 
         {!success && (
           <button
@@ -61,7 +56,7 @@ export const BiometricPromptModal: React.FC = () => {
             disabled={scanning}
             className="w-full bg-[#005BAC] hover:bg-blue-700 active:scale-98 text-white font-semibold text-sm py-3 rounded-2xl shadow-md shadow-blue-500/20 transition-all flex items-center justify-center gap-2"
           >
-            {scanning ? 'Authenticating...' : 'Verify with Fingerprint / Face ID'}
+            {scanning ? 'Authenticating…' : 'Verify'}
           </button>
         )}
       </div>

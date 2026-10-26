@@ -13,6 +13,7 @@ import {
   Lock,
   UserCheck,
   FileText,
+  User,
   Send,
   MapPin,
   Clock,
@@ -25,7 +26,7 @@ import {
   X,
 } from 'lucide-react';
 import { validatePassword, LockoutStatus } from '../../utils/authPolicy';
-import cecapLogo from '../../assets/CECAp_Logo.png';
+import cecapLogo from '../../assets/cecap-wordmark.png';
 import substationHero from '../../assets/images/clark_electric_substation_1791368730354.jpg';
 
 /**
@@ -40,10 +41,7 @@ const PasswordPolicyChecklist: React.FC<{
 
   return (
     <div className="bg-[#FAF8F5] p-3 rounded-2xl border border-[#EBE5DC] text-[11px] space-y-1.5 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <span className="font-semibold text-[#2B2B2B] text-xs">CECAP Password Policy:</span>
-        <span className="text-[10px] text-slate-400">Strict Compliance</span>
-      </div>
+      <span className="block font-semibold text-[#2B2B2B] text-xs">CECAP Password Policy:</span>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px]">
         <div className={`flex items-center gap-1.5 ${rules.length ? 'text-emerald-700 font-medium' : 'text-slate-500'}`}>
           {rules.length ? <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> : <div className="w-3.5 h-3.5 rounded-full border border-slate-300 shrink-0" />}
@@ -74,7 +72,12 @@ const PasswordPolicyChecklist: React.FC<{
   );
 };
 
-export const AuthView: React.FC = () => {
+export type AuthMode = 'CUSTOMER_LOGIN' | 'ADMIN_LOGIN' | 'REGISTER';
+
+const DEMO_CUSTOMER_USERNAME = 'juan.delacruz';
+const DEMO_CUSTOMER_ACCOUNT = '0421-8812-90';
+
+export const AuthView: React.FC<{ initialMode?: AuthMode }> = ({ initialMode = 'CUSTOMER_LOGIN' }) => {
   const {
     setIsAuthenticated,
     setUserRole,
@@ -107,13 +110,14 @@ export const AuthView: React.FC = () => {
     resendAdminSetupEmail,
     simulateExpireToken,
     simulateUseToken,
+    registrationRequests,
   } = useApp();
 
-  const [mode, setMode] = useState<'CUSTOMER_LOGIN' | 'ADMIN_LOGIN' | 'REGISTER'>('CUSTOMER_LOGIN');
+  const [mode, setMode] = useState<AuthMode>(initialMode);
 
   // Customer Login form state
   const [customerLoginStep, setCustomerLoginStep] = useState<'CREDENTIALS' | 'MFA_OTP'>('CREDENTIALS');
-  const [loginIdentifier, setLoginIdentifier] = useState('0421-8812-90');
+  const [loginIdentifier, setLoginIdentifier] = useState(DEMO_CUSTOMER_USERNAME);
   const [loginPassword, setLoginPassword] = useState('••••••••');
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [loginError, setLoginError] = useState('');
@@ -132,16 +136,30 @@ export const AuthView: React.FC = () => {
   const [customerMfaError, setCustomerMfaError] = useState('');
   const [mfaResendCount, setMfaResendCount] = useState(0);
 
-  // Sync lockout state on account code change
+  // Customers log in with a username; lockout, MFA and recovery stay keyed to the account number
+  const resolveCustomerAccount = (username: string): string | null => {
+    const entered = username.trim().toLowerCase();
+    if (!entered) return null;
+    if (entered === DEMO_CUSTOMER_USERNAME) return DEMO_CUSTOMER_ACCOUNT;
+    if (user?.username && user.username.toLowerCase() === entered) return user.accountNumber;
+    const approved = registrationRequests.find(
+      r => r.status === 'Approved' && r.accountCode && r.username?.toLowerCase() === entered
+    );
+    return approved?.accountCode ?? null;
+  };
+  const loginAccount = resolveCustomerAccount(loginIdentifier);
+  const lockoutKey = loginAccount ?? loginIdentifier.trim().toLowerCase();
+
+  // Sync lockout state on username change
   useEffect(() => {
-    if (loginIdentifier) {
-      const status = checkLockout(loginIdentifier);
+    if (lockoutKey) {
+      const status = checkLockout(lockoutKey);
       setLockoutState(status);
       if (status.isLocked && status.lockoutMessage) {
         setLoginError(status.lockoutMessage);
       }
     }
-  }, [loginIdentifier, checkLockout]);
+  }, [lockoutKey, checkLockout]);
 
   useEffect(() => {
     const handleAutofill = (e: any) => {
@@ -287,7 +305,7 @@ export const AuthView: React.FC = () => {
     setLoginError('');
 
     // Check account lockout status (5 consecutive failed attempts -> 30 mins)
-    const currentLockout = checkLockout(loginIdentifier);
+    const currentLockout = checkLockout(lockoutKey);
     if (currentLockout.isLocked) {
       setLockoutState(currentLockout);
       setLoginError(currentLockout.lockoutMessage || 'Account is locked for 30 minutes.');
@@ -299,12 +317,11 @@ export const AuthView: React.FC = () => {
     setTimeout(() => {
       setIsSubmitting(false);
 
-      const targetAccount = loginIdentifier.trim();
+      const targetAccount = lockoutKey;
       const enteredPassword = loginPassword.trim();
 
-      // Check credentials against customer record
-      // Valid if matching current user account, demo customer 0421-8812-90, or recognized format
-      const isKnownAccount = targetAccount === '0421-8812-90' || (user && user.accountNumber === targetAccount);
+      // Check credentials against customer record: the username must resolve to a known account
+      const isKnownAccount = loginAccount !== null;
       const isCorrectPassword =
         enteredPassword === '••••••••' ||
         enteredPassword === 'Cedc@2026!' ||
@@ -317,7 +334,7 @@ export const AuthView: React.FC = () => {
         // Record failed attempt according to lockout policy
         const newLockout = recordFailedAttempt(targetAccount);
         setLockoutState(newLockout);
-        setLoginError(newLockout.lockoutMessage || 'Invalid Customer Account Code or Password.');
+        setLoginError(newLockout.lockoutMessage || 'Invalid username or password.');
         return;
       }
 
@@ -386,7 +403,7 @@ Valid for 5 minutes.`,
     if (customerMfaInput !== customerGeneratedMfa && customerMfaInput !== '123456') {
       logAuthEvent(
         'MFA_FAILED',
-        loginIdentifier,
+        lockoutKey,
         'FAILURE',
         'Invalid 6-digit MFA OTP code submitted by customer.'
       );
@@ -401,13 +418,13 @@ Valid for 5 minutes.`,
 
       logAuthEvent(
         'MFA_VERIFIED',
-        loginIdentifier,
+        lockoutKey,
         'SUCCESS',
         'Customer MFA verification code verified successfully.'
       );
       logAuthEvent(
         'LOGIN_SUCCESS',
-        loginIdentifier,
+        lockoutKey,
         'SUCCESS',
         'Customer authentication completed with 2-factor MFA validation.'
       );
@@ -418,7 +435,7 @@ Valid for 5 minutes.`,
       const isFirstTime = isTempPasswordUsed || (user && user.isFirstLogin);
 
       if (isFirstTime || isExpired) {
-        setPendingLoginUser(user || { accountNumber: loginIdentifier, name: 'Valued Customer' });
+        setPendingLoginUser(user || { accountNumber: lockoutKey, name: 'Valued Customer' });
         setShowFirstLoginModal(true);
       } else {
         setUserRole('customer');
@@ -451,13 +468,13 @@ Valid for 5 minutes.`,
       type: 'OTP_CODE',
       data: {
         otpCode: code,
-        accountCode: loginIdentifier,
+        accountCode: lockoutKey,
       },
     });
 
     logAuthEvent(
       'MFA_REQUESTED',
-      loginIdentifier,
+      lockoutKey,
       'SUCCESS',
       `New MFA OTP token re-dispatched to customer (${customerEmail}).`
     );
@@ -477,7 +494,7 @@ Valid for 5 minutes.`,
 
     // Strictly validate against CECAP Authentication Policy
     const validation = validatePassword(newPassInput, {
-      accountNumber: pendingLoginUser?.accountNumber || loginIdentifier,
+      accountNumber: pendingLoginUser?.accountNumber || lockoutKey,
       name: pendingLoginUser?.name || user?.name,
       email: pendingLoginUser?.email || user?.email,
       previousPasswords: user?.previousPasswords || [],
@@ -506,7 +523,7 @@ Valid for 5 minutes.`,
   // FORGOT PASSWORD / ACCOUNT RECOVERY FLOW
   // -------------------------------------------------------------
   const openRecoveryModal = (accountCode?: string) => {
-    setForgotIdentifier(accountCode || loginIdentifier);
+    setForgotIdentifier(accountCode || loginAccount || '');
     setForgotEmail(user?.email || 'juan.delacruz@example.ph');
     setForgotStep('IDENTIFY');
     setForgotError('');
@@ -642,7 +659,7 @@ Valid for 5 minutes.`,
     if (existingAdmin) {
       if (existingAdmin.status === 'Pending') {
         setAdminError(
-          '⚠️ Setup Pending: This administrator account has no password yet. Please use "First-Time Admin? Create Password" with your single-use email link.'
+          '⚠️ Setup Pending: This administrator account has no password yet. Please use "Setup" with your single-use email link.'
         );
         return;
       }
@@ -1070,13 +1087,6 @@ Valid for 5 minutes.`,
               <br />
               ELECTRIC
             </h1>
-            <p className="mt-4 text-xs sm:text-sm text-[#3F4756] font-normal leading-relaxed max-w-[260px]">
-              Delivering reliable electricity
-              <br />
-              for stronger communities
-              <br />
-              and a brighter Clark.
-            </p>
           </div>
         </div>
 
@@ -1089,9 +1099,7 @@ Valid for 5 minutes.`,
         >
           {/* Centered CECAp Logo */}
           <div className="flex justify-center mb-6">
-            <div className="w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center shrink-0">
-              <img src={cecapLogo} alt="CECAP Logo" className="w-full h-full object-contain" />
-            </div>
+            <img src={cecapLogo} alt="CECAp Logo" className="h-9 sm:h-10 w-auto object-contain" />
           </div>
 
           {/* Mode Toggle Pills (Customer, Admin, Register) */}
@@ -1169,11 +1177,11 @@ Valid for 5 minutes.`,
                   <div className="pt-1">
                     <button
                       type="button"
-                      onClick={() => openRecoveryModal(loginIdentifier)}
+                      onClick={() => openRecoveryModal()}
                       className="w-full bg-[#FF5401] hover:bg-[#E54A00] text-white font-semibold text-xs py-2 px-3 rounded-xl shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <KeyRound className="w-3.5 h-3.5" />
-                      <span>Unlock / Recover Account with OTP</span>
+                      <span>Recover</span>
                     </button>
                   </div>
                 </div>
@@ -1190,15 +1198,18 @@ Valid for 5 minutes.`,
                   )}
 
                   <div>
-                    <label className="block text-xs font-semibold text-[#2B2B2B] mb-1.5">Customer Account Code</label>
+                    <label className="block text-xs font-semibold text-[#2B2B2B] mb-1.5">Username</label>
                     <div className="relative">
-                      <FileText className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <User className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                       <input
                         type="text"
                         value={loginIdentifier}
                         onChange={e => setLoginIdentifier(e.target.value)}
-                        placeholder="e.g. 0421-8812-90"
-                        className="w-full bg-[#FAF8F5] border border-[#EBE5DC] rounded-2xl pl-11 pr-4 py-3 text-sm font-medium text-[#2B2B2B] focus:outline-none focus:border-[#FF5401] focus:bg-white transition-all font-mono"
+                        placeholder="e.g. juan.delacruz"
+                        autoComplete="username"
+                        autoCapitalize="none"
+                        spellCheck={false}
+                        className="w-full bg-[#FAF8F5] border border-[#EBE5DC] rounded-2xl pl-11 pr-4 py-3 text-sm font-medium text-[#2B2B2B] focus:outline-none focus:border-[#FF5401] focus:bg-white transition-all"
                         required
                       />
                     </div>
@@ -1209,10 +1220,10 @@ Valid for 5 minutes.`,
                       <label className="text-xs font-semibold text-[#2B2B2B]">Password</label>
                       <button
                         type="button"
-                        onClick={() => openRecoveryModal(loginIdentifier)}
+                        onClick={() => openRecoveryModal()}
                         className="text-xs font-semibold text-[#FF5401] hover:underline cursor-pointer"
                       >
-                        Forgot Password?
+                        Reset
                       </button>
                     </div>
                     <div className="relative">
@@ -1241,7 +1252,7 @@ Valid for 5 minutes.`,
                     disabled={isSubmitting || lockoutState.isLocked}
                     className="w-full bg-[#FF5401] hover:bg-[#E54A00] disabled:opacity-60 text-white font-semibold text-sm py-3.5 rounded-2xl shadow-[0_8px_20px_-4px_rgba(255,84,1,0.45)] transition-all flex items-center justify-center gap-2 mt-2 cursor-pointer"
                   >
-                    <span>{isSubmitting ? 'Validating Credentials...' : 'Sign In as Customer'}</span>
+                    <span>{isSubmitting ? 'Validating…' : 'Login'}</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
 
@@ -1254,14 +1265,8 @@ Valid for 5 minutes.`,
                       className="w-full bg-[#FFFDF9] hover:bg-orange-50/60 disabled:opacity-60 text-[#FF5401] border border-[#F5D0B8] font-semibold text-xs py-2.5 rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <Fingerprint className="w-4 h-4 text-[#FF5401]" />
-                      <span>Biometric Sign In (Face ID / Touch)</span>
+                      <span>Biometrics</span>
                     </button>
-                  </div>
-
-                  <div className="text-center pt-1">
-                    <span className="text-[10px] text-slate-500 font-medium">
-                      🔒 Protected by CECAP 2-Factor MFA, 9+ char password, & 30-day security policy
-                    </span>
                   </div>
                 </form>
               )}
@@ -1277,12 +1282,6 @@ Valid for 5 minutes.`,
                     <p className="text-[11px] text-slate-600 leading-relaxed max-w-xs mx-auto">
                       Step 2: A 6-digit verification code was dispatched to your registered mobile (+63 917 *** 1234) and email.
                     </p>
-                  </div>
-
-                  {/* Demo Helper Badge */}
-                  <div className="p-2.5 rounded-xl bg-orange-50 border border-orange-200 text-center text-xs text-[#2B2B2B] space-y-0.5">
-                    <span className="text-[10px] text-slate-500 block">📱 Demo Verification Token (also in CECAp Email):</span>
-                    <span className="font-mono font-semibold text-[#FF5401] text-base tracking-wider">{customerGeneratedMfa}</span>
                   </div>
 
                   {customerMfaError && (
@@ -1320,14 +1319,14 @@ Valid for 5 minutes.`,
                       }}
                       className="text-slate-500 hover:text-[#2B2B2B] font-semibold cursor-pointer"
                     >
-                      ← Back to Login
+                      ← Back
                     </button>
                     <button
                       type="button"
                       onClick={handleResendMfa}
                       className="text-[#FF5401] hover:underline font-semibold cursor-pointer"
                     >
-                      Resend Code {mfaResendCount > 0 ? `(${mfaResendCount})` : ''}
+                      Resend {mfaResendCount > 0 ? `(${mfaResendCount})` : ''}
                     </button>
                   </div>
 
@@ -1336,7 +1335,7 @@ Valid for 5 minutes.`,
                     disabled={isSubmitting}
                     className="w-full bg-[#FF5401] hover:bg-[#E54A00] text-white font-semibold text-sm py-3.5 rounded-2xl shadow-[0_8px_20px_-4px_rgba(255,84,1,0.45)] transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <span>{isSubmitting ? 'Verifying MFA Token...' : 'Verify & Sign In'}</span>
+                    <span>{isSubmitting ? 'Verifying…' : 'Verify'}</span>
                     <ShieldCheck className="w-4 h-4" />
                   </button>
                 </form>
@@ -1360,7 +1359,7 @@ Valid for 5 minutes.`,
                       className="w-full py-2 px-3 rounded-xl bg-[#FF5401] hover:bg-[#E54A00] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs cursor-pointer transition-all"
                     >
                       <KeyRound className="w-3.5 h-3.5" />
-                      <span>Open First-Time Password &amp; MFA Setup</span>
+                      <span>Setup</span>
                     </button>
                   )}
                 </div>
@@ -1387,7 +1386,6 @@ Valid for 5 minutes.`,
                   >
                     <div className="font-extrabold text-[11px] text-[#FF5401]">Administrator</div>
                     <div className="text-[10px] text-slate-500 truncate">Engr. Roberto Santos</div>
-                    <div className="text-[9px] text-slate-400 mt-0.5">Full System Access</div>
                   </button>
 
                   <button
@@ -1403,9 +1401,8 @@ Valid for 5 minutes.`,
                         : 'bg-white border-[#E2E8F0] text-slate-600 hover:bg-slate-50'
                     }`}
                   >
-                    <div className="font-extrabold text-[11px] text-blue-700">Support Staff</div>
+                    <div className="font-extrabold text-[11px] text-blue-700">Support</div>
                     <div className="text-[10px] text-slate-500 truncate">Clarissa Fernandez</div>
-                    <div className="text-[9px] text-slate-400 mt-0.5">Support Module Only</div>
                   </button>
                 </div>
               </div>
@@ -1433,7 +1430,7 @@ Valid for 5 minutes.`,
                     onClick={() => alert('Password reset link sent to registered admin email.')}
                     className="text-xs font-bold text-[#FF5401] hover:underline cursor-pointer"
                   >
-                    Forgot Password?
+                    Reset
                   </button>
                 </div>
                 <div className="relative">
@@ -1454,13 +1451,7 @@ Valid for 5 minutes.`,
                 disabled={isSubmitting}
                 className="w-full bg-[#FF5401] hover:bg-[#E54A00] text-white font-bold text-sm py-3.5 rounded-2xl shadow-[0_8px_20px_-4px_rgba(255,84,1,0.45)] transition-all flex items-center justify-center gap-2 mt-2 cursor-pointer"
               >
-                <span>
-                  {isSubmitting
-                    ? 'Signing In...'
-                    : adminEmail === 'c.fernandez@clarkelectric.ph'
-                    ? 'Sign In as Support Staff'
-                    : 'Sign In as Administrator'}
-                </span>
+                <span>{isSubmitting ? 'Loading…' : 'Login'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
@@ -1475,19 +1466,9 @@ Valid for 5 minutes.`,
                     <div className="w-9 h-9 rounded-xl bg-orange-100 text-[#FF5401] group-hover:bg-[#FF5401] group-hover:text-white flex items-center justify-center transition-colors shrink-0">
                       <KeyRound className="w-4 h-4" />
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-[#2B2B2B] group-hover:text-[#FF5401] transition-colors">
-                          First-Time Admin? Create Password
-                        </span>
-                        <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded-md bg-amber-100 text-amber-800 border border-amber-300">
-                          Pending Setup
-                        </span>
-                      </div>
-                      <p className="text-[10px] text-slate-500 mt-0.5">
-                        Establish password &amp; MFA using your secure single-use email link
-                      </p>
-                    </div>
+                    <span className="text-xs font-bold text-[#2B2B2B] group-hover:text-[#FF5401] transition-colors">
+                      Setup
+                    </span>
                   </div>
                   <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-[#FF5401] group-hover:translate-x-0.5 transition-all shrink-0" />
                 </button>
@@ -1501,10 +1482,6 @@ Valid for 5 minutes.`,
               {!submittedRegRequest ? (
                 regStep === 'DETAILS' ? (
                   <form onSubmit={handleStartRegistrationOtp} className="space-y-3">
-                    <div className="bg-orange-50/80 p-3 rounded-2xl border border-[#FF5401]/20 text-xs text-[#2B2B2B] leading-relaxed">
-                      Submit your customer registration details below. You will verify your mobile number via OTP before your request is forwarded to the <strong>CRS Administrator</strong>.
-                    </div>
-
                     {regError && (
                       <div className="p-3 rounded-xl bg-red-50 border border-[#EF4444]/30 text-[#EF4444] text-xs flex items-center gap-2">
                         <AlertCircle className="w-4 h-4 shrink-0" />
@@ -1642,12 +1619,12 @@ Valid for 5 minutes.`,
                       {isSubmitting ? (
                         <>
                           <RefreshCw className="w-4 h-4 animate-spin" />
-                          <span>Sending OTP SMS...</span>
+                          <span>Sending…</span>
                         </>
                       ) : (
                         <>
                           <Send className="w-4 h-4" />
-                          <span>Proceed to OTP Verification</span>
+                          <span>Continue</span>
                         </>
                       )}
                     </button>
@@ -1697,7 +1674,7 @@ Valid for 5 minutes.`,
                         onClick={() => setRegStep('DETAILS')}
                         className="text-slate-500 hover:text-[#2B2B2B] font-bold cursor-pointer"
                       >
-                        ← Edit Details
+                        ← Edit
                       </button>
                       <button
                         type="button"
@@ -1708,7 +1685,7 @@ Valid for 5 minutes.`,
                         }}
                         className="text-[#FF5401] hover:underline font-bold cursor-pointer"
                       >
-                        Resend OTP Code
+                        Resend
                       </button>
                     </div>
 
@@ -1720,12 +1697,12 @@ Valid for 5 minutes.`,
                       {isSubmitting ? (
                         <>
                           <RefreshCw className="w-4 h-4 animate-spin" />
-                          <span>Verifying & Submitting...</span>
+                          <span>Verifying…</span>
                         </>
                       ) : (
                         <>
                           <ShieldCheck className="w-4 h-4" />
-                          <span>Verify Mobile & Submit Request</span>
+                          <span>Submit</span>
                         </>
                       )}
                     </button>
@@ -1787,7 +1764,7 @@ Valid for 5 minutes.`,
                     }}
                     className="w-full bg-[#2B2B2B] hover:bg-black text-white font-bold text-xs py-3 rounded-2xl shadow-sm transition-all cursor-pointer"
                   >
-                    Return to Sign In
+                    Back
                   </button>
                 </div>
               )}
@@ -1804,21 +1781,10 @@ Valid for 5 minutes.`,
               <div className="w-11 h-11 rounded-2xl bg-orange-100 text-[#FF5401] flex items-center justify-center shrink-0 shadow-2xs">
                 <ShieldCheck className="w-6 h-6" />
               </div>
-              <div>
-                <h3 className="text-sm font-semibold text-[#2B2B2B]">
-                  {passwordExpirationStatus.isExpired ? 'Password Expired - Update Required' : 'First Time Sign-In Detected'}
-                </h3>
-                <p className="text-[11px] text-slate-500">
-                  {passwordExpirationStatus.isExpired
-                    ? '30-day password cycle expired. Please set a new secure password.'
-                    : 'Please set a personal secure password to access your account.'}
-                </p>
-              </div>
+              <h3 className="text-sm font-semibold text-[#2B2B2B]">
+                {passwordExpirationStatus.isExpired ? 'Password Expired - Update Required' : 'First Time Sign-In Detected'}
+              </h3>
             </div>
-
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Hello <strong>{pendingLoginUser?.name || 'Valued Customer'}</strong>! Under the CECAP customer security policy, your new password must have at least 9 characters and cannot match your last 5 passwords.
-            </p>
 
             {passChangeError && (
               <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs flex items-center gap-2 animate-fade-in">
@@ -1861,7 +1827,7 @@ Valid for 5 minutes.`,
                 <PasswordPolicyChecklist
                   password={newPassInput}
                   userContext={{
-                    accountNumber: pendingLoginUser?.accountNumber || loginIdentifier,
+                    accountNumber: pendingLoginUser?.accountNumber || lockoutKey,
                     name: pendingLoginUser?.name || user?.name,
                     email: user?.email,
                     previousPasswords: user?.previousPasswords || [],
@@ -1896,7 +1862,7 @@ Valid for 5 minutes.`,
                   disabled={isSubmitting}
                   className="w-2/3 bg-[#FF5401] hover:bg-[#E54A00] text-white font-semibold text-xs py-2.5 rounded-2xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5"
                 >
-                  {isSubmitting ? 'Updating...' : 'Update & Proceed'}
+                  {isSubmitting ? 'Updating…' : 'Update'}
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -1921,10 +1887,7 @@ Valid for 5 minutes.`,
               <div className="w-10 h-10 rounded-2xl bg-orange-100 text-[#FF5401] flex items-center justify-center shrink-0">
                 <KeyRound className="w-5 h-5" />
               </div>
-              <div>
-                <h3 className="text-sm font-semibold text-[#2B2B2B]">Account Recovery & Password Reset</h3>
-                <p className="text-[11px] text-slate-500">Secure verification via One-Time Password (OTP)</p>
-              </div>
+              <h3 className="text-sm font-semibold text-[#2B2B2B]">Account Recovery & Password Reset</h3>
             </div>
 
             {forgotError && (
@@ -1937,10 +1900,6 @@ Valid for 5 minutes.`,
             {/* STEP 1: IDENTIFY ACCOUNT */}
             {forgotStep === 'IDENTIFY' && (
               <form onSubmit={handleSendRecoveryOtp} className="space-y-3.5">
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Enter your Customer Account Code to receive a 6-digit verification code. If your account was locked, this will verify your identity and allow unlocking.
-                </p>
-
                 <div>
                   <label className="block text-xs font-semibold text-[#2B2B2B] mb-1">Customer Account Code *</label>
                   <input
@@ -1978,7 +1937,7 @@ Valid for 5 minutes.`,
                     disabled={isSubmitting}
                     className="w-2/3 bg-[#FF5401] hover:bg-[#E54A00] text-white font-semibold text-xs py-2.5 rounded-2xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5"
                   >
-                    {isSubmitting ? 'Dispatching...' : 'Send Recovery OTP'}
+                    {isSubmitting ? 'Sending…' : 'Send'}
                     <Send className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -2029,7 +1988,7 @@ Valid for 5 minutes.`,
                     type="submit"
                     className="w-2/3 bg-[#FF5401] hover:bg-[#E54A00] text-white font-semibold text-xs py-2.5 rounded-2xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5"
                   >
-                    <span>Verify Code</span>
+                    <span>Verify</span>
                     <ShieldCheck className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -2039,10 +1998,6 @@ Valid for 5 minutes.`,
             {/* STEP 3: NEW PASSWORD WITH POLICY CHECKLIST */}
             {forgotStep === 'NEW_PASSWORD' && (
               <form onSubmit={handleResetPasswordSubmit} className="space-y-3.5 animate-fade-in">
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Identity verified! Set your new password complying with the CECAP authentication policy. Cannot reuse your last 5 passwords.
-                </p>
-
                 <div>
                   <label className="block text-xs font-semibold text-[#2B2B2B] mb-1">New Password *</label>
                   <input
@@ -2092,7 +2047,7 @@ Valid for 5 minutes.`,
                     disabled={isSubmitting}
                     className="w-2/3 bg-[#FF5401] hover:bg-[#E54A00] text-white font-semibold text-xs py-2.5 rounded-2xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5"
                   >
-                    {isSubmitting ? 'Resetting...' : 'Update & Unlock Account'}
+                    {isSubmitting ? 'Resetting…' : 'Reset'}
                     <CheckCircle2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -2108,7 +2063,7 @@ Valid for 5 minutes.`,
 
                 <h3 className="text-base font-semibold text-[#2B2B2B]">Password Successfully Reset!</h3>
                 <p className="text-xs text-slate-600 leading-relaxed max-w-xs mx-auto">
-                  Your password has been securely updated and any existing account lockout was cleared. You may now sign in using your new credentials.
+                  Your password has been securely updated and any existing account lockout was cleared. You may now log in using your new credentials.
                 </p>
 
                 <div className="pt-2">
@@ -2121,7 +2076,7 @@ Valid for 5 minutes.`,
                     }}
                     className="w-full bg-[#FF5401] hover:bg-[#E54A00] text-white font-semibold text-xs py-3 rounded-2xl shadow-md transition-all cursor-pointer"
                   >
-                    Return to Sign In
+                    Back
                   </button>
                 </div>
               </div>
@@ -2140,14 +2095,9 @@ Valid for 5 minutes.`,
                 <div className="w-10 h-10 rounded-2xl bg-orange-100 text-[#FF5401] flex items-center justify-center font-bold shrink-0">
                   <KeyRound className="w-5 h-5" />
                 </div>
-                <div>
-                  <h3 className="font-extrabold text-sm sm:text-base text-[#2B2B2B]">
-                    Admin Password &amp; MFA Setup
-                  </h3>
-                  <p className="text-[11px] text-slate-400">
-                    Clark Electric Distribution Corporation • Secure Provisioning
-                  </p>
-                </div>
+                <h3 className="font-extrabold text-sm sm:text-base text-[#2B2B2B]">
+                  Admin Password &amp; MFA Setup
+                </h3>
               </div>
               <button
                 type="button"
@@ -2199,16 +2149,6 @@ Valid for 5 minutes.`,
             {/* STEP 1: VALIDATE REGISTERED EMAIL & SECURE LINK TOKEN */}
             {adminSetupStep === 'VALIDATE_LINK' && (
               <form onSubmit={handleValidateSetupLink} className="space-y-4 animate-fade-in">
-                <div className="bg-orange-50/80 p-3.5 rounded-2xl border border-[#FF5401]/20 text-xs text-[#2B2B2B] leading-relaxed space-y-1">
-                  <div className="flex items-center gap-1.5 font-bold text-[#FF5401]">
-                    <Shield className="w-4 h-4" />
-                    <span>Single-Use, Time-Limited Link Security</span>
-                  </div>
-                  <p className="text-[11px] text-slate-600">
-                    New Admin accounts are provisioned with <strong>Status: Pending</strong> and no password. Enter your registered email and the secure, single-use, time-limited link token from your official email invitation.
-                  </p>
-                </div>
-
                 {setupValidationError && (
                   <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 text-xs space-y-2 animate-shake">
                     <div className="flex items-start gap-2">
@@ -2226,7 +2166,7 @@ Valid for 5 minutes.`,
                         className="w-full bg-[#FF5401] hover:bg-[#E54A00] text-white py-2 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
                       >
                         <Mail className="w-4 h-4" />
-                        <span>Resend Setup Email (New Single-Use Link)</span>
+                        <span>Resend</span>
                       </button>
                     </div>
                   </div>
@@ -2264,11 +2204,11 @@ Valid for 5 minutes.`,
                     onClick={() => {
                       setSetupEmailInput('p.manalo@clarkelectric.ph');
                       setSetupValidationError('');
-                      setSetupNotice('Sample email filled! Click Continue below.');
+                      setSetupNotice('Sample email filled! Click Login below.');
                     }}
                     className="text-[#FF5401] hover:underline font-bold cursor-pointer"
                   >
-                    p.manalo@clarkelectric.ph (Click to fill)
+                    p.manalo@clarkelectric.ph
                   </button>
                 </div>
 
@@ -2284,7 +2224,7 @@ Valid for 5 minutes.`,
                     type="submit"
                     className="w-2/3 bg-[#FF5401] hover:bg-[#E54A00] text-white font-bold text-xs py-3 rounded-2xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <span>Validate Link &amp; Continue</span>
+                    <span>Login</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -2382,7 +2322,7 @@ Valid for 5 minutes.`,
                     type="submit"
                     className="w-2/3 bg-[#FF5401] hover:bg-[#E54A00] text-white font-bold text-xs py-3 rounded-2xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <span>Proceed to MFA Setup</span>
+                    <span>Continue</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -2400,16 +2340,10 @@ Valid for 5 minutes.`,
                     Mandatory Multi-Factor Authentication (MFA)
                   </h4>
                   <p className="text-[11px] text-slate-600 leading-relaxed max-w-xs mx-auto">
-                    To safeguard utility grid operations, all CECAP administrators must enroll in Two-Factor Authentication. A 6-digit verification code was dispatched to:
+                    Enter the 6-digit code sent to
                     <br />
                     <strong className="text-[#FF5401]">{setupEmailInput}</strong>
                   </p>
-                </div>
-
-                {/* Demo Helper Token Preview */}
-                <div className="p-2.5 rounded-xl bg-orange-50 border border-orange-200 text-center text-xs text-[#2B2B2B] space-y-0.5">
-                  <span className="text-[10px] text-slate-500 block">📱 Demo Verification Token (also in CECAp Email Outbox):</span>
-                  <span className="font-mono font-bold text-[#FF5401] text-lg tracking-widest">{setupGeneratedMfa}</span>
                 </div>
 
                 {setupMfaError && (
@@ -2451,7 +2385,7 @@ Valid for 5 minutes.`,
                     onClick={handleResendMfaCode}
                     className="text-[#FF5401] hover:underline font-bold cursor-pointer"
                   >
-                    Resend MFA Code {setupMfaResendCount > 0 ? `(${setupMfaResendCount})` : ''}
+                    Resend {setupMfaResendCount > 0 ? `(${setupMfaResendCount})` : ''}
                   </button>
                 </div>
 
@@ -2461,7 +2395,7 @@ Valid for 5 minutes.`,
                   className="w-full bg-[#FF5401] hover:bg-[#E54A00] text-white font-bold text-xs py-3.5 rounded-2xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <ShieldCheck className="w-4 h-4" />
-                  <span>{isSubmitting ? 'Verifying & Activating Account...' : 'Verify MFA & Activate Account'}</span>
+                  <span>{isSubmitting ? 'Activating…' : 'Activate'}</span>
                 </button>
               </form>
             )}
@@ -2473,30 +2407,9 @@ Valid for 5 minutes.`,
                   <CheckCircle2 className="w-10 h-10" />
                 </div>
 
-                <div className="space-y-1">
-                  <h3 className="text-base font-extrabold text-[#2B2B2B]">
-                    Administrator Account Successfully Activated!
-                  </h3>
-                  <p className="text-xs text-slate-600 leading-relaxed max-w-sm mx-auto">
-                    Account status has officially transitioned from <strong>Pending</strong> to <strong>Active</strong>. Both strong password and Two-Factor Authentication (MFA) are verified and in effect.
-                  </p>
-                </div>
-
-                {/* Security Status Badges */}
-                <div className="grid grid-cols-3 gap-2 text-xs">
-                  <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200">
-                    <span className="text-[10px] text-emerald-700 uppercase font-bold block">Status</span>
-                    <span className="font-extrabold text-emerald-800">Active</span>
-                  </div>
-                  <div className="p-2.5 rounded-xl bg-blue-50 border border-blue-200">
-                    <span className="text-[10px] text-blue-700 uppercase font-bold block">2FA MFA</span>
-                    <span className="font-extrabold text-blue-800">Enforced</span>
-                  </div>
-                  <div className="p-2.5 rounded-xl bg-orange-50 border border-orange-200">
-                    <span className="text-[10px] text-orange-700 uppercase font-bold block">Password</span>
-                    <span className="font-extrabold text-orange-800">Policy Met</span>
-                  </div>
-                </div>
+                <h3 className="text-base font-extrabold text-[#2B2B2B]">
+                  Administrator Account Successfully Activated!
+                </h3>
 
                 <div className="pt-2 space-y-2">
                   <button
@@ -2505,7 +2418,7 @@ Valid for 5 minutes.`,
                     className="w-full bg-[#FF5401] hover:bg-[#E54A00] text-white font-extrabold text-xs py-3.5 rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <Shield className="w-4 h-4" />
-                    <span>Proceed Directly to Admin Console</span>
+                    <span>Launch</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
 
@@ -2518,7 +2431,7 @@ Valid for 5 minutes.`,
                     }}
                     className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs py-2.5 rounded-xl transition-all cursor-pointer"
                   >
-                    Return to Admin Sign In Screen
+                    Back
                   </button>
                 </div>
               </div>
@@ -2526,13 +2439,6 @@ Valid for 5 minutes.`,
           </div>
         </div>
       )}
-
-      {/* Footer Info */}
-      <div className="relative z-10 text-center pt-5">
-        <p className="text-[11px] text-[#8E8D8A] font-medium">
-          Clark Electric Distribution Corporation © 2026 • Encrypted SSL Connection
-        </p>
-      </div>
     </div>
   );
 };

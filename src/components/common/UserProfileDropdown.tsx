@@ -61,7 +61,7 @@ export const UserProfileDropdown: React.FC = () => {
         className="flex items-center gap-2 p-1 sm:px-2.5 sm:py-1.5 rounded-full hover:bg-slate-100/90 active:bg-slate-200/70 border border-slate-200/80 hover:border-slate-300 transition-all cursor-pointer shadow-2xs group focus:outline-none focus:ring-2 focus:ring-[#FF5401]/30"
       >
         {/* Avatar Badge */}
-        <div className="w-8 h-8 rounded-full bg-[#FF5401] text-white flex items-center justify-center font-extrabold text-xs shrink-0 shadow-xs ring-2 ring-white">
+        <div className="w-8 h-8 rounded-full bg-orange-50 text-[#FF5401] border border-[#FF5401]/25 flex items-center justify-center font-semibold text-xs shrink-0">
           {initials}
         </div>
 
@@ -88,7 +88,7 @@ export const UserProfileDropdown: React.FC = () => {
         >
           {/* User Details Summary: Just User Name and Email */}
           <div className="p-3 bg-[#F8FAFC] rounded-xl border border-slate-100 flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-full bg-[#FF5401] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+            <div className="w-10 h-10 rounded-full bg-orange-50 text-[#FF5401] border border-[#FF5401]/25 flex items-center justify-center font-semibold text-xs shrink-0">
               {initials}
             </div>
             <div className="min-w-0 flex-1">
@@ -121,14 +121,9 @@ export const UserProfileDropdown: React.FC = () => {
                 <div className="w-7 h-7 rounded-lg bg-orange-50 group-hover:bg-[#FF5401] text-[#FF5401] group-hover:text-white flex items-center justify-center transition-colors shadow-2xs">
                   <ShieldCheck className="w-4 h-4" />
                 </div>
-                <div className="text-left">
-                  <span className="block text-xs font-bold text-[#2B2B2B] group-hover:text-[#FF5401]">
-                    Change Password
-                  </span>
-                  <span className="block text-[10px] text-slate-400 group-hover:text-orange-600/80">
-                    Update security credentials
-                  </span>
-                </div>
+                <span className="text-xs font-bold text-[#2B2B2B] group-hover:text-[#FF5401]">
+                  Password
+                </span>
               </div>
               <KeyRound className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#FF5401] transition-colors" />
             </button>
@@ -147,7 +142,7 @@ export const UserProfileDropdown: React.FC = () => {
             className="w-full bg-rose-50 hover:bg-rose-100/90 text-[#EF4444] hover:text-rose-700 px-3 py-2.5 rounded-xl border border-rose-200/60 text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
           >
             <LogOut className="w-4 h-4 text-[#EF4444]" />
-            <span>Log Out</span>
+            <span>Logout</span>
           </button>
         </div>
       )}

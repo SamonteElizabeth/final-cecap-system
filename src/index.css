@@ -50,3 +50,57 @@ b, strong {
 .sleek-card-glow {
   background: radial-gradient(circle at top right, rgba(255, 84, 1, 0.15), transparent 70%);
 }
+
+/* Mobile landing page animations */
+@keyframes cecap-fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes cecap-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes cecap-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes cecap-glow {
+  0%, 100% { opacity: 0.55; transform: scale(0.95); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+@keyframes cecap-drift {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-18px, 14px); }
+}
+@keyframes cecap-dash {
+  to { stroke-dashoffset: -640; }
+}
+@keyframes cecap-shine {
+  0% { transform: translateX(-120%) skewX(-20deg); }
+  60%, 100% { transform: translateX(260%) skewX(-20deg); }
+}
+
+.cecap-fade-up { animation: cecap-fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.cecap-float { animation: cecap-float 4s ease-in-out infinite; }
+.cecap-float-slow { animation: cecap-float 6s ease-in-out infinite; }
+.cecap-dash { animation: cecap-dash 3.5s linear infinite; }
+.cecap-spin-slow { animation: cecap-spin 14s linear infinite; }
+.cecap-spin-reverse { animation: cecap-spin 22s linear infinite reverse; }
+.cecap-glow { animation: cecap-glow 3.6s ease-in-out infinite; }
+.cecap-drift { animation: cecap-drift 12s ease-in-out infinite; }
+.cecap-drift-reverse { animation: cecap-drift 14s ease-in-out infinite reverse; }
+.cecap-shine::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  animation: cecap-shine 3.2s ease-in-out 1.6s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cecap-fade-up, .cecap-float, .cecap-spin-slow, .cecap-spin-reverse,
+  .cecap-glow, .cecap-drift, .cecap-drift-reverse, .cecap-shine::after,
+  .cecap-float-slow, .cecap-dash {
+    animation: none !important;
+  }
+}

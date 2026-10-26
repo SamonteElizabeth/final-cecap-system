@@ -5,10 +5,8 @@ import { ConsumptionData } from '../../types';
 import {
   Zap,
   TrendingUp,
-  Activity,
   CreditCard,
   Calendar,
-  Info,
   ArrowUpRight,
   ArrowDownRight,
   ChevronDown,
@@ -21,7 +19,6 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
-  ReferenceLine,
   Cell,
 } from 'recharts';
 
@@ -90,12 +87,6 @@ export const ConsumptionView: React.FC = () => {
     return Number((((currentConsumption - prevConsumption) / prevConsumption) * 100).toFixed(1));
   }, [currentConsumption, prevConsumption]);
 
-  const averageUsage = useMemo(() => {
-    if (!chartData.length) return 365;
-    const sum = chartData.reduce((acc, curr) => acc + curr.kwh, 0);
-    return Math.round(sum / chartData.length);
-  }, [chartData]);
-
   const peakDemand = useMemo(() => {
     if (!chartData.length) return { kw: selectedAccount?.currentBill.peakKw || 4.2, month: 'Current' };
     const highest = chartData.reduce((prev, current) => (prev.peakKw > current.peakKw ? prev : current), chartData[0]);
@@ -139,8 +130,8 @@ export const ConsumptionView: React.FC = () => {
         </div>
       </div>
 
-      {/* 4 PRIMARY KPI CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+      {/* 3 PRIMARY KPI CARDS */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-5">
         {/* KPI 1: Current Consumption */}
         <div className="bg-white rounded-2xl p-5 border border-[#E5E7EB] shadow-xs hover:border-[#FF5401]/40 transition-all flex flex-col justify-between space-y-3 group">
           <div className="flex items-center justify-between">
@@ -166,29 +157,9 @@ export const ConsumptionView: React.FC = () => {
               )}
             </div>
           </div>
-          <p className="text-[10px] text-slate-400 pt-1 border-t border-slate-100">Active billing cycle total</p>
         </div>
 
-        {/* KPI 2: Average Usage */}
-        <div className="bg-white rounded-2xl p-5 border border-[#E5E7EB] shadow-xs hover:border-[#FF5401]/40 transition-all flex flex-col justify-between space-y-3 group">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">Average Usage</span>
-            <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 group-hover:scale-105 transition-all">
-              <Activity className="w-4 h-4" />
-            </div>
-          </div>
-          <div>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl md:text-3xl font-semibold text-[#2B2B2B]">{averageUsage}</span>
-              <span className="text-xs font-medium text-slate-500">kWh / mo</span>
-            </div>
-          </div>
-          <p className="text-[10px] text-slate-400 pt-1 border-t border-slate-100">
-            Full annual billing period ({chartData.length} months)
-          </p>
-        </div>
-
-        {/* KPI 3: Peak Demand */}
+        {/* KPI 2: Peak Demand */}
         <div className="bg-white rounded-2xl p-5 border border-[#E5E7EB] shadow-xs hover:border-[#FF5401]/40 transition-all flex flex-col justify-between space-y-3 group">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">Peak Demand</span>
@@ -207,10 +178,9 @@ export const ConsumptionView: React.FC = () => {
               </span>
             </div>
           </div>
-          <p className="text-[10px] text-slate-400 pt-1 border-t border-slate-100">Standard residential limit: 10 kW</p>
         </div>
 
-        {/* KPI 4: Estimated Bill */}
+        {/* KPI 3: Estimated Bill */}
         <div className="bg-white rounded-2xl p-5 border border-[#E5E7EB] shadow-xs hover:border-[#FF5401]/40 transition-all flex flex-col justify-between space-y-3 group">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">Estimated Bill</span>
@@ -225,7 +195,6 @@ export const ConsumptionView: React.FC = () => {
               </span>
             </div>
           </div>
-          <p className="text-[10px] text-slate-400 pt-1 border-t border-slate-100">Includes all ERC unbundled rates</p>
         </div>
       </div>
 
@@ -233,17 +202,11 @@ export const ConsumptionView: React.FC = () => {
       <div className="bg-white rounded-3xl p-5 md:p-7 border border-[#E5E7EB] shadow-xs space-y-5">
         {/* Chart Header and Controls */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E5E7EB] pb-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm md:text-base font-semibold text-[#2B2B2B]">Monthly kWh Consumption Trend</h3>
-              <span className="bg-orange-50 text-[#FF5401] text-[10px] font-medium px-2 py-0.5 rounded-md border border-[#FF5401]/20">
-                {selectedYear === 'ALL' ? 'All-Time Trend' : `Full ${selectedYear} (${chartData.length} Months)`}
-              </span>
-            </div>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Monthly reference average: <strong className="text-[#FF5401] font-semibold">{averageUsage} kWh</strong>.
-              <span className="text-slate-600 font-medium ml-1">Click any bar to view that month's consumption.</span>
-            </p>
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm md:text-base font-semibold text-[#2B2B2B]">Monthly kWh Consumption Trend</h3>
+            <span className="bg-orange-50 text-[#FF5401] text-[10px] font-medium px-2 py-0.5 rounded-md border border-[#FF5401]/20">
+              {selectedYear === 'ALL' ? 'All-Time Trend' : `Full ${selectedYear} (${chartData.length} Months)`}
+            </span>
           </div>
 
           {/* Controls: Year Filter */}
@@ -275,26 +238,18 @@ export const ConsumptionView: React.FC = () => {
 
         {/* Legend & Active Month Indicator */}
         <div className="flex flex-wrap items-center justify-between gap-3 text-xs pt-1">
-          <div className="flex items-center gap-4 flex-wrap">
-            <div className="flex items-center gap-2">
-              <div className="w-3.5 h-3.5 rounded bg-[#FF5401]" />
-              <span className="text-slate-600 font-medium">Billed Consumption (kWh)</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-0.5 border-t-2 border-dashed border-[#E54A00]" />
-              <span className="text-slate-600 font-medium">Average Line ({averageUsage} kWh)</span>
-            </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3.5 h-3.5 rounded bg-[#FF5401]" />
+            <span className="text-slate-600 font-medium">Billed Consumption (kWh)</span>
           </div>
 
-          <div className="text-[11px] font-medium text-slate-500 bg-[#F8FAFC] px-3 py-1 rounded-lg border border-[#E5E7EB]">
-            {selectedMonthData ? (
+          {selectedMonthData && (
+            <div className="text-[11px] font-medium text-slate-500 bg-[#F8FAFC] px-3 py-1 rounded-lg border border-[#E5E7EB]">
               <span>
                 Selected: <strong className="text-[#FF5401]">{selectedMonthData.month} {selectedMonthData.year}</strong> ({selectedMonthData.kwh} kWh • ₱{selectedMonthData.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })})
               </span>
-            ) : (
-              <span>Click a bar to inspect month</span>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Recharts Bar Chart Container */}
@@ -343,7 +298,6 @@ export const ConsumptionView: React.FC = () => {
                 content={({ active, payload }) => {
                   if (active && payload && payload.length) {
                     const data = payload[0].payload as ConsumptionData;
-                    const diffFromAvg = data.kwh - averageUsage;
                     return (
                       <div className="bg-[#2B2B2B] text-white p-3.5 rounded-2xl shadow-xl border border-slate-700 text-xs min-w-[210px] space-y-2">
                         <div className="flex items-center justify-between border-b border-slate-600 pb-1.5">
@@ -369,33 +323,11 @@ export const ConsumptionView: React.FC = () => {
                               ₱{data.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                             </span>
                           </div>
-                          <div className="flex justify-between items-center pt-1 border-t border-slate-700 text-[10px]">
-                            <span className="text-slate-400">Vs Period Average:</span>
-                            <span className={diffFromAvg >= 0 ? 'text-amber-400 font-semibold' : 'text-emerald-400 font-semibold'}>
-                              {diffFromAvg >= 0 ? `+${diffFromAvg} kWh` : `${diffFromAvg} kWh`}
-                            </span>
-                          </div>
-                          <div className="text-[10px] text-center text-[#FF9E66] pt-1 border-t border-slate-700/60 font-medium">
-                            👆 Click to view full month details
-                          </div>
                         </div>
                       </div>
                     );
                   }
                   return null;
-                }}
-              />
-              <ReferenceLine
-                y={averageUsage}
-                stroke="#E54A00"
-                strokeDasharray="4 4"
-                strokeWidth={2}
-                label={{
-                  value: `Average: ${averageUsage} kWh`,
-                  fill: '#E54A00',
-                  fontSize: 11,
-                  fontWeight: 'bold',
-                  position: 'top',
                 }}
               />
               <Bar
@@ -438,12 +370,9 @@ export const ConsumptionView: React.FC = () => {
 
         {/* CLICKABLE MONTH STRIP FOR QUICK NAVIGATION */}
         <div className="pt-2 border-t border-slate-100">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-semibold text-slate-600">
-              Select Month ({chartData.length} Full Months):
-            </span>
-            <span className="text-[10px] text-slate-400">Click bar or month to view</span>
-          </div>
+          <span className="block mb-2 text-[11px] font-semibold text-slate-600">
+            Select Month ({chartData.length} Full Months):
+          </span>
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 pt-0.5">
             {chartData.map((d, i) => {
               const isSelected = selectedMonthData?.month === d.month && selectedMonthData?.year === d.year;
@@ -476,18 +405,13 @@ export const ConsumptionView: React.FC = () => {
                 <div className="w-9 h-9 rounded-xl bg-[#FF5401] text-white flex items-center justify-center shrink-0 shadow-2xs">
                   <Zap className="w-5 h-5 fill-white" />
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h4 className="text-sm md:text-base font-semibold text-[#2B2B2B]">
-                      {selectedMonthData.month} {selectedMonthData.year} Consumption Details
-                    </h4>
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-orange-100 text-[#FF5401] border border-[#FF5401]/30">
-                      Active
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-500">
-                    Billed usage, demand profile, and unbundled rates for this cycle
-                  </p>
+                <div className="flex items-center gap-2">
+                  <h4 className="text-sm md:text-base font-semibold text-[#2B2B2B]">
+                    {selectedMonthData.month} {selectedMonthData.year} Consumption Details
+                  </h4>
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-orange-100 text-[#FF5401] border border-[#FF5401]/30">
+                    Active
+                  </span>
                 </div>
               </div>
 
@@ -497,7 +421,7 @@ export const ConsumptionView: React.FC = () => {
                   onClick={() => setActiveTab('billing')}
                   className="bg-white hover:bg-slate-50 text-[#FF5401] border border-[#FF5401]/30 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
                 >
-                  <span>View Statement</span>
+                  <span>Statement</span>
                   <ArrowUpRight className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -511,17 +435,6 @@ export const ConsumptionView: React.FC = () => {
                   <span className="text-xl md:text-2xl font-semibold text-[#FF5401]">{selectedMonthData.kwh}</span>
                   <span className="text-xs font-medium text-slate-500">kWh</span>
                 </div>
-                <div className="mt-1 text-[10px]">
-                  {selectedMonthData.kwh >= averageUsage ? (
-                    <span className="text-amber-700 font-medium">
-                      +{selectedMonthData.kwh - averageUsage} kWh vs period avg
-                    </span>
-                  ) : (
-                    <span className="text-emerald-700 font-medium">
-                      -{averageUsage - selectedMonthData.kwh} kWh vs period avg
-                    </span>
-                  )}
-                </div>
               </div>
 
               <div className="bg-white p-3.5 rounded-xl border border-[#E5E7EB] shadow-2xs">
@@ -531,7 +444,6 @@ export const ConsumptionView: React.FC = () => {
                     ₱{selectedMonthData.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
-                <span className="text-[10px] text-slate-400 mt-1 block">Full month statement</span>
               </div>
 
               <div className="bg-white p-3.5 rounded-xl border border-[#E5E7EB] shadow-2xs">
@@ -540,7 +452,6 @@ export const ConsumptionView: React.FC = () => {
                   <span className="text-xl md:text-2xl font-semibold text-rose-600">{selectedMonthData.peakKw}</span>
                   <span className="text-xs font-medium text-slate-500">kW</span>
                 </div>
-                <span className="text-[10px] text-slate-400 mt-1 block">Max 15-min peak</span>
               </div>
             </div>
 
@@ -578,19 +489,6 @@ export const ConsumptionView: React.FC = () => {
             </div>
           </div>
         )}
-
-        {/* Footer tip */}
-        <div className="bg-orange-50/70 border border-[#FF5401]/20 rounded-2xl p-3.5 flex items-start gap-3 text-xs">
-          <div className="w-7 h-7 rounded-xl bg-white border border-[#FF5401]/30 flex items-center justify-center shrink-0 text-[#FF5401] mt-0.5">
-            <Info className="w-4 h-4" />
-          </div>
-          <p className="text-slate-700 leading-relaxed text-[11px] sm:text-xs">
-            <strong className="text-[#FF5401]">Customer Tip:</strong> Your peak monthly consumption recorded was{' '}
-            <strong className="text-[#2B2B2B]">{peakDemand.kw} kW</strong> in {peakDemand.month}. Maintaining high-load
-            appliances outside 1:00 PM – 4:00 PM peak hours can help reduce grid load and lower your tier distribution
-            charges.
-          </p>
-        </div>
       </div>
 
     </div>

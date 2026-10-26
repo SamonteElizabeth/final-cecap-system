@@ -13,7 +13,7 @@ import {
   FileQuestion,
   BookOpen,
 } from 'lucide-react';
-import cecapLogo from '../../assets/CECAp_Logo.png';
+import cecapLogo from '../../assets/cecap-emblem.png';
 
 import { useApp } from '../../context/AppContext';
 
@@ -71,9 +71,9 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
       className="w-80 bg-gradient-to-b from-[#FFF3DF] to-[#FFD08A] border-r border-[#E5E7EB] flex flex-col h-full shrink-0 shadow-xs select-none"
     >
       {/* Brand Header */}
-      <div className="p-6 border-b border-[#E5E7EB] flex flex-col items-center justify-center bg-transparent">
-        <img src={cecapLogo} alt="Clark Electric Logo" className="h-16 object-contain" />
-        <div className="mt-3 flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-orange-50 border border-[#FF5401]/25 text-[#FF5401]">
+      <div className="px-6 py-8 border-b border-[#E5E7EB] flex flex-col items-center justify-center gap-4 bg-transparent">
+        <img src={cecapLogo} alt="CECAp Logo" className="w-14 h-14 object-contain" />
+        <div className="flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-orange-50 border border-[#FF5401]/25 text-[#FF5401]">
           {isSupportStaff ? (
             <>
               <HelpCircle className="w-3.5 h-3.5" />
@@ -234,7 +234,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                 >
                   <div className="flex items-center gap-2.5">
                     <BookOpen className="w-3.5 h-3.5 shrink-0" />
-                    <span>Self Service Guides</span>
+                    <span>Guides</span>
                   </div>
                 </button>
               </div>
@@ -300,7 +300,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           >
             <div className="flex items-center gap-3.5">
               <UserCheck className="w-5 h-5 shrink-0" />
-              <span>User Management</span>
+              <span>Users</span>
             </div>
           </button>
         )}

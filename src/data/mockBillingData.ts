@@ -4,6 +4,7 @@ export const MOCK_CUSTOMERS: Customer[] = [
   {
     id: 'CUST-001928',
     accountNumber: '0421-8812-90',
+    username: 'juan.delacruz',
     name: 'Juan Dela Cruz',
     email: 'juan.delacruz@example.ph',
     mobileNumber: '+63 917 555 1234',

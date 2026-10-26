@@ -140,7 +140,7 @@ Your CECAp customer portal registration has been verified and approved.
 Customer Account Code: 0421-9012-34
 Temporary Password: CedcTemp#7419
 
-Please sign in and set your new password.`,
+Please log in and set your new password.`,
     sentAt: 'Aug 05, 2026, 03:45 PM',
     type: 'REGISTRATION_APPROVED',
     status: 'DELIVERED',
@@ -226,7 +226,7 @@ interface AppContextType {
   triggerBiometricAuth: (onSuccess: () => void) => void;
   registrationRequests: RegistrationRequest[];
   submitRegistration: (req: { fullName: string; accountCode?: string; serviceAddress: string; mobileNumber: string; email: string; notificationChannel?: 'Email' | 'SMS' }) => void;
-  approveRegistration: (id: string, customAccountCode?: string) => { accountCode: string; tempPassword: string };
+  approveRegistration: (id: string, customAccountCode?: string) => { accountCode: string; username: string; tempPassword: string };
   rejectRegistration: (id: string, reason: string) => void;
 
   // Sent Emails / Dispatch Hub State
@@ -915,6 +915,10 @@ Our team is currently verifying your details. You will receive an update once ap
     const existingReq = registrationRequests.find(r => r.id === id);
     const accountCode = customAccountCode || existingReq?.accountCode || existingReq?.matchingBillingRecord?.accountNumber || `0421-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(10 + Math.random() * 90)}`;
     const tempPassword = `CedcTemp#${Math.floor(1000 + Math.random() * 9000)}`;
+    // Login username issued on approval, taken from the email handle (e.g. eleanor.vance)
+    const username =
+      existingReq?.username ||
+      (existingReq?.email.split('@')[0] || `cust${accountCode.replace(/\D/g, '').slice(-6)}`).toLowerCase();
     const nowStr = new Date().toLocaleString();
 
     setRegistrationRequests(prev =>
@@ -926,6 +930,7 @@ Our team is currently verifying your details. You will receive an update once ap
             reviewedAt: nowStr,
             reviewedBy: adminUser?.name || 'CRS Administrator',
             accountCode,
+            username,
             tempPassword,
           };
         }
@@ -940,7 +945,7 @@ Our team is currently verifying your details. You will receive an update once ap
         id: `NOTIF-REG-APP-${Date.now()}`,
         type: 'PAYMENT_CONFIRMATION',
         title: 'Registration Request Approved!',
-        message: `Your CEDC portal registration request was verified & approved by CRS Admin. Account Code: ${accountCode}. Temp Password: ${tempPassword}. Please log in and change your password.`,
+        message: `Your CEDC portal registration request was verified & approved by CRS Admin. Username: ${username}. Temp Password: ${tempPassword}. Please log in and change your password.`,
         timestamp: 'Just now',
         isRead: false,
       });
@@ -955,20 +960,22 @@ Our team is currently verifying your details. You will receive an update once ap
 
 Your CECAp customer portal registration has been verified and approved.
 
+Username: ${username}
 Customer Account Code: ${accountCode}
 Temporary Password: ${tempPassword}
 
-Please sign in and set your new password.`,
+Please log in and set your new password.`,
         type: 'REGISTRATION_APPROVED',
         data: {
           accountCode,
+          username,
           tempPassword,
           requestId: id,
         },
       });
     }
 
-    return { accountCode, tempPassword };
+    return { accountCode, username, tempPassword };
   };
 
   const rejectRegistration = (id: string, reason: string) => {
@@ -1125,7 +1132,7 @@ To get started, please set up your password and configure multi-factor authentic
     if (existingUser.status === 'Active') {
       return {
         success: false,
-        message: 'Administrator account is already Active. Please sign in or use password reset.',
+        message: 'Administrator account is already Active. Please log in or use password reset.',
       };
     }
 
@@ -1234,7 +1241,7 @@ To get started, please set up your password and configure multi-factor authentic
       return {
         isValid: false,
         reason: 'ALREADY_ACTIVE' as const,
-        message: 'This administrator account is already Active. Please proceed to regular Admin Sign In.',
+        message: 'This administrator account is already Active. Please proceed to regular Admin Log In.',
         admin,
       };
     }
@@ -1405,7 +1412,7 @@ Activation Summary:
 - Multi-Factor Authentication: Enabled (MFA Protected)
 - Activation Date: ${new Date().toLocaleString()}
 
-You can now sign in to the CECAp Admin Console using your registered email and new password.
+You can now log in to the CECAp Admin Console using your registered email and new password.
 
 Thank you,
 CECAP Systems Security Team`,

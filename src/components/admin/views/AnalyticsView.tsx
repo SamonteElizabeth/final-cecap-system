@@ -41,10 +41,7 @@ export const AnalyticsView: React.FC = () => {
     <div className="space-y-6 animate-fade-in pb-8">
       {/* Top Controls: Date Range Filter & Quick Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-2xs">
-        <div>
-          <h2 className="text-base md:text-lg font-extrabold text-[#2B2B2B]">Executive Performance Analytics</h2>
-          <p className="text-xs text-slate-500">Real-time overview of customer registrations, grid payments, and ticketing metrics.</p>
-        </div>
+        <h2 className="text-base md:text-lg font-extrabold text-[#2B2B2B]">Executive Performance Analytics</h2>
 
         <div className="flex items-center gap-2 bg-[#F8FAFC] border border-[#E2E8F0] p-1.5 rounded-xl">
           <Calendar className="w-4 h-4 text-[#FF5401] ml-2" />
@@ -136,10 +133,7 @@ export const AnalyticsView: React.FC = () => {
         {/* Customer Registration Trend (Line Chart) */}
         <div className="lg:col-span-8 bg-white rounded-2xl p-5 border border-[#E5E7EB] shadow-2xs space-y-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-extrabold text-sm text-[#2B2B2B]">Customer Registration Trend</h3>
-              <p className="text-xs text-slate-500">New customer sign-ups by service category over time</p>
-            </div>
+            <h3 className="font-extrabold text-sm text-[#2B2B2B]">Customer Registration Trend</h3>
             <span className="text-xs font-extrabold text-[#FF5401] bg-orange-50 px-2.5 py-1 rounded-lg">
               Monthly Sign-ups
             </span>
@@ -165,10 +159,7 @@ export const AnalyticsView: React.FC = () => {
 
         {/* Support Ticket Distribution (Donut Chart) */}
         <div className="lg:col-span-4 bg-white rounded-2xl p-5 border border-[#E5E7EB] shadow-2xs space-y-4 flex flex-col justify-between">
-          <div>
-            <h3 className="font-extrabold text-sm text-[#2B2B2B]">Ticket Status Distribution</h3>
-            <p className="text-xs text-slate-500">Breakdown of active and resolved concerns</p>
-          </div>
+          <h3 className="font-extrabold text-sm text-[#2B2B2B]">Ticket Status Distribution</h3>
 
           <div className="h-56 w-full flex items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
@@ -208,10 +199,7 @@ export const AnalyticsView: React.FC = () => {
         {/* Payment Collection Overview (Bar Chart) */}
         <div className="lg:col-span-8 bg-white rounded-2xl p-5 border border-[#E5E7EB] shadow-2xs space-y-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-extrabold text-sm text-[#2B2B2B]">Payment Collection Overview (₱ Millions)</h3>
-              <p className="text-xs text-slate-500">Comparison of collection volumes across integrated payment channels</p>
-            </div>
+            <h3 className="font-extrabold text-sm text-[#2B2B2B]">Payment Collection Overview (₱ Millions)</h3>
             <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">
               Channel Breakdown
             </span>
@@ -251,26 +239,17 @@ export const AnalyticsView: React.FC = () => {
               </div>
 
               <div className="p-3 rounded-xl bg-emerald-50/60 border border-emerald-100 flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-bold text-[#2B2B2B]">Dominant Payment Channel</p>
-                  <p className="text-[11px] text-slate-500">Digital Gateway Leader</p>
-                </div>
+                <p className="text-xs font-bold text-[#2B2B2B]">Dominant Payment Channel</p>
                 <span className="text-sm font-extrabold text-emerald-600">GCash (62.4%)</span>
               </div>
 
               <div className="p-3 rounded-xl bg-blue-50/60 border border-blue-100 flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-bold text-[#2B2B2B]">Substation Grid Reliability</p>
-                  <p className="text-[11px] text-slate-500">Clark Freeport Zone</p>
-                </div>
+                <p className="text-xs font-bold text-[#2B2B2B]">Substation Grid Reliability</p>
                 <span className="text-sm font-extrabold text-blue-600">99.98% Uptime</span>
               </div>
 
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-bold text-[#2B2B2B]">Active Grid Interruptions</p>
-                  <p className="text-[11px] text-slate-500">Current Feeder Alerts</p>
-                </div>
+                <p className="text-xs font-bold text-[#2B2B2B]">Active Grid Interruptions</p>
                 <span className="text-xs font-extrabold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800">
                   0 Active Outages
                 </span>
@@ -283,11 +262,7 @@ export const AnalyticsView: React.FC = () => {
       {/* Recent Activities Feed */}
       <div className="bg-white rounded-2xl p-5 border border-[#E5E7EB] shadow-2xs space-y-4">
         <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-extrabold text-sm text-[#2B2B2B]">Recent Operations Activity Log</h3>
-            <p className="text-xs text-slate-500">Audit timeline of recent administrative actions and system events</p>
-          </div>
-          <span className="text-xs text-slate-400 font-medium">Live Audit Feed</span>
+          <h3 className="font-extrabold text-sm text-[#2B2B2B]">Recent Operations Activity Log</h3>
         </div>
 
         <div className="divide-y divide-slate-100">

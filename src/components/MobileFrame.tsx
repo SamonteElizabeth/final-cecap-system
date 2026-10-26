@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { DashboardView } from './mobile/DashboardView';
 import { BillingView } from './mobile/BillingView';
@@ -6,14 +6,17 @@ import { SupportView } from './mobile/SupportView';
 import { NotificationsView } from './mobile/NotificationsView';
 import { AccountInfoView } from './mobile/AccountInfoView';
 import { AdminConsoleView } from './admin/AdminConsoleView';
-import { AuthView } from './mobile/AuthView';
+import { AuthView, AuthMode } from './mobile/AuthView';
+import { LandingView } from './mobile/LandingView';
 import { ConsumptionView } from './mobile/ConsumptionView';
 import { BiometricPromptModal } from './mobile/BiometricPromptModal';
 import { PaymentModal } from './mobile/PaymentModal';
 import { PasswordChangeModal } from './mobile/PasswordChangeModal';
-import { LayoutDashboard, CreditCard, HelpCircle, Bell, UserCheck, ShieldAlert, Mail, Zap } from 'lucide-react';
+import { LayoutDashboard, CreditCard, HelpCircle, Bell, UserCheck, ShieldAlert, Mail, Zap, ChevronLeft, ChevronRight } from 'lucide-react';
 import { UserProfileDropdown } from './common/UserProfileDropdown';
-import cecapLogo from '../assets/CECAp_Logo.png';
+import cecapLogo from '../assets/cecap-emblem.png';
+
+const SIDEBAR_COLLAPSED_KEY = 'cecap_sidebar_collapsed';
 
 const MeterIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
   <svg
@@ -44,6 +47,55 @@ export const MobileFrame: React.FC = () => {
     setEmailModalOpen,
   } = useApp();
 
+  // Landing shows once per visit, unless arriving via an admin setup link or a pending login autofill
+  const [showLanding, setShowLanding] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('token') || params.get('setup_token') || params.get('action')) return false;
+      if (localStorage.getItem('autofill_account_code')) return false;
+    } catch {
+      // ignore
+    }
+    return true;
+  });
+  const [authMode, setAuthMode] = useState<AuthMode>('CUSTOMER_LOGIN');
+
+  const leaveLanding = (mode: AuthMode) => {
+    setAuthMode(mode);
+    setShowLanding(false);
+  };
+
+  // Desktop sidebar collapse, remembered per browser
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleSidebar = () => {
+    setSidebarCollapsed(prev => {
+      try {
+        localStorage.setItem(SIDEBAR_COLLAPSED_KEY, prev ? '0' : '1');
+      } catch {
+        // ignore
+      }
+      return !prev;
+    });
+  };
+
+  const navItems = [
+    ...(userRole === 'admin'
+      ? [{ tab: 'admin-console', label: 'Admin', icon: ShieldAlert, isActive: activeTab === 'admin-console' }]
+      : []),
+    { tab: 'dashboard', label: 'Home', icon: LayoutDashboard, isActive: activeTab === 'dashboard' },
+    { tab: 'billing', label: 'Billing', icon: CreditCard, isActive: activeTab === 'billing' },
+    { tab: 'consumption', label: 'Consumption', icon: Zap, isActive: activeTab === 'consumption' },
+    { tab: 'support', label: 'Support', icon: HelpCircle, isActive: activeTab === 'support' },
+    { tab: 'profile', label: 'Account', icon: MeterIcon, isActive: activeTab === 'profile' || activeTab === 'settings' },
+  ];
+
 
   if (isAuthenticated && (activeTab === 'admin-console' || userRole === 'admin' || userRole === 'support_staff')) {
     return <AdminConsoleView />;
@@ -55,143 +107,83 @@ export const MobileFrame: React.FC = () => {
       {isAuthenticated && (
         <aside
           style={{ background: 'linear-gradient(180deg, #FFF3DF 0%, #FFD08A 100%)' }}
-          className="hidden md:flex flex-col fixed top-0 left-0 bottom-0 w-80 bg-gradient-to-b from-[#FFF3DF] to-[#FFD08A] border-r border-[#E5E7EB] z-40 shadow-xs select-none"
+          className={`hidden md:flex flex-col fixed top-0 left-0 bottom-0 ${sidebarCollapsed ? 'w-20' : 'w-80'} transition-[width] duration-200 bg-gradient-to-b from-[#FFF3DF] to-[#FFD08A] border-r border-[#E5E7EB] z-40 shadow-xs select-none`}
         >
+          {/* Collapse / expand toggle on the sidebar edge */}
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            className="absolute -right-3.5 top-24 w-7 h-7 rounded-full bg-white border border-[#E5E7EB] shadow-xs flex items-center justify-center text-slate-500 hover:text-[#FF5401] hover:border-[#FF5401]/40 transition-colors cursor-pointer z-10"
+            title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            aria-expanded={!sidebarCollapsed}
+          >
+            {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          </button>
+
           {/* Brand Header */}
-          <div className="p-6 border-b border-[#E5E7EB] flex flex-col items-center justify-center bg-transparent">
-            <img src={cecapLogo} alt="CECAP Logo" className="h-16 object-contain" />
-            {userRole === 'admin' ? (
-              <div className="mt-3 flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-orange-50 border border-[#FF5401]/25 text-[#FF5401]">
-                <ShieldAlert className="w-3.5 h-3.5 text-[#FF5401]" />
-                <span className="text-[11px] font-semibold uppercase tracking-wider">Admin Portal</span>
-              </div>
-            ) : (
-              <div className="mt-3 flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-orange-50 border border-[#FF5401]/25 text-[#FF5401]">
-                <UserCheck className="w-3.5 h-3.5 text-[#FF5401]" />
-                <span className="text-[11px] font-semibold uppercase tracking-wider">Customer Portal</span>
+          <div
+            className={`border-b border-[#E5E7EB] flex flex-col items-center justify-center gap-4 bg-transparent ${
+              sidebarCollapsed ? 'px-3 py-6' : 'px-6 py-8'
+            }`}
+          >
+            <img
+              src={cecapLogo}
+              alt="CECAp Logo"
+              className={`object-contain transition-all ${sidebarCollapsed ? 'w-10 h-10' : 'w-14 h-14'}`}
+            />
+            {!sidebarCollapsed && (
+              <div className="flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-orange-50 border border-[#FF5401]/25 text-[#FF5401]">
+                {userRole === 'admin' ? (
+                  <ShieldAlert className="w-3.5 h-3.5 text-[#FF5401]" />
+                ) : (
+                  <UserCheck className="w-3.5 h-3.5 text-[#FF5401]" />
+                )}
+                <span className="text-[11px] font-semibold uppercase tracking-wider whitespace-nowrap">
+                  {userRole === 'admin' ? 'Admin Portal' : 'Customer Portal'}
+                </span>
               </div>
             )}
           </div>
 
           {/* Navigation Menu Links */}
-          <div className="flex-1 overflow-y-auto p-4 md:p-5 space-y-2 custom-scrollbar">
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider px-3.5 block mb-2.5">
-              Navigation
-            </span>
+          <div className={`flex-1 overflow-y-auto overflow-x-hidden space-y-2 custom-scrollbar ${sidebarCollapsed ? 'p-3' : 'p-5'}`}>
+            {!sidebarCollapsed && (
+              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider px-3.5 block mb-2.5">
+                Navigation
+              </span>
+            )}
 
-            {userRole === 'admin' && (
+            {navItems.map(({ tab, label, icon: Icon, isActive }) => (
               <button
+                key={tab}
                 type="button"
-                onClick={() => setActiveTab('admin-console')}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-[13px] font-semibold transition-all cursor-pointer ${
-                  activeTab === 'admin-console'
+                onClick={() => setActiveTab(tab)}
+                title={sidebarCollapsed ? label : undefined}
+                aria-label={label}
+                className={`w-full flex items-center rounded-2xl text-[13px] font-semibold transition-all cursor-pointer ${
+                  sidebarCollapsed ? 'justify-center p-3' : 'gap-3.5 px-4 py-3'
+                } ${
+                  isActive
                     ? 'bg-[#FF5401] text-white shadow-xs'
                     : 'text-slate-600 hover:bg-slate-50/80 hover:text-[#2B2B2B]'
                 }`}
               >
-                <div className="flex items-center gap-3.5">
-                  <ShieldAlert className="w-5 h-5 shrink-0" />
-                  <span>Admin Console</span>
-                </div>
+                <Icon className="w-5 h-5 shrink-0" />
+                {!sidebarCollapsed && <span className="whitespace-nowrap">{label}</span>}
               </button>
-            )}
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('dashboard')}
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-[13px] font-semibold transition-all cursor-pointer ${
-                activeTab === 'dashboard'
-                  ? 'bg-[#FF5401] text-white shadow-xs'
-                  : 'text-slate-600 hover:bg-slate-50/80 hover:text-[#2B2B2B]'
-              }`}
-            >
-              <div className="flex items-center gap-3.5">
-                <LayoutDashboard className="w-5 h-5 shrink-0" />
-                <span>Home</span>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('billing')}
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-[13px] font-semibold transition-all cursor-pointer ${
-                activeTab === 'billing'
-                  ? 'bg-[#FF5401] text-white shadow-xs'
-                  : 'text-slate-600 hover:bg-slate-50/80 hover:text-[#2B2B2B]'
-              }`}
-            >
-              <div className="flex items-center gap-3.5">
-                <CreditCard className="w-5 h-5 shrink-0" />
-                <span>Billing</span>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('consumption')}
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-[13px] font-semibold transition-all cursor-pointer ${
-                activeTab === 'consumption'
-                  ? 'bg-[#FF5401] text-white shadow-xs'
-                  : 'text-slate-600 hover:bg-slate-50/80 hover:text-[#2B2B2B]'
-              }`}
-            >
-              <div className="flex items-center gap-3.5">
-                <Zap className="w-5 h-5 shrink-0" />
-                <span>Consumption</span>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('support')}
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-[13px] font-semibold transition-all cursor-pointer ${
-                activeTab === 'support'
-                  ? 'bg-[#FF5401] text-white shadow-xs'
-                  : 'text-slate-600 hover:bg-slate-50/80 hover:text-[#2B2B2B]'
-              }`}
-            >
-              <div className="flex items-center gap-3.5">
-                <HelpCircle className="w-5 h-5 shrink-0" />
-                <span>Support</span>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('profile')}
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-[13px] font-semibold transition-all cursor-pointer ${
-                activeTab === 'profile' || activeTab === 'settings'
-                  ? 'bg-[#FF5401] text-white shadow-xs'
-                  : 'text-slate-600 hover:bg-slate-50/80 hover:text-[#2B2B2B]'
-              }`}
-            >
-              <div className="flex items-center gap-3.5">
-                <MeterIcon className="w-5 h-5 shrink-0" />
-                <span>Service Account</span>
-              </div>
-            </button>
+            ))}
           </div>
         </aside>
       )}
 
       {/* Top Header Bar with Notifications Icon and User Profile on the Right */}
       {isAuthenticated && (
-        <header className="bg-white/95 backdrop-blur-md border-b border-[#E5E7EB] px-4 md:px-8 py-3 flex items-center justify-between fixed top-0 left-0 md:left-80 right-0 z-30 shadow-xs h-16">
-          {/* Left Side: Section Title / Breadcrumbs */}
+        <header className={`bg-white/95 backdrop-blur-md border-b border-[#E5E7EB] px-4 md:px-8 py-3 flex items-center justify-between fixed top-0 left-0 ${sidebarCollapsed ? 'md:left-20' : 'md:left-80'} transition-[left] duration-200 right-0 z-30 shadow-xs h-16`}>
+          {/* Left Side: Logo (mobile only) */}
           <div className="flex items-center gap-3">
             <div className="md:hidden flex items-center gap-2">
-              <img src={cecapLogo} alt="CECAP Logo" className="h-8 object-contain" />
-            </div>
-            <div className="flex items-center gap-2.5">
-              <h2 className="text-xs md:text-sm font-semibold text-[#2B2B2B]">
-                {activeTab === 'admin-console' && 'Admin Console'}
-                {activeTab === 'dashboard' && 'Home'}
-                {activeTab === 'billing' && 'Billing'}
-                {activeTab === 'consumption' && 'Consumption'}
-                {activeTab === 'support' && 'Support'}
-                {activeTab === 'notifications' && 'System Alerts'}
-                {(activeTab === 'profile' || activeTab === 'settings') && 'Service Account'}
-              </h2>
+              <img src={cecapLogo} alt="CECAp Logo" className="w-8 h-8 object-contain" />
             </div>
           </div>
 
@@ -200,13 +192,15 @@ export const MobileFrame: React.FC = () => {
             <button
               type="button"
               onClick={() => setEmailModalOpen(true)}
-              className="h-9 px-3 rounded-full bg-orange-50 hover:bg-orange-100 border border-[#FF5401]/30 text-[#FF5401] flex items-center gap-1.5 font-medium text-xs transition-all cursor-pointer shadow-2xs relative"
+              className="w-9 h-9 rounded-full flex items-center justify-center border transition-all cursor-pointer relative shadow-2xs bg-white border-[#E2E8F0] text-[#FF5401] hover:bg-orange-50/50 hover:border-[#FF5401]/50"
               title="View CECAp Emails"
             >
               <Mail className="w-4 h-4 text-[#FF5401]" />
-              <span className="bg-[#FF5401] text-white text-[10px] font-semibold px-1.5 py-0.2 rounded-full">
-                {sentEmails.length}
-              </span>
+              {sentEmails.length > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-4 h-4 px-0.5 rounded-full text-[9px] font-bold flex items-center justify-center shadow-xs border-2 bg-[#FF5C5C] text-white border-white">
+                  {sentEmails.length > 9 ? '9+' : sentEmails.length}
+                </span>
+              )}
             </button>
 
             <button
@@ -245,11 +239,17 @@ export const MobileFrame: React.FC = () => {
       {/* Main Content Area */}
       <main
         className={`flex-1 w-full min-h-screen ${
-          isAuthenticated ? 'bg-[#F5F5F5] md:pl-80 pt-20 md:pt-20 pb-24 md:pb-16' : 'bg-[#FDFBF7]'
+          isAuthenticated ? `bg-[#F5F5F5] ${sidebarCollapsed ? 'md:pl-20' : 'md:pl-80'} md:transition-[padding] md:duration-200 pt-20 md:pt-20 pb-24 md:pb-16` : 'bg-[#FDFBF7]'
         }`}
       >
         {!isAuthenticated ? (
-          <AuthView />
+          <>
+            {showLanding ? (
+              <LandingView onSignIn={() => leaveLanding('CUSTOMER_LOGIN')} onRegister={() => leaveLanding('REGISTER')} />
+            ) : (
+              <AuthView initialMode={authMode} />
+            )}
+          </>
         ) : (
           <div className="w-full px-4 sm:px-6 md:px-8 lg:px-10">
             <div className="w-full space-y-6 md:space-y-8">

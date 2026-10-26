@@ -44,10 +44,7 @@ export const DashboardView: React.FC = () => {
             🚨
           </div>
           <div className="flex-1 min-w-0 space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] uppercase font-bold tracking-widest text-red-100">Official CEDC Emergency Alert</span>
-              <span className="text-[10px] text-red-200 font-medium">Tap for details →</span>
-            </div>
+            <span className="block text-[10px] uppercase font-bold tracking-widest text-red-100">Official CEDC Emergency Alert</span>
             <h4 className="text-xs md:text-sm font-semibold text-white">
               {notifications.find(n => n.urgency === 'EMERGENCY')?.title}
             </h4>
@@ -99,7 +96,7 @@ export const DashboardView: React.FC = () => {
             className="bg-[#FF5401] hover:bg-[#E54A00] text-white font-semibold text-xs px-4 py-2.5 rounded-xl transition-all shadow-xs shrink-0 self-start sm:self-center flex items-center gap-1.5 cursor-pointer"
           >
             <KeyRound className="w-3.5 h-3.5" />
-            <span>Update Password Now</span>
+            <span>Update</span>
           </button>
         </div>
       )}
@@ -194,7 +191,7 @@ export const DashboardView: React.FC = () => {
               <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-orange-50 flex items-center justify-center text-[#FF5401] group-hover:bg-[#FF5401] group-hover:text-white transition-all shrink-0">
                 <CreditCard className="w-5 h-5" />
               </div>
-              <span className="text-xs font-semibold text-[#2B2B2B] uppercase tracking-tighter">Pay Bills</span>
+              <span className="text-xs font-semibold text-[#2B2B2B] uppercase tracking-tighter">Pay</span>
             </button>
 
             <button
@@ -239,7 +236,7 @@ export const DashboardView: React.FC = () => {
               onClick={() => setActiveTab('notifications')}
               className="text-xs font-semibold text-[#FF5401] hover:text-[#d96b0c] hover:underline cursor-pointer flex items-center gap-1 transition-all"
             >
-              <span>View all</span>
+              <span>View</span>
             </button>
           </div>
 

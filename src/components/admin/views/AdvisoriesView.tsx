@@ -283,7 +283,7 @@ export const AdvisoriesView: React.FC<AdvisoriesViewProps> = ({ subTab, searchQu
                 }`}
               >
                 <Zap className="w-3.5 h-3.5" />
-                <span>Outage Advisories ({outages.length})</span>
+                <span>Outages ({outages.length})</span>
               </button>
               <button
                 type="button"
@@ -321,7 +321,7 @@ export const AdvisoriesView: React.FC<AdvisoriesViewProps> = ({ subTab, searchQu
                 className="flex items-center justify-center gap-2 bg-[#FF5401] hover:bg-[#E54A00] text-white px-4 py-2 rounded-xl font-bold text-xs shadow-xs transition-all cursor-pointer shrink-0"
               >
                 <Plus className="w-4 h-4" />
-                <span className="whitespace-nowrap">Create New Advisory</span>
+                <span className="whitespace-nowrap">Create</span>
               </button>
             </div>
           </div>
@@ -357,7 +357,6 @@ export const AdvisoriesView: React.FC<AdvisoriesViewProps> = ({ subTab, searchQu
                       <td colSpan={5} className="text-center py-16 space-y-2 text-slate-400 font-bold">
                         <Megaphone className="w-8 h-8 text-slate-300 mx-auto" />
                         <p className="text-xs text-slate-400 font-bold">No advisories or announcements found</p>
-                        <p className="text-[11px] text-slate-400 font-normal">Try adjusting your filter or search query</p>
                       </td>
                     </tr>
                   ) : (
@@ -528,7 +527,7 @@ export const AdvisoriesView: React.FC<AdvisoriesViewProps> = ({ subTab, searchQu
                 className="flex items-center justify-center gap-2 bg-[#FF5401] hover:bg-[#E54A00] text-white px-4 py-2 rounded-xl font-bold text-xs shadow-xs transition-all cursor-pointer shrink-0"
               >
                 <Plus className="w-4 h-4" />
-                <span className="whitespace-nowrap">Create New FAQ</span>
+                <span className="whitespace-nowrap">Create</span>
               </button>
             </div>
           </div>
@@ -593,7 +592,7 @@ export const AdvisoriesView: React.FC<AdvisoriesViewProps> = ({ subTab, searchQu
                 className="flex items-center justify-center gap-2 bg-[#FF5401] hover:bg-[#E54A00] text-white px-4 py-2 rounded-xl font-bold text-xs shadow-xs transition-all cursor-pointer shrink-0"
               >
                 <Plus className="w-4 h-4" />
-                <span className="whitespace-nowrap">Create New Guide</span>
+                <span className="whitespace-nowrap">Create</span>
               </button>
             </div>
           </div>
@@ -658,7 +657,7 @@ export const AdvisoriesView: React.FC<AdvisoriesViewProps> = ({ subTab, searchQu
                             className="flex items-center gap-1 text-rose-500 hover:text-rose-700 font-bold cursor-pointer"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
-                            <span>Delete Guide</span>
+                            <span>Delete</span>
                           </button>
                         </div>
                       </div>
@@ -677,18 +676,15 @@ export const AdvisoriesView: React.FC<AdvisoriesViewProps> = ({ subTab, searchQu
           <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl p-6 space-y-5 max-h-[90vh] overflow-y-auto custom-scrollbar">
             {/* Header & Mode Switcher */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div>
-                <h3 className="font-extrabold text-sm text-[#2B2B2B]">
-                  {subTab === 'announcements'
-                    ? advisoryType === 'OUTAGE'
-                      ? 'Publish Power Outage Advisory'
-                      : 'Publish Broadcast Announcement'
-                    : subTab === 'faqs'
-                    ? 'Create New FAQ'
-                    : 'Create Self-Service Guide'}
-                </h3>
-                <p className="text-xs text-slate-400">Compose and preview content before publishing live.</p>
-              </div>
+              <h3 className="font-extrabold text-sm text-[#2B2B2B]">
+                {subTab === 'announcements'
+                  ? advisoryType === 'OUTAGE'
+                    ? 'Publish Power Outage Advisory'
+                    : 'Publish Broadcast Announcement'
+                  : subTab === 'faqs'
+                  ? 'Create New FAQ'
+                  : 'Create Self-Service Guide'}
+              </h3>
 
               {/* Mode Tabs: Editor vs Live Preview */}
               <div className="flex items-center bg-[#F8FAFC] border border-slate-200 p-1 rounded-xl">
@@ -699,7 +695,7 @@ export const AdvisoriesView: React.FC<AdvisoriesViewProps> = ({ subTab, searchQu
                     !previewMode ? 'bg-[#FF5401] text-white shadow-2xs' : 'text-slate-600'
                   }`}
                 >
-                  Editor Form
+                  Editor
                 </button>
                 <button
                   type="button"
@@ -708,7 +704,7 @@ export const AdvisoriesView: React.FC<AdvisoriesViewProps> = ({ subTab, searchQu
                     previewMode ? 'bg-[#FF5401] text-white shadow-2xs' : 'text-slate-600'
                   }`}
                 >
-                  Customer Preview
+                  Preview
                 </button>
               </div>
             </div>
@@ -732,10 +728,7 @@ export const AdvisoriesView: React.FC<AdvisoriesViewProps> = ({ subTab, searchQu
                         }`}
                       >
                         <Megaphone className="w-4 h-4 shrink-0" />
-                        <div>
-                          <div className="text-xs">Broadcast Announcement</div>
-                          <div className="text-[10px] text-slate-400 font-normal">Push notification / Notice</div>
-                        </div>
+                        <div className="text-xs">Announcement</div>
                       </button>
 
                       <button
@@ -748,10 +741,7 @@ export const AdvisoriesView: React.FC<AdvisoriesViewProps> = ({ subTab, searchQu
                         }`}
                       >
                         <Zap className="w-4 h-4 shrink-0" />
-                        <div>
-                          <div className="text-xs">Power Outage Advisory</div>
-                          <div className="text-[10px] text-slate-400 font-normal">Scheduled or Emergency</div>
-                        </div>
+                        <div className="text-xs">Outage</div>
                       </button>
                     </div>
                   </div>
@@ -840,7 +830,7 @@ export const AdvisoriesView: React.FC<AdvisoriesViewProps> = ({ subTab, searchQu
                   <div className="space-y-3 bg-amber-50/50 p-3.5 rounded-2xl border border-amber-200/60">
                     <div>
                       <label className="block text-[10px] font-extrabold uppercase text-amber-900 mb-1">
-                        Affected Areas (comma-separated)
+                        Affected Areas
                       </label>
                       <input
                         type="text"
@@ -936,7 +926,7 @@ export const AdvisoriesView: React.FC<AdvisoriesViewProps> = ({ subTab, searchQu
                     className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#FF5401] hover:bg-[#E54A00] text-white font-bold text-xs shadow-xs cursor-pointer"
                   >
                     <Send className="w-4 h-4" />
-                    <span>Publish Live Now</span>
+                    <span>Publish</span>
                   </button>
                 </div>
               </form>
@@ -983,7 +973,7 @@ export const AdvisoriesView: React.FC<AdvisoriesViewProps> = ({ subTab, searchQu
                     onClick={() => setPreviewMode(false)}
                     className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs cursor-pointer"
                   >
-                    Back to Editor Form
+                    Back
                   </button>
                 </div>
               </div>
@@ -1006,12 +996,9 @@ export const AdvisoriesView: React.FC<AdvisoriesViewProps> = ({ subTab, searchQu
                 <div className="p-2 bg-orange-100 text-[#FF5401] rounded-xl">
                   <Pencil className="w-4 h-4" />
                 </div>
-                <div>
-                  <h3 className="font-extrabold text-sm text-[#2B2B2B]">
-                    Edit {editingItem.type === 'OUTAGE' ? 'Outage Advisory' : 'Announcement'} Details
-                  </h3>
-                  <p className="text-[11px] text-slate-400">Update headline, description, and urgency.</p>
-                </div>
+                <h3 className="font-extrabold text-sm text-[#2B2B2B]">
+                  Edit {editingItem.type === 'OUTAGE' ? 'Outage Advisory' : 'Announcement'} Details
+                </h3>
               </div>
               <button
                 type="button"
@@ -1079,7 +1066,7 @@ export const AdvisoriesView: React.FC<AdvisoriesViewProps> = ({ subTab, searchQu
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#FF5401] hover:bg-[#E54A00] text-white font-bold text-xs shadow-xs cursor-pointer transition-colors"
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>Save Changes</span>
+                  <span>Save</span>
                 </button>
               </div>
             </form>

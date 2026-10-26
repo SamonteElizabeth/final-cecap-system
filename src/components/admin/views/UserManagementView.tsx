@@ -12,7 +12,6 @@ import {
   X,
   Check,
   Lock,
-  Shield,
   Clock,
   Smartphone,
   AlertTriangle,
@@ -202,7 +201,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({ searchQu
           }`}
         >
           <UserCheck className="w-4 h-4" />
-          <span>Staff Administrators ({adminStaffUsers.length})</span>
+          <span>Staff ({adminStaffUsers.length})</span>
         </button>
 
         <button
@@ -215,7 +214,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({ searchQu
           }`}
         >
           <History className="w-4 h-4" />
-          <span>Authentication Audit Trail ({auditLogs.length})</span>
+          <span>Audit ({auditLogs.length})</span>
         </button>
       </div>
 
@@ -226,7 +225,6 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({ searchQu
             <div className="bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-2xs space-y-2">
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Administrators</span>
               <div className="text-2xl font-black text-[#2B2B2B]">{adminStaffUsers.length} Users</div>
-              <span className="text-[11px] text-slate-500 font-medium">Enterprise portal access</span>
             </div>
 
             <div className="bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-2xs space-y-2">
@@ -234,7 +232,6 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({ searchQu
               <div className="text-2xl font-black text-emerald-600">
                 {adminStaffUsers.filter(u => u.status === 'Active').length} Active
               </div>
-              <span className="text-[11px] text-emerald-600 font-bold">100% Security Verified</span>
             </div>
 
             <div className="bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-2xs space-y-2">
@@ -242,7 +239,6 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({ searchQu
               <div className="text-2xl font-black text-amber-600">
                 {adminStaffUsers.filter(u => u.status === 'Pending').length} Pending
               </div>
-              <span className="text-[11px] text-amber-600 font-bold">Awaiting Link &amp; MFA</span>
             </div>
           </div>
 
@@ -286,7 +282,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({ searchQu
                   className="w-full flex items-center justify-center gap-2 bg-[#FF5401] hover:bg-[#E54A00] text-white px-4 py-2 rounded-xl font-bold text-xs shadow-xs transition-all cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>Add New Admin User</span>
+                  <span>Add</span>
                 </button>
               </div>
             </div>
@@ -341,7 +337,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({ searchQu
                           title="Dispatches a fresh single-use time-limited link (15 mins)"
                         >
                           <Mail className="w-3 h-3" />
-                          <span>Resend link</span>
+                          <span>Resend</span>
                         </button>
                       </div>
                     ) : (
@@ -521,18 +517,6 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({ searchQu
             </div>
 
             <form onSubmit={handleSaveUser} className="space-y-4">
-              {!editingUser && (
-                <div className="bg-orange-50/80 p-3 rounded-2xl border border-[#FF5401]/20 text-[11px] text-[#2B2B2B] leading-relaxed space-y-1">
-                  <div className="flex items-center gap-1.5 font-bold text-[#FF5401]">
-                    <Shield className="w-3.5 h-3.5" />
-                    <span>Secure First-Time Setup Workflow</span>
-                  </div>
-                  <p className="text-slate-600">
-                    New administrators start with <strong>Status: Pending</strong> and <strong>no password</strong>. A single-use, 15-minute link is dispatched to their email. Activation requires registered email validation, strong password creation, and mandatory MFA setup.
-                  </p>
-                </div>
-              )}
-
               <div>
                 <label className="block text-[10px] font-extrabold uppercase text-slate-500 mb-1">Full Name</label>
                 <input
@@ -602,7 +586,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({ searchQu
                   type="submit"
                   className="px-5 py-2.5 rounded-xl bg-[#FF5401] hover:bg-[#E54A00] text-white font-bold text-xs shadow-xs cursor-pointer"
                 >
-                  Save Admin User
+                  Save
                 </button>
               </div>
             </form>
@@ -627,7 +611,6 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({ searchQu
             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-center space-y-1">
               <span className="text-[10px] font-bold text-slate-400 uppercase">Temporary Password</span>
               <div className="font-mono text-base font-black text-[#FF5401] select-all">{generatedTempPwd}</div>
-              <p className="text-[10px] text-slate-500 font-medium">User will be prompted to change password on next login.</p>
             </div>
 
             <div className="flex items-center justify-end pt-2">

@@ -105,7 +105,7 @@ export const CustomerView: React.FC<CustomerViewProps> = ({ searchQuery = '' }) 
       setIsProcessing(false);
       setShowReviewModal(false);
       setSelectedRequest(null);
-      setToastMsg(`✅ Registration Approved for ${req.fullName}! Temp Password: ${res.tempPassword} dispatched via ${req.notificationChannel}.`);
+      setToastMsg(`✅ Registration Approved for ${req.fullName}! Username: ${res.username} • Temp Password: ${res.tempPassword} dispatched via ${req.notificationChannel}.`);
       setTimeout(() => setToastMsg(''), 6000);
     }, 600);
   };
@@ -180,7 +180,7 @@ export const CustomerView: React.FC<CustomerViewProps> = ({ searchQuery = '' }) 
             <span className={`text-[10px] font-bold uppercase tracking-wider block ${
               activeFilter === 'ALL' ? 'text-[#FF5401]' : 'text-slate-500'
             }`}>
-              All Registrations
+              All
             </span>
             <div className="text-2xl font-black text-[#2B2B2B] flex items-baseline gap-2">
               <span>{allCount}</span>
@@ -212,7 +212,7 @@ export const CustomerView: React.FC<CustomerViewProps> = ({ searchQuery = '' }) 
             <span className={`text-[10px] font-bold uppercase tracking-wider block ${
               activeFilter === 'PENDING' ? 'text-[#FF5401]' : 'text-slate-500'
             }`}>
-              Pending Registration
+              Pending
             </span>
             <div className="text-2xl font-black text-[#2B2B2B] flex items-baseline gap-2">
               <span>{pendingCount}</span>
@@ -250,13 +250,10 @@ export const CustomerView: React.FC<CustomerViewProps> = ({ searchQuery = '' }) 
             <span className={`text-[10px] font-bold uppercase tracking-wider block ${
               activeFilter === 'APPROVED' ? 'text-[#FF5401]' : 'text-slate-500'
             }`}>
-              Approve Registration
+              Approved
             </span>
             <div className="text-2xl font-black text-[#2B2B2B] flex items-baseline gap-2">
               <span>{approvedCount}</span>
-              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-                Approved
-              </span>
             </div>
           </div>
           <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-colors ${
@@ -282,13 +279,10 @@ export const CustomerView: React.FC<CustomerViewProps> = ({ searchQuery = '' }) 
             <span className={`text-[10px] font-bold uppercase tracking-wider block ${
               activeFilter === 'REJECTED' ? 'text-[#FF5401]' : 'text-slate-500'
             }`}>
-              Rejected Registration
+              Rejected
             </span>
             <div className="text-2xl font-black text-[#2B2B2B] flex items-baseline gap-2">
               <span>{rejectedCount}</span>
-              <span className="text-[10px] font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full">
-                Rejected
-              </span>
             </div>
           </div>
           <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-colors ${
@@ -353,7 +347,7 @@ export const CustomerView: React.FC<CustomerViewProps> = ({ searchQuery = '' }) 
               className="bg-[#2B2B2B] hover:bg-black text-white text-xs font-bold px-4 py-2 rounded-xl transition-all flex items-center gap-2 cursor-pointer shadow-xs"
             >
               <Download className="w-3.5 h-3.5" />
-              <span>Export CSV</span>
+              <span>Export</span>
             </button>
           </div>
         </div>
@@ -476,7 +470,7 @@ export const CustomerView: React.FC<CustomerViewProps> = ({ searchQuery = '' }) 
                     className="w-full bg-[#FF5401] hover:bg-[#E54A00] text-white font-bold text-xs py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
                   >
                     <Eye className="w-3.5 h-3.5" />
-                    <span>Review Application</span>
+                    <span>Review</span>
                   </button>
                 ) : (
                   <button
@@ -484,7 +478,7 @@ export const CustomerView: React.FC<CustomerViewProps> = ({ searchQuery = '' }) 
                     className="w-full bg-slate-100 hover:bg-slate-200 text-[#2B2B2B] font-bold text-xs py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <Eye className="w-3.5 h-3.5 text-slate-500" />
-                    <span>View Details</span>
+                    <span>View</span>
                   </button>
                 )}
               </div>
@@ -589,7 +583,7 @@ export const CustomerView: React.FC<CustomerViewProps> = ({ searchQuery = '' }) 
                           className="bg-slate-100 hover:bg-slate-200 text-[#2B2B2B] font-bold text-xs px-3.5 py-1.5 rounded-xl transition-all inline-flex items-center gap-1.5 cursor-pointer"
                         >
                           <Eye className="w-3.5 h-3.5 text-slate-500" />
-                          <span>View Details</span>
+                          <span>View</span>
                         </button>
                       )}
                     </td>
@@ -705,12 +699,12 @@ export const CustomerView: React.FC<CustomerViewProps> = ({ searchQuery = '' }) 
                   {verificationStatus === 'verifying' ? (
                     <>
                       <RefreshCw className="w-4 h-4 animate-spin" />
-                      <span>Verifying...</span>
+                      <span>Verifying…</span>
                     </>
                   ) : (
                     <>
                       <Database className="w-4 h-4" />
-                      <span>{verificationStatus === 'idle' ? 'Verify Customer' : 'Re-Verify Customer'}</span>
+                      <span>{verificationStatus === 'idle' ? 'Verify' : 'Re-verify'}</span>
                     </>
                   )}
                 </button>
@@ -802,7 +796,6 @@ export const CustomerView: React.FC<CustomerViewProps> = ({ searchQuery = '' }) 
                     <div className="p-8 text-center text-slate-500 text-xs space-y-2">
                       <Database className="w-8 h-8 text-slate-400 mx-auto" />
                       <p className="font-bold text-slate-700">Verification Required</p>
-                      <p className="text-[11px] text-slate-500">Click "Verify Customer" above to perform database lookup.</p>
                     </div>
                   )}
 
@@ -810,7 +803,6 @@ export const CustomerView: React.FC<CustomerViewProps> = ({ searchQuery = '' }) 
                     <div className="p-8 text-center text-amber-800 text-xs space-y-2">
                       <RefreshCw className="w-8 h-8 text-amber-500 animate-spin mx-auto" />
                       <p className="font-bold">Searching Billing System Database...</p>
-                      <p className="text-[11px] text-amber-600">Cross-referencing address, phone, and meter indexes...</p>
                     </div>
                   )}
 
@@ -852,9 +844,6 @@ export const CustomerView: React.FC<CustomerViewProps> = ({ searchQuery = '' }) 
                     <div className="p-6 text-center text-red-800 text-xs space-y-2">
                       <XCircle className="w-8 h-8 text-red-500 mx-auto" />
                       <p className="font-extrabold text-sm text-red-900">NOT FOUND IN BILLING SYSTEM</p>
-                      <p className="text-[11px] text-red-700 max-w-xs mx-auto">
-                        No active meter or account matches this applicant in the central database.
-                      </p>
                     </div>
                   )}
                 </div>
@@ -916,7 +905,7 @@ export const CustomerView: React.FC<CustomerViewProps> = ({ searchQuery = '' }) 
                       {isProcessing ? (
                         <>
                           <RefreshCw className="w-4 h-4 animate-spin" />
-                          <span>Approving...</span>
+                          <span>Approving…</span>
                         </>
                       ) : (
                         <>
@@ -986,10 +975,6 @@ export const CustomerView: React.FC<CustomerViewProps> = ({ searchQuery = '' }) 
                 />
               </div>
 
-              <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200 text-[11px] text-amber-900 leading-relaxed">
-                📢 The customer will receive a notification ({selectedRequest.notificationChannel}) explaining why their registration request was rejected.
-              </div>
-
               <div className="pt-2 flex gap-2">
                 <button
                   type="button"
@@ -1004,7 +989,7 @@ export const CustomerView: React.FC<CustomerViewProps> = ({ searchQuery = '' }) 
                   disabled={isProcessing}
                   className="w-2/3 bg-red-600 hover:bg-red-700 text-white font-bold text-xs py-2.5 rounded-2xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5"
                 >
-                  {isProcessing ? 'Rejecting...' : 'Confirm Rejection'}
+                  {isProcessing ? 'Rejecting…' : 'Reject'}
                 </button>
               </div>
             </form>
