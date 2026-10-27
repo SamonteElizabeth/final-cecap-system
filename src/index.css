@@ -35,6 +35,11 @@
   textarea {
     font-size: 16px;
   }
+  /* Placeholder hints stay small; iOS zoom only looks at the field's own font size */
+  input::placeholder,
+  textarea::placeholder {
+    font-size: 12px;
+  }
   /* Fields already 18px+ (e.g. OTP boxes) keep their Tailwind size */
   :is(input, select, textarea):is(.text-lg, .text-xl, .text-2xl, .text-3xl, .text-4xl) {
     font-size: revert-layer;
