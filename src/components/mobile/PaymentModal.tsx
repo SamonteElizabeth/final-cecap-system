@@ -81,8 +81,8 @@ export const PaymentModal: React.FC = () => {
   };
 
   return (
-    <div className="absolute inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-3 animate-fade-in">
-      <div className="bg-white rounded-3xl w-full max-w-sm p-5 shadow-2xl border border-slate-100 relative max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-[60] flex items-center justify-center p-3 animate-fade-in">
+      <div className="bg-white rounded-3xl w-full max-w-sm p-5 shadow-2xl border border-slate-100 relative max-h-[90dvh] overflow-y-auto overscroll-contain">
         <button
           onClick={handleClose}
           className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1 rounded-full bg-slate-100"

@@ -196,7 +196,7 @@ export const BillingView: React.FC = () => {
       {/* Official Receipt Modal Sheet */}
       {selectedHistoryReceipt && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-5 max-w-sm w-full space-y-4 shadow-2xl animate-fade-in border border-[#E5E7EB]">
+          <div className="bg-white rounded-3xl p-5 max-w-sm w-full max-h-[90dvh] overflow-y-auto overscroll-contain space-y-4 shadow-2xl animate-fade-in border border-[#E5E7EB]">
             <div className="text-center pb-2 border-b border-[#E5E7EB]">
               <div className="w-10 h-10 bg-emerald-100 text-[#22C55E] rounded-2xl mx-auto flex items-center justify-center mb-2">
                 <CheckCircle2 className="w-6 h-6" />

@@ -25,7 +25,7 @@ export const BiometricPromptModal: React.FC = () => {
   };
 
   return (
-    <div className="absolute inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-4 transition-all animate-fade-in">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-[60] flex items-center justify-center p-4 transition-all animate-fade-in">
       <div className="bg-white rounded-3xl w-full max-w-xs p-6 text-center shadow-2xl border border-slate-100 relative overflow-hidden">
         <button
           onClick={() => setBiometricPromptOpen(false)}

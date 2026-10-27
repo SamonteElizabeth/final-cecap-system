@@ -1460,17 +1460,20 @@ Valid for 5 minutes.`,
                 <button
                   type="button"
                   onClick={() => handleOpenFirstTimeSetup(adminEmail !== 'admin@clarkelectric.ph' ? adminEmail : undefined)}
-                  className="w-full bg-[#FFFDF9] hover:bg-orange-50/70 border border-[#F5D0B8] hover:border-[#FF5401]/50 p-3 rounded-2xl transition-all flex items-center justify-between text-left cursor-pointer group shadow-2xs"
+                  className="relative w-full bg-[#FFFDF9] hover:bg-orange-50/70 border border-[#F5D0B8] hover:border-[#FF5401]/50 p-3 rounded-2xl transition-all flex items-center justify-center cursor-pointer group shadow-2xs"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-xl bg-orange-100 text-[#FF5401] group-hover:bg-[#FF5401] group-hover:text-white flex items-center justify-center transition-colors shrink-0">
                       <KeyRound className="w-4 h-4" />
                     </div>
-                    <span className="text-xs font-bold text-[#2B2B2B] group-hover:text-[#FF5401] transition-colors">
-                      Setup
-                    </span>
+                    <div className="flex flex-col text-left leading-tight">
+                      <span className="text-xs font-bold text-[#2B2B2B] group-hover:text-[#FF5401] transition-colors">
+                        New user?
+                      </span>
+                      <span className="text-[10px] font-medium text-slate-500">Setup</span>
+                    </div>
                   </div>
-                  <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-[#FF5401] group-hover:translate-x-0.5 transition-all shrink-0" />
+                  <ArrowRight className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-[#FF5401] group-hover:translate-x-0.5 transition-all shrink-0" />
                 </button>
               </div>
             </form>
