@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, CreditCard, Zap, BellRing, Headset, ShieldCheck, Signal, Wifi, BatteryFull } from 'lucide-react';
+import { ArrowRight, CreditCard, Zap, BellRing, Headset, Signal, Wifi, BatteryFull } from 'lucide-react';
 import cecapLogo from '../../assets/cecap-wordmark.png';
 import cecapEmblem from '../../assets/cecap-emblem.png';
 import substationHero from '../../assets/images/clark_electric_substation_1791368730354.jpg';
@@ -348,10 +348,6 @@ export const LandingView: React.FC<LandingViewProps> = ({ onSignIn, onRegister }
 
             {/* Footer (mobile) */}
             <div className="cecap-fade-up md:hidden mt-6 text-center space-y-1" style={delay(960)}>
-              <p className="flex items-center justify-center gap-1.5 text-[10px] text-slate-500">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                Secured with 2-Factor Authentication
-              </p>
               <p className="text-[10px] text-slate-400">© 2026 Clark Electric Distribution Corporation</p>
             </div>
           </div>
