@@ -13,10 +13,34 @@
   * {
     font-family: 'Poppins', system-ui, -apple-system, sans-serif;
   }
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  html, body {
+    overflow-x: hidden;
+  }
   body {
     background-color: #F5F5F5;
     color: #2B2B2B;
     font-family: 'Poppins', system-ui, -apple-system, sans-serif;
+  }
+}
+
+/* Keep forms steady on phones: iOS Safari zooms the page when a field under 16px is focused,
+   which makes the form jump and drift sideways while typing. */
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+  /* Fields already 18px+ (e.g. OTP boxes) keep their Tailwind size */
+  :is(input, select, textarea):is(.text-lg, .text-xl, .text-2xl, .text-3xl, .text-4xl) {
+    font-size: revert-layer;
+  }
+  button, a, input, select, textarea, label {
+    touch-action: manipulation;
   }
 }
 
