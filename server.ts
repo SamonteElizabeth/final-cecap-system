@@ -567,8 +567,17 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[CEDC Express Server] Running on http://0.0.0.0:${PORT}`);
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    // 0.0.0.0 is a bind address, not a browsable URL (fails on Windows), so print localhost
+    console.log(`[CEDC Express Server] Running on http://localhost:${PORT}`);
+  });
+
+  server.on('error', (err: NodeJS.ErrnoException) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`[CEDC Express Server] Port ${PORT} is already in use. Another dev server is probably still running - stop it (Ctrl+C in its terminal) and try again.`);
+      process.exit(1);
+    }
+    throw err;
   });
 }
 
