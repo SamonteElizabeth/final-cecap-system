@@ -1,4 +1,5 @@
 import { Bill, ServiceAccount, BillingHistoryItem, ConsumptionData, NotificationItem, PaymentReceipt, SupportConcern, RegistrationRequest } from '../types';
+import { MOCK_CONSUMPTION_HISTORY } from '../data/mockBillingData';
 
 export async function submitRegistrationRequest(payload: {
   fullName: string;
@@ -172,11 +173,16 @@ export async function fetchBillingHistory(accountNumber: string) {
 }
 
 export async function fetchConsumptionHistory(accountNumber: string) {
+  const localConsumption = () => ({
+    success: true,
+    consumption: MOCK_CONSUMPTION_HISTORY[accountNumber] || MOCK_CONSUMPTION_HISTORY['0421-8812-90'] || [],
+  });
   try {
     const res = await fetch(`/api/billing/consumption/${encodeURIComponent(accountNumber)}`);
-    return await res.json();
+    const data = await res.json();
+    return data?.consumption?.length ? data : localConsumption();
   } catch (err) {
-    return { success: false, consumption: [] };
+    return localConsumption();
   }
 }
 
@@ -206,14 +212,16 @@ export async function initiatePaymentCheckout(payload: {
   }
 }
 
-export async function confirmPayment(payload: {
+type ConfirmPaymentPayload = {
   transactionId: string;
   accountNumber: string;
   billNumber: string;
   amountPaid: number;
   channel: 'GCash' | 'Maya' | 'ECPay';
   gatewayRef: string;
-}) {
+};
+
+export async function confirmPayment(payload: ConfirmPaymentPayload) {
   try {
     const res = await fetch('/api/payment/confirm', {
       method: 'POST',
@@ -222,25 +230,30 @@ export async function confirmPayment(payload: {
     });
     return await res.json();
   } catch (err) {
-    const receiptNum = `OR-2026-${Math.floor(100000 + Math.random() * 900000)}`;
-    return {
-      success: true,
-      receipt: {
-        transactionId: payload.transactionId,
-        referenceNumber: receiptNum,
-        accountNumber: payload.accountNumber,
-        billNumber: payload.billNumber,
-        amountPaid: payload.amountPaid,
-        paymentChannel: payload.channel,
-        timestamp: new Date().toISOString(),
-        status: 'SUCCESS',
-        remainingBalance: 0,
-        gatewayRef: payload.gatewayRef,
-      },
-      smsDispatched: true,
-      emailDispatched: true,
-    };
+    return createDemoReceipt(payload);
   }
+}
+
+// Builds a receipt in the browser without touching the billing server (presentation payments)
+export function createDemoReceipt(payload: ConfirmPaymentPayload) {
+  const receiptNum = `OR-2026-${Math.floor(100000 + Math.random() * 900000)}`;
+  return {
+    success: true,
+    receipt: {
+      transactionId: payload.transactionId,
+      referenceNumber: receiptNum,
+      accountNumber: payload.accountNumber,
+      billNumber: payload.billNumber,
+      amountPaid: payload.amountPaid,
+      paymentChannel: payload.channel,
+      timestamp: new Date().toISOString(),
+      status: 'SUCCESS',
+      remainingBalance: 0,
+      gatewayRef: payload.gatewayRef,
+    },
+    smsDispatched: true,
+    emailDispatched: true,
+  };
 }
 
 export async function submitSupportConcern(payload: {

@@ -362,7 +362,7 @@ This code is valid for 5 minutes. Once verified, your service account will be li
       },
     };
 
-    const updatedLinkedAccounts = [...linkedAccounts, newServiceAccount];
+    const updatedLinkedAccounts = [...(user.linkedAccounts || []), newServiceAccount];
     setUser({
       ...user,
       linkedAccounts: updatedLinkedAccounts,
@@ -430,25 +430,33 @@ This code is valid for 5 minutes. Once verified, your service account will be li
         </div>
 
         {/* Customer Address & Contact */}
-        <div className="mt-5 pt-4 border-t border-[#E5E7EB] grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-medium text-[#2B2B2B]">
-          {user.serviceAddress && (
-            <div className="flex items-start gap-2 min-w-0">
-              <MapPin className="w-4 h-4 text-[#FF5401] shrink-0 mt-0.5" />
-              <span className="break-words">{user.serviceAddress}</span>
-            </div>
-          )}
-          {user.mobileNumber && (
-            <a href={`tel:${user.mobileNumber.replace(/\s/g, '')}`} className="flex items-center gap-2 min-w-0 hover:text-[#FF5401]">
-              <Phone className="w-4 h-4 text-[#FF5401] shrink-0" />
-              <span className="truncate">{user.mobileNumber}</span>
-            </a>
-          )}
-          {user.email && (
-            <a href={`mailto:${user.email}`} className="flex items-center gap-2 min-w-0 hover:text-[#FF5401]">
-              <Mail className="w-4 h-4 text-[#FF5401] shrink-0" />
-              <span className="truncate">{user.email}</span>
-            </a>
-          )}
+        <div className="mt-5 pt-5 border-t border-[#E5E7EB] grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-medium text-[#2B2B2B]">
+          {[
+            { key: 'address', icon: MapPin, value: user.serviceAddress, href: undefined },
+            { key: 'mobile', icon: Phone, value: user.mobileNumber, href: user.mobileNumber && `tel:${user.mobileNumber.replace(/\s/g, '')}` },
+            { key: 'email', icon: Mail, value: user.email, href: user.email && `mailto:${user.email}` },
+          ]
+            .filter(item => item.value)
+            .map(({ key, icon: Icon, value, href }) => {
+              const content = (
+                <>
+                  <span className="w-8 h-8 rounded-xl bg-white border border-[#E5E7EB] flex items-center justify-center shrink-0">
+                    <Icon className="w-4 h-4 text-[#FF5401]" />
+                  </span>
+                  <span className="min-w-0 line-clamp-2 break-words leading-snug">{value}</span>
+                </>
+              );
+              const tileClass = 'flex items-center gap-3 min-w-0 min-h-[60px] bg-[#F5F5F5] border border-[#E5E7EB] rounded-2xl px-3.5 py-3';
+              return href ? (
+                <a key={key} href={href} className={`${tileClass} hover:border-[#FF5401]/40 transition-colors`}>
+                  {content}
+                </a>
+              ) : (
+                <div key={key} className={tileClass} title={value}>
+                  {content}
+                </div>
+              );
+            })}
         </div>
       </div>
 

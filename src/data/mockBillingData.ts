@@ -150,8 +150,36 @@ export const MOCK_BILLING_HISTORY: Record<string, BillingHistoryItem[]> = {
   ],
 };
 
+// Seasonal mock usage: hot dry months (Apr–May) peak, cooler months dip, small year-on-year growth
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const SEASONAL_FACTOR = [0.92, 0.88, 0.97, 1.15, 1.12, 1.06, 1.04, 1.0, 0.96, 0.93, 0.9, 1.05];
+const MONTHLY_TEMP_C = [26, 27, 29, 33, 32, 31, 30, 29, 28, 28, 27, 26];
+
+const buildConsumption = (
+  baseKwh: number,
+  basePeakKw: number,
+  ratePerKwh: number,
+  years: number[],
+  withTemperature = false
+): ConsumptionData[] =>
+  years.flatMap((year, yi) =>
+    MONTHS.map((month, mi) => {
+      const variation = (((mi * 7 + yi * 3) % 5) - 2) * 0.012;
+      const kwh = Math.round(baseKwh * SEASONAL_FACTOR[mi] * Math.pow(1.03, yi) * (1 + variation));
+      return {
+        month,
+        year,
+        kwh,
+        peakKw: Math.round(basePeakKw * (kwh / baseKwh) * 10) / 10,
+        amount: Math.round(kwh * ratePerKwh * 100) / 100,
+        ...(withTemperature ? { averageTemperatureC: MONTHLY_TEMP_C[mi] } : {}),
+      };
+    })
+  );
+
 export const MOCK_CONSUMPTION_HISTORY: Record<string, ConsumptionData[]> = {
   '0421-8812-90': [
+    ...buildConsumption(320, 3.6, 12.6, [2024], true),
     { month: 'Jan', year: 2025, kwh: 310, peakKw: 3.5, amount: 3950.0, averageTemperatureC: 26 },
     { month: 'Feb', year: 2025, kwh: 300, peakKw: 3.4, amount: 3820.0, averageTemperatureC: 27 },
     { month: 'Mar', year: 2025, kwh: 320, peakKw: 3.6, amount: 4070.0, averageTemperatureC: 29 },
@@ -178,6 +206,7 @@ export const MOCK_CONSUMPTION_HISTORY: Record<string, ConsumptionData[]> = {
     { month: 'Dec', year: 2026, kwh: 420, peakKw: 4.6, amount: 5290.0, averageTemperatureC: 26 },
   ],
   '0421-9943-11': [
+    ...buildConsumption(1260, 15.8, 12.7, [2024]),
     { month: 'Jan', year: 2025, kwh: 1220, peakKw: 15.4, amount: 15450.0 },
     { month: 'Feb', year: 2025, kwh: 1190, peakKw: 15.0, amount: 15100.0 },
     { month: 'Mar', year: 2025, kwh: 1260, peakKw: 15.8, amount: 15950.0 },
@@ -203,6 +232,12 @@ export const MOCK_CONSUMPTION_HISTORY: Record<string, ConsumptionData[]> = {
     { month: 'Nov', year: 2026, kwh: 1430, peakKw: 18.0, amount: 18150.0 },
     { month: 'Dec', year: 2026, kwh: 1600, peakKw: 19.8, amount: 20300.0 },
   ],
+  // Service accounts available for linking (Account module)
+  '0421-2045-88': buildConsumption(265, 3.0, 12.6, [2024, 2025, 2026], true),
+  '0421-9012-34': buildConsumption(940, 11.0, 12.7, [2024, 2025, 2026]),
+  '0421-5512-88': buildConsumption(300, 3.4, 12.6, [2024, 2025, 2026], true),
+  '0421-8420-19': buildConsumption(3450, 40.5, 12.5, [2024, 2025, 2026]),
+  '0421-7700-34': buildConsumption(210, 2.5, 12.6, [2024, 2025, 2026], true),
 };
 
 export const MOCK_NOTIFICATIONS: NotificationItem[] = [

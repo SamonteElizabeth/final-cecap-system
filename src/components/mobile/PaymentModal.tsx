@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { initiatePaymentCheckout, confirmPayment } from '../../services/api';
+import { initiatePaymentCheckout, createDemoReceipt } from '../../services/api';
 import { X, CheckCircle2, ShieldCheck, ArrowRight, Smartphone, Building2, Wallet, Download, Share2, AlertCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export const PaymentModal: React.FC = () => {
-  const { paymentModalOpen, setPaymentModalOpen, selectedAccount, refreshAccountData } = useApp();
+  const { paymentModalOpen, setPaymentModalOpen, selectedAccount, recordDemoPayment } = useApp();
 
   const [paymentType, setPaymentType] = useState<'FULL' | 'PARTIAL'>('FULL');
   const [partialAmount, setPartialAmount] = useState<string>('2000');
@@ -50,7 +50,9 @@ export const PaymentModal: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    const res = await confirmPayment({
+    // Presentation payment: settled in memory only, resets when the site is reloaded or closed
+    await new Promise(resolve => setTimeout(resolve, 600));
+    const res = createDemoReceipt({
       transactionId: gatewayTxnId,
       accountNumber: selectedAccount.accountNumber,
       billNumber: currentBill.billNumber,
@@ -71,7 +73,7 @@ export const PaymentModal: React.FC = () => {
           origin: { y: 0.6 },
         });
       } catch (err) {}
-      refreshAccountData();
+      recordDemoPayment(selectedAccount.accountNumber, payAmount);
     }
   };
 

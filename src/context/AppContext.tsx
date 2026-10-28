@@ -219,6 +219,7 @@ interface AppContextType {
   paymentModalOpen: boolean;
   setPaymentModalOpen: (val: boolean) => void;
   refreshAccountData: () => Promise<void>;
+  recordDemoPayment: (accountNumber: string, amount: number) => void;
   logout: () => void;
   biometricPromptOpen: boolean;
   setBiometricPromptOpen: (val: boolean) => void;
@@ -726,7 +727,33 @@ CECAp Cybersecurity Operations`,
     return newEmail;
   };
 
+  // Presentation-only payments: held in memory, so bills return to unpaid once the site is reloaded or closed
+  const [demoPayments, setDemoPayments] = useState<Record<string, number>>({});
+
+  const recordDemoPayment = (accountNumber: string, amount: number) => {
+    setDemoPayments(prev => ({ ...prev, [accountNumber]: (prev[accountNumber] || 0) + amount }));
+  };
+
+  const applyDemoPayment = (acc: ServiceAccount): ServiceAccount => {
+    const paid = demoPayments[acc.accountNumber];
+    if (!paid) return acc;
+    const amountDue = Math.max(0, acc.currentBill.amountDue - paid);
+    return {
+      ...acc,
+      currentBill: {
+        ...acc.currentBill,
+        amountDue,
+        totalAmountDue: Math.max(0, acc.currentBill.totalAmountDue - paid),
+        amountPaid: acc.currentBill.amountPaid + paid,
+        status: amountDue === 0 ? 'Paid' : 'Partially Paid',
+      },
+    };
+  };
+
   const setSelectedAccount = (acc: ServiceAccount) => {
+    // Store the original bill, never the in-memory paid overlay
+    const original = linkedAccounts.find(a => a.accountNumber === acc.accountNumber);
+    if (original) acc = { ...acc, currentBill: original.currentBill };
     setSelectedAccountState(acc);
     try {
       localStorage.setItem(SESSION_ACCOUNT_KEY, JSON.stringify(acc));
@@ -1461,9 +1488,9 @@ CECAP Systems Security Team`,
         setAdminUser,
         user,
         setUser,
-        selectedAccount,
+        selectedAccount: selectedAccount && applyDemoPayment(selectedAccount),
         setSelectedAccount,
-        linkedAccounts,
+        linkedAccounts: linkedAccounts.map(applyDemoPayment),
         activeTab,
         setActiveTab,
         notifications,
@@ -1489,6 +1516,7 @@ CECAP Systems Security Team`,
         paymentModalOpen,
         setPaymentModalOpen,
         refreshAccountData,
+        recordDemoPayment,
         logout,
         biometricPromptOpen,
         setBiometricPromptOpen,
