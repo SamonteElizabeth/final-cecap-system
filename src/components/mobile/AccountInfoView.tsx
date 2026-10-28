@@ -16,6 +16,8 @@ import {
   Database,
   Check,
   KeyRound,
+  Phone,
+  Mail,
 } from 'lucide-react';
 
 interface CentralBillingRecord {
@@ -425,6 +427,28 @@ This code is valid for 5 minutes. Once verified, your service account will be li
               <span>Link</span>
             </button>
           </div>
+        </div>
+
+        {/* Customer Address & Contact */}
+        <div className="mt-5 pt-4 border-t border-[#E5E7EB] grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-medium text-[#2B2B2B]">
+          {user.serviceAddress && (
+            <div className="flex items-start gap-2 min-w-0">
+              <MapPin className="w-4 h-4 text-[#FF5401] shrink-0 mt-0.5" />
+              <span className="break-words">{user.serviceAddress}</span>
+            </div>
+          )}
+          {user.mobileNumber && (
+            <a href={`tel:${user.mobileNumber.replace(/\s/g, '')}`} className="flex items-center gap-2 min-w-0 hover:text-[#FF5401]">
+              <Phone className="w-4 h-4 text-[#FF5401] shrink-0" />
+              <span className="truncate">{user.mobileNumber}</span>
+            </a>
+          )}
+          {user.email && (
+            <a href={`mailto:${user.email}`} className="flex items-center gap-2 min-w-0 hover:text-[#FF5401]">
+              <Mail className="w-4 h-4 text-[#FF5401] shrink-0" />
+              <span className="truncate">{user.email}</span>
+            </a>
+          )}
         </div>
       </div>
 

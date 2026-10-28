@@ -27,23 +27,9 @@
   }
 }
 
-/* Keep forms steady on phones: iOS Safari zooms the page when a field under 16px is focused,
-   which makes the form jump and drift sideways while typing. */
+/* iOS focus-zoom on small fields is prevented by maximum-scale=1 in the viewport meta (index.html),
+   so fields keep their Tailwind text size on phones. */
 @media (pointer: coarse) {
-  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
-  select,
-  textarea {
-    font-size: 16px;
-  }
-  /* Placeholder hints stay small; iOS zoom only looks at the field's own font size */
-  input::placeholder,
-  textarea::placeholder {
-    font-size: 12px;
-  }
-  /* Fields already 18px+ (e.g. OTP boxes) keep their Tailwind size */
-  :is(input, select, textarea):is(.text-lg, .text-xl, .text-2xl, .text-3xl, .text-4xl) {
-    font-size: revert-layer;
-  }
   button, a, input, select, textarea, label {
     touch-action: manipulation;
   }

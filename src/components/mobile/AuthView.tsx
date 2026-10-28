@@ -9,7 +9,7 @@ import {
   ArrowRight,
   CheckCircle2,
   AlertCircle,
-  Fingerprint,
+  ScanFace,
   Lock,
   UserCheck,
   FileText,
@@ -1209,7 +1209,7 @@ Valid for 5 minutes.`,
                         autoComplete="username"
                         autoCapitalize="none"
                         spellCheck={false}
-                        className="w-full bg-[#FAF8F5] border border-[#EBE5DC] rounded-2xl pl-11 pr-4 py-3 text-sm font-medium text-[#2B2B2B] focus:outline-none focus:border-[#FF5401] focus:bg-white transition-all"
+                        className="w-full bg-[#FAF8F5] border border-[#EBE5DC] rounded-2xl pl-11 pr-4 py-3 text-xs font-medium text-[#2B2B2B] focus:outline-none focus:border-[#FF5401] focus:bg-white transition-all"
                         required
                       />
                     </div>
@@ -1233,7 +1233,7 @@ Valid for 5 minutes.`,
                         value={loginPassword}
                         onChange={e => setLoginPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full bg-[#FAF8F5] border border-[#EBE5DC] rounded-2xl pl-11 pr-11 py-3 text-sm font-medium text-[#2B2B2B] focus:outline-none focus:border-[#FF5401] focus:bg-white transition-all"
+                        className="w-full bg-[#FAF8F5] border border-[#EBE5DC] rounded-2xl pl-11 pr-11 py-3 text-xs font-medium text-[#2B2B2B] focus:outline-none focus:border-[#FF5401] focus:bg-white transition-all"
                         required
                       />
                       <button
@@ -1250,7 +1250,7 @@ Valid for 5 minutes.`,
                   <button
                     type="submit"
                     disabled={isSubmitting || lockoutState.isLocked}
-                    className="w-full bg-[#FF5401] hover:bg-[#E54A00] disabled:opacity-60 text-white font-semibold text-sm py-3.5 rounded-2xl shadow-[0_8px_20px_-4px_rgba(255,84,1,0.45)] transition-all flex items-center justify-center gap-2 mt-2 cursor-pointer"
+                    className="w-full bg-[#FF5401] hover:bg-[#E54A00] disabled:opacity-60 text-white font-semibold text-xs py-3.5 rounded-2xl shadow-[0_8px_20px_-4px_rgba(255,84,1,0.45)] transition-all flex items-center justify-center gap-2 mt-2 cursor-pointer"
                   >
                     <span>{isSubmitting ? 'Validating…' : 'Login'}</span>
                     <ArrowRight className="w-4 h-4" />
@@ -1264,7 +1264,7 @@ Valid for 5 minutes.`,
                       disabled={lockoutState.isLocked}
                       className="w-full bg-[#FFFDF9] hover:bg-orange-50/60 disabled:opacity-60 text-[#FF5401] border border-[#F5D0B8] font-semibold text-xs py-2.5 rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer"
                     >
-                      <Fingerprint className="w-4 h-4 text-[#FF5401]" />
+                      <ScanFace className="w-4 h-4 text-[#FF5401]" />
                       <span>Biometrics</span>
                     </button>
                   </div>
@@ -1333,7 +1333,7 @@ Valid for 5 minutes.`,
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-[#FF5401] hover:bg-[#E54A00] text-white font-semibold text-sm py-3.5 rounded-2xl shadow-[0_8px_20px_-4px_rgba(255,84,1,0.45)] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full bg-[#FF5401] hover:bg-[#E54A00] text-white font-semibold text-xs py-3.5 rounded-2xl shadow-[0_8px_20px_-4px_rgba(255,84,1,0.45)] transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <span>{isSubmitting ? 'Verifying…' : 'Verify'}</span>
                     <ShieldCheck className="w-4 h-4" />
@@ -1416,7 +1416,7 @@ Valid for 5 minutes.`,
                     value={adminEmail}
                     onChange={e => setAdminEmail(e.target.value)}
                     placeholder="admin@clarkelectric.ph"
-                    className="w-full bg-[#FAF8F5] border border-[#EBE5DC] rounded-2xl pl-11 pr-4 py-3.5 text-sm font-medium text-[#2B2B2B] focus:outline-none focus:border-[#FF5401] focus:bg-white transition-all"
+                    className="w-full bg-[#FAF8F5] border border-[#EBE5DC] rounded-2xl pl-11 pr-4 py-3.5 text-xs font-medium text-[#2B2B2B] focus:outline-none focus:border-[#FF5401] focus:bg-white transition-all"
                     required
                   />
                 </div>
@@ -1440,7 +1440,7 @@ Valid for 5 minutes.`,
                     value={adminPassword}
                     onChange={e => setAdminPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full bg-[#FAF8F5] border border-[#EBE5DC] rounded-2xl pl-11 pr-4 py-3.5 text-sm font-medium text-[#2B2B2B] focus:outline-none focus:border-[#FF5401] focus:bg-white transition-all"
+                    className="w-full bg-[#FAF8F5] border border-[#EBE5DC] rounded-2xl pl-11 pr-4 py-3.5 text-xs font-medium text-[#2B2B2B] focus:outline-none focus:border-[#FF5401] focus:bg-white transition-all"
                     required
                   />
                 </div>
@@ -1449,7 +1449,7 @@ Valid for 5 minutes.`,
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-[#FF5401] hover:bg-[#E54A00] text-white font-bold text-sm py-3.5 rounded-2xl shadow-[0_8px_20px_-4px_rgba(255,84,1,0.45)] transition-all flex items-center justify-center gap-2 mt-2 cursor-pointer"
+                className="w-full bg-[#FF5401] hover:bg-[#E54A00] text-white font-semibold text-xs py-3.5 rounded-2xl shadow-[0_8px_20px_-4px_rgba(255,84,1,0.45)] transition-all flex items-center justify-center gap-2 mt-2 cursor-pointer"
               >
                 <span>{isSubmitting ? 'Loading…' : 'Login'}</span>
                 <ArrowRight className="w-4 h-4" />
