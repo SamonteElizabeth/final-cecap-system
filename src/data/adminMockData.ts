@@ -171,6 +171,11 @@ export const BILL_PAYMENT_STATUS_DATA = [
   { month: 'May', Paid: 132560, Unpaid: 9880 },
   { month: 'Jun', Paid: 134120, Unpaid: 8910 },
   { month: 'Jul', Paid: 135340, Unpaid: 7510 },
+  { month: 'Aug', Paid: 136180, Unpaid: 7920 },
+  { month: 'Sep', Paid: 137050, Unpaid: 7340 },
+  { month: 'Oct', Paid: 137820, Unpaid: 6980 },
+  { month: 'Nov', Paid: 138460, Unpaid: 7150 },
+  { month: 'Dec', Paid: 139710, Unpaid: 8260 },
 ];
 
 export interface BillPaymentCustomer {
@@ -215,13 +220,15 @@ const BILLING_CUSTOMER_POOL: { accountNumber: string; name: string; serviceType:
 
 const PAYMENT_CHANNELS = ['GCash', 'Maya', 'ECPay', 'Bank'];
 const STATUS_MONTHS = BILL_PAYMENT_STATUS_DATA.map(d => d.month);
-const NEXT_MONTH_NAME = ['February', 'March', 'April', 'May', 'June', 'July', 'August'];
+// Bills fall due the month after billing (December bills are due in January 2027)
+const NEXT_MONTH_NAME = ['February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December', 'January'];
 
 // Customers billed in a given 2026 month with their payment status (stable per account and month)
 export const getBillPaymentCustomers = (month: string, status: 'Paid' | 'Unpaid'): BillPaymentCustomer[] => {
   const mi = Math.max(0, STATUS_MONTHS.indexOf(month));
+  const dueYear = mi === 11 ? 2027 : 2026;
   return BILLING_CUSTOMER_POOL.map((c, i) => {
-    const isUnpaid = (i * 5 + mi * 3) % 7 === 0;
+    const isUnpaid = (i * 5 + mi * 7) % 12 < 2;
     const amount = Math.round(c.baseAmount * (0.9 + (((i * 13 + mi * 5) % 9) * 0.025)) * 100) / 100;
     return {
       accountNumber: c.accountNumber,
@@ -230,9 +237,9 @@ export const getBillPaymentCustomers = (month: string, status: 'Paid' | 'Unpaid'
       area: c.area,
       amount,
       status: (isUnpaid ? 'Unpaid' : 'Paid') as BillPaymentCustomer['status'],
-      paymentDate: isUnpaid ? undefined : `${NEXT_MONTH_NAME[mi]} ${String(2 + ((i * 3 + mi) % 10)).padStart(2, '0')}, 2026`,
+      paymentDate: isUnpaid ? undefined : `${NEXT_MONTH_NAME[mi]} ${String(2 + ((i * 3 + mi) % 10)).padStart(2, '0')}, ${dueYear}`,
       paymentChannel: isUnpaid ? undefined : PAYMENT_CHANNELS[(i + mi) % PAYMENT_CHANNELS.length],
-      dueDate: `${NEXT_MONTH_NAME[mi]} 12, 2026`,
+      dueDate: `${NEXT_MONTH_NAME[mi]} 12, ${dueYear}`,
     };
   }).filter(c => c.status === status);
 };
