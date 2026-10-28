@@ -1,4 +1,4 @@
-import { Customer, Bill, BillingHistoryItem, ConsumptionData, FAQItem, NotificationItem } from '../types';
+import { Customer, Bill, BillingHistoryItem, ConsumptionData, FAQItem, NotificationItem, RegistrationRequest, ServiceAccount, BillBreakdownItem } from '../types';
 
 export const MOCK_CUSTOMERS: Customer[] = [
   {
@@ -238,6 +238,165 @@ export const MOCK_CONSUMPTION_HISTORY: Record<string, ConsumptionData[]> = {
   '0421-5512-88': buildConsumption(300, 3.4, 12.6, [2024, 2025, 2026], true),
   '0421-8420-19': buildConsumption(3450, 40.5, 12.5, [2024, 2025, 2026]),
   '0421-7700-34': buildConsumption(210, 2.5, 12.6, [2024, 2025, 2026], true),
+};
+
+// -------------------------------------------------------------
+// Sample data for newly registered customers (built on demand, stable per account number)
+// -------------------------------------------------------------
+type ServiceType = ServiceAccount['serviceType'];
+
+const SAMPLE_BASE: Record<ServiceType, { kwh: number; peakKw: number }> = {
+  Residential: { kwh: 290, peakKw: 3.3 },
+  Commercial: { kwh: 950, peakKw: 11.5 },
+  Industrial: { kwh: 3500, peakKw: 41 },
+};
+
+const SAMPLE_CHARGES: [string, string, number][] = [
+  ['Generation Charge', 'Power supplier generation cost', 7.0],
+  ['Transmission Charge', 'NGCP high-voltage grid transmission', 1.4],
+  ['Distribution System', 'CEDC wires, transformers, & meters operation', 2.2],
+  ['System Loss Charge', 'Technical & non-technical losses allowed by ERC', 0.6],
+  ['Subsidies & Universal Charge', 'Lifeline subsidy, Missionary, & Environmental', 0.4],
+];
+const SAMPLE_TAX_RATE = 0.086;
+
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
+const accountSeed = (accountNumber: string) =>
+  accountNumber
+    .replace(/\D/g, '')
+    .split('')
+    .reduce((sum, d, i) => sum + Number(d) * (i + 1), 0);
+
+const billAmountForKwh = (kwh: number) => {
+  const subtotal = SAMPLE_CHARGES.reduce((sum, [, , rate]) => sum + kwh * rate, 0);
+  return round2(subtotal * (1 + SAMPLE_TAX_RATE));
+};
+
+export const getSampleConsumption = (accountNumber: string, serviceType: ServiceType = 'Residential'): ConsumptionData[] => {
+  if (MOCK_CONSUMPTION_HISTORY[accountNumber]) return MOCK_CONSUMPTION_HISTORY[accountNumber];
+  const scale = 0.85 + (accountSeed(accountNumber) % 30) / 100;
+  const base = SAMPLE_BASE[serviceType] || SAMPLE_BASE.Residential;
+  return buildConsumption(
+    Math.round(base.kwh * scale),
+    Math.round(base.peakKw * scale * 10) / 10,
+    billAmountForKwh(1),
+    [2024, 2025, 2026],
+    serviceType === 'Residential'
+  );
+};
+
+const HISTORY_PERIODS = [
+  { month: 'May', bill: '06', period: 'May 16 - Jun 15, 2026', due: 'July 12, 2026', paidOn: 'July 05, 2026', method: 'GCash' },
+  { month: 'Apr', bill: '05', period: 'Apr 16 - May 15, 2026', due: 'June 12, 2026', paidOn: 'June 10, 2026', method: 'Maya' },
+  { month: 'Mar', bill: '04', period: 'Mar 16 - Apr 15, 2026', due: 'May 12, 2026', paidOn: 'May 08, 2026', method: 'ECPay' },
+  { month: 'Feb', bill: '03', period: 'Feb 16 - Mar 15, 2026', due: 'April 12, 2026', paidOn: 'April 09, 2026', method: 'GCash' },
+];
+
+export const getSampleBillingHistory = (accountNumber: string, serviceType: ServiceType = 'Residential'): BillingHistoryItem[] => {
+  if (MOCK_BILLING_HISTORY[accountNumber]) return MOCK_BILLING_HISTORY[accountNumber];
+  const digits = accountNumber.replace(/\D/g, '');
+  const consumption = getSampleConsumption(accountNumber, serviceType);
+  const seed = accountSeed(accountNumber);
+  return HISTORY_PERIODS.map((p, i) => {
+    const kwh = consumption.find(c => c.year === 2026 && c.month === p.month)?.kwh || 0;
+    const amount = billAmountForKwh(kwh);
+    return {
+      id: `HIST-${digits}-${p.bill}`,
+      billNumber: `BILL-2026-${p.bill}-${digits}`,
+      accountNumber,
+      billingPeriod: p.period,
+      dueDate: p.due,
+      amount,
+      amountPaid: amount,
+      remainingBalance: 0,
+      status: 'Paid',
+      paymentDate: p.paidOn,
+      paymentMethod: p.method,
+      receiptNumber: `OR-2026-${100000 + ((seed * 7919 + i * 104729) % 900000)}`,
+    };
+  });
+};
+
+export const createSampleServiceAccount = (details: {
+  accountNumber: string;
+  accountHolderName: string;
+  serviceAddress: string;
+  meterNumber: string;
+  serviceType: ServiceType;
+}): ServiceAccount => {
+  const { accountNumber, serviceType } = details;
+  const kwh = getSampleConsumption(accountNumber, serviceType).find(c => c.year === 2026 && c.month === 'Jun')?.kwh || SAMPLE_BASE[serviceType].kwh;
+  const breakdown: BillBreakdownItem[] = SAMPLE_CHARGES.map(([category, description, ratePerKwh]) => ({
+    category,
+    description,
+    amount: round2(kwh * ratePerKwh),
+    ratePerKwh,
+  }));
+  const subtotal = breakdown.reduce((sum, b) => sum + b.amount, 0);
+  const taxes = round2(subtotal * SAMPLE_TAX_RATE);
+  breakdown.push({ category: 'Government Taxes', description: 'VAT (12%) & Local Franchise Tax', amount: taxes });
+  const amountDue = round2(subtotal + taxes);
+
+  return {
+    ...details,
+    nickname: `${serviceType} - ${details.accountHolderName}`,
+    isPrimary: true,
+    currentBill: {
+      billNumber: `BILL-2026-07-${accountNumber.replace(/\D/g, '')}`,
+      accountNumber,
+      billingPeriod: 'June 16, 2026 - July 15, 2026',
+      dueDate: 'August 12, 2026',
+      amountDue,
+      previousBalance: 0,
+      totalAmountDue: amountDue,
+      status: 'Unpaid',
+      amountPaid: 0,
+      kwhConsumed: kwh,
+      peakKw: Math.round(SAMPLE_BASE[serviceType].peakKw * (kwh / SAMPLE_BASE[serviceType].kwh) * 10) / 10,
+      billingDate: 'July 18, 2026',
+      breakdown,
+    },
+  };
+};
+
+// Builds the customer profile for an admin-approved registration request
+export const createCustomerFromRegistration = (req: RegistrationRequest): Customer => {
+  const accountNumber = req.accountCode || req.matchingBillingRecord?.accountNumber || '';
+  const serviceType = (req.matchingBillingRecord?.serviceType as ServiceType) || 'Residential';
+  const meterNumber = req.matchingBillingRecord?.meterNumber || `MTR-2026-${String(accountSeed(accountNumber)).padStart(5, '0')}`;
+  const now = new Date().toISOString();
+
+  return {
+    id: `CUST-${accountNumber.replace(/\D/g, '').slice(-6)}`,
+    accountNumber,
+    username: req.username,
+    name: req.fullName,
+    email: req.email,
+    mobileNumber: req.mobileNumber,
+    serviceAddress: req.serviceAddress,
+    serviceType,
+    meterNumber,
+    biometricsEnabled: true,
+    registeredDate: now.slice(0, 10),
+    isFirstLogin: true,
+    tempPassword: req.tempPassword,
+    currentPassword: req.tempPassword,
+    passwordLastChanged: now,
+    previousPasswords: [],
+    failedLoginAttempts: 0,
+    lockedUntil: null,
+    status: 'Active',
+    linkedAccounts: [
+      createSampleServiceAccount({
+        accountNumber,
+        accountHolderName: req.fullName,
+        serviceAddress: req.serviceAddress,
+        meterNumber,
+        serviceType,
+      }),
+    ],
+  };
 };
 
 export const MOCK_NOTIFICATIONS: NotificationItem[] = [

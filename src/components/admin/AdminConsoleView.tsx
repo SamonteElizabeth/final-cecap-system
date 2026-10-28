@@ -81,7 +81,7 @@ export const AdminConsoleView: React.FC = () => {
   return (
     <div className="flex flex-col md:flex-row h-screen w-full bg-[#F5F5F5] text-[#2B2B2B] overflow-hidden relative">
       {/* Left Sidebar Navigation (Desktop) */}
-      <div className="hidden md:flex shrink-0">
+      <div className="hidden md:flex shrink-0 relative z-20">
         <AdminSidebar
           activeTab={activeTab}
           setActiveTab={setActiveTab}

@@ -13,7 +13,7 @@ import {
   AdminStaffUser,
   AdminSetupToken,
 } from '../types';
-import { MOCK_CUSTOMERS, MOCK_NOTIFICATIONS } from '../data/mockBillingData';
+import { MOCK_CUSTOMERS, MOCK_NOTIFICATIONS, createCustomerFromRegistration } from '../data/mockBillingData';
 import { INITIAL_REGISTRATION_REQUESTS, ADMIN_STAFF_USERS_LIST } from '../data/adminMockData';
 import {
   validatePassword,
@@ -229,6 +229,8 @@ interface AppContextType {
   submitRegistration: (req: { fullName: string; accountCode?: string; serviceAddress: string; mobileNumber: string; email: string; notificationChannel?: 'Email' | 'SMS' }) => void;
   approveRegistration: (id: string, customAccountCode?: string) => { accountCode: string; username: string; tempPassword: string };
   rejectRegistration: (id: string, reason: string) => void;
+  findCustomerByUsername: (username: string) => Customer | null;
+  signInAsCustomer: (customer: Customer) => void;
 
   // Sent Emails / Dispatch Hub State
   sentEmails: SentEmail[];
@@ -306,6 +308,8 @@ const SESSION_ROLE_KEY = 'cecap_session_role';
 const SESSION_TAB_KEY = 'cecap_session_active_tab';
 const SESSION_USER_KEY = 'cecap_session_user';
 const SESSION_ACCOUNT_KEY = 'cecap_session_selected_account';
+const REGISTRATION_REQUESTS_KEY = 'cecap_registration_requests';
+const SAVED_CUSTOMERS_KEY = 'cecap_saved_customers';
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticatedState] = useState<boolean>(() => {
@@ -410,7 +414,70 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
   const [notifications, setNotifications] = useState<NotificationItem[]>(MOCK_NOTIFICATIONS);
   const [supportConcerns, setSupportConcerns] = useState<SupportConcern[]>(INITIAL_SUPPORT_CONCERNS);
-  const [registrationRequests, setRegistrationRequests] = useState<RegistrationRequest[]>(INITIAL_REGISTRATION_REQUESTS);
+  const [registrationRequests, setRegistrationRequests] = useState<RegistrationRequest[]>(() => {
+    try {
+      const saved = localStorage.getItem(REGISTRATION_REQUESTS_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch {
+      // ignore
+    }
+    return INITIAL_REGISTRATION_REQUESTS;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(REGISTRATION_REQUESTS_KEY, JSON.stringify(registrationRequests));
+    } catch {
+      // ignore
+    }
+  }, [registrationRequests]);
+
+  // Customer profiles saved in this browser (registered customers, plus any changes to the demo customer)
+  const [savedCustomers, setSavedCustomers] = useState<Customer[]>(() => {
+    try {
+      const saved = localStorage.getItem(SAVED_CUSTOMERS_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch {
+      // ignore
+    }
+    return [];
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(SAVED_CUSTOMERS_KEY, JSON.stringify(savedCustomers));
+    } catch {
+      // ignore
+    }
+  }, [savedCustomers]);
+
+  // Resolves a login username to the customer profile it opens
+  const findCustomerByUsername = (username: string): Customer | null => {
+    const entered = username.trim().toLowerCase();
+    if (!entered) return null;
+    const saved = savedCustomers.find(c => c.username?.toLowerCase() === entered);
+    if (saved) return saved;
+    const demo = MOCK_CUSTOMERS.find(c => c.username?.toLowerCase() === entered);
+    if (demo) return demo;
+    const approved = registrationRequests.find(
+      r => r.status === 'Approved' && r.accountCode && r.username?.toLowerCase() === entered
+    );
+    return approved ? createCustomerFromRegistration(approved) : null;
+  };
+
+  const signInAsCustomer = (customer: Customer) => {
+    setUser(customer);
+    setLinkedAccounts(customer.linkedAccounts);
+    const primary = customer.linkedAccounts.find(a => a.isPrimary) || customer.linkedAccounts[0];
+    if (primary) {
+      setSelectedAccountState(primary);
+      try {
+        localStorage.setItem(SESSION_ACCOUNT_KEY, JSON.stringify(primary));
+      } catch {
+        // ignore
+      }
+    }
+  };
 
   // Email Hub State
   const [sentEmails, setSentEmails] = useState<SentEmail[]>(INITIAL_SENT_EMAILS);
@@ -772,6 +839,14 @@ CECAp Cybersecurity Operations`,
       } catch {
         // ignore
       }
+      // Keep the saved profile in step with password, contact and linked-account changes
+      if (user.username) {
+        setSavedCustomers(prev => {
+          const key = user.username!.toLowerCase();
+          const others = prev.filter(c => c.username?.toLowerCase() !== key);
+          return [...others, user];
+        });
+      }
     }
   }, [user]);
 
@@ -868,7 +943,8 @@ CECAp Cybersecurity Operations`,
   };
 
   const refreshAccountData = async () => {
-    if (!selectedAccount) return;
+    // The billing server only holds the demo customer; registered customers keep their saved profile
+    if (!selectedAccount || user?.id !== MOCK_CUSTOMERS[0].id) return;
     try {
       const res = await fetch(`/api/billing/account/${encodeURIComponent(selectedAccount.accountNumber)}`);
       const data = await res.json();
@@ -1526,6 +1602,8 @@ CECAP Systems Security Team`,
         submitRegistration,
         approveRegistration,
         rejectRegistration,
+        findCustomerByUsername,
+        signInAsCustomer,
 
         // Email Hub
         sentEmails,

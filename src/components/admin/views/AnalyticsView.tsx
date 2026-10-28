@@ -11,6 +11,8 @@ import {
   Clock,
   ArrowUpRight,
   Filter,
+  Search,
+  X,
 } from 'lucide-react';
 import {
   LineChart,
@@ -32,10 +34,43 @@ import {
   PAYMENT_COLLECTION_DATA,
   TICKET_DISTRIBUTION_DATA,
   RECENT_ACTIVITIES_LOG,
+  BILL_PAYMENT_STATUS_DATA,
+  getBillPaymentCustomers,
 } from '../../../data/adminMockData';
+
+// Paid / Unpaid colours validated for colour-blind separation; icons + labels carry the meaning too
+const PAYMENT_STATUS_SERIES = [
+  { key: 'Paid', color: '#FDD9C2', icon: CheckCircle2 },
+  { key: 'Unpaid', color: '#FF5401', icon: Clock },
+] as const;
 
 export const AnalyticsView: React.FC = () => {
   const [dateRange, setDateRange] = useState('Last 30 Days');
+  const [paymentStatusView, setPaymentStatusView] = useState<'chart' | 'table'>('chart');
+
+  const latestPaymentStatus = BILL_PAYMENT_STATUS_DATA[BILL_PAYMENT_STATUS_DATA.length - 1];
+  const latestBilled = latestPaymentStatus.Paid + latestPaymentStatus.Unpaid;
+  const latestPaidRate = ((latestPaymentStatus.Paid / latestBilled) * 100).toFixed(1);
+
+  // Customer list opened by clicking a Paid / Unpaid bar, summary row or table cell
+  const [paymentCustomersView, setPaymentCustomersView] = useState<{ month: string; status: 'Paid' | 'Unpaid' } | null>(null);
+  const [paymentCustomerSearch, setPaymentCustomerSearch] = useState('');
+
+  const openPaymentCustomers = (month: string, status: 'Paid' | 'Unpaid') => {
+    if (!month) return;
+    setPaymentCustomerSearch('');
+    setPaymentCustomersView({ month, status });
+  };
+
+  const paymentCustomers = paymentCustomersView
+    ? getBillPaymentCustomers(paymentCustomersView.month, paymentCustomersView.status).filter(c => {
+        const q = paymentCustomerSearch.trim().toLowerCase();
+        return !q || c.name.toLowerCase().includes(q) || c.accountNumber.includes(q);
+      })
+    : [];
+  const paymentCustomersTotal = paymentCustomersView
+    ? BILL_PAYMENT_STATUS_DATA.find(d => d.month === paymentCustomersView.month)?.[paymentCustomersView.status] ?? 0
+    : 0;
 
   return (
     <div className="space-y-6 animate-fade-in pb-8">
@@ -257,7 +292,252 @@ export const AnalyticsView: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Bill Payment Status (Stacked Bar) */}
+        <div className="lg:col-span-12 bg-white rounded-2xl p-5 border border-[#E5E7EB] shadow-2xs space-y-4">
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="font-extrabold text-sm text-[#2B2B2B]">Bill Payment Status</h3>
+            <div className="flex items-center bg-slate-100 p-0.5 rounded-lg text-[11px] font-bold">
+              {(['chart', 'table'] as const).map(view => (
+                <button
+                  key={view}
+                  onClick={() => setPaymentStatusView(view)}
+                  className={`px-2.5 py-1 rounded-md capitalize transition-all cursor-pointer ${
+                    paymentStatusView === view ? 'bg-white text-[#2B2B2B] shadow-2xs' : 'text-slate-500'
+                  }`}
+                >
+                  {view}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+            {/* Latest month summary (doubles as the legend) */}
+            <div className="lg:col-span-3 space-y-4">
+              <div>
+                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{latestPaymentStatus.month} 2026 Paid Rate</p>
+                <p className="text-3xl font-black text-[#2B2B2B] mt-1">{latestPaidRate}%</p>
+                <p className="text-xs text-slate-500 font-medium mt-0.5">
+                  of {latestBilled.toLocaleString()} bills issued
+                </p>
+              </div>
+              <div className="space-y-2">
+                {PAYMENT_STATUS_SERIES.map(({ key, color, icon: Icon }) => (
+                  <button
+                    key={key}
+                    onClick={() => openPaymentCustomers(latestPaymentStatus.month, key)}
+                    className="w-full flex items-center justify-between p-3 rounded-xl bg-[#F8FAFC] border border-slate-100 hover:border-[#FF5401]/40 transition-colors cursor-pointer"
+                  >
+                    <span className="flex items-center gap-2 text-xs font-bold text-[#2B2B2B]">
+                      <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: color }} />
+                      <Icon className="w-3.5 h-3.5 text-slate-500" />
+                      {key}
+                    </span>
+                    <span className="text-sm font-extrabold text-[#2B2B2B]">
+                      {latestPaymentStatus[key].toLocaleString()}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="lg:col-span-9">
+              {paymentStatusView === 'chart' ? (
+                <div className="h-72 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={BILL_PAYMENT_STATUS_DATA} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
+                      <XAxis dataKey="month" stroke="#64748B" fontSize={11} tickLine={false} />
+                      <YAxis
+                        stroke="#64748B"
+                        fontSize={11}
+                        tickLine={false}
+                        tickFormatter={(v: number) => `${Math.round(v / 1000)}k`}
+                      />
+                      <Tooltip
+                        cursor={{ fill: '#F8FAFC' }}
+                        contentStyle={{ backgroundColor: '#1E293B', color: '#FFF', borderRadius: '12px', fontSize: '12px' }}
+                        itemStyle={{ color: '#FFF' }}
+                        formatter={(value, name, item) => {
+                          const { Paid, Unpaid } = item.payload as { Paid: number; Unpaid: number };
+                          const count = Number(value);
+                          return [`${count.toLocaleString()} (${((count / (Paid + Unpaid)) * 100).toFixed(1)}%)`, name];
+                        }}
+                      />
+                      <Bar
+                        dataKey="Paid"
+                        stackId="status"
+                        fill={PAYMENT_STATUS_SERIES[0].color}
+                        stroke="#FFFFFF"
+                        strokeWidth={2}
+                        maxBarSize={48}
+                        cursor="pointer"
+                        onClick={(entry: { month?: string; payload?: { month: string } }) => openPaymentCustomers(entry.payload?.month ?? entry.month ?? '', 'Paid')}
+                      />
+                      <Bar
+                        dataKey="Unpaid"
+                        stackId="status"
+                        fill={PAYMENT_STATUS_SERIES[1].color}
+                        stroke="#FFFFFF"
+                        strokeWidth={2}
+                        radius={[4, 4, 0, 0]}
+                        maxBarSize={48}
+                        cursor="pointer"
+                        onClick={(entry: { month?: string; payload?: { month: string } }) => openPaymentCustomers(entry.payload?.month ?? entry.month ?? '', 'Unpaid')}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="text-left text-slate-500 border-b border-slate-100">
+                        <th className="py-2 font-bold">Month</th>
+                        <th className="py-2 font-bold text-right">Paid</th>
+                        <th className="py-2 font-bold text-right">Unpaid</th>
+                        <th className="py-2 font-bold text-right">Paid Rate</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {BILL_PAYMENT_STATUS_DATA.map(row => (
+                        <tr key={row.month} className="text-[#2B2B2B]">
+                          <td className="py-2 font-bold">{row.month}</td>
+                          {PAYMENT_STATUS_SERIES.map(({ key }) => (
+                            <td key={key} className="py-2 text-right">
+                              <button
+                                onClick={() => openPaymentCustomers(row.month, key)}
+                                className="font-semibold hover:text-[#FF5401] hover:underline cursor-pointer"
+                              >
+                                {row[key].toLocaleString()}
+                              </button>
+                            </td>
+                          ))}
+                          <td className="py-2 text-right font-bold">
+                            {((row.Paid / (row.Paid + row.Unpaid)) * 100).toFixed(1)}%
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Paid / Unpaid Customer List */}
+      {paymentCustomersView && (
+        <div
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setPaymentCustomersView(null)}
+        >
+          <div
+            className="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl border border-[#E5E7EB]"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="p-5 border-b border-slate-100 space-y-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="font-extrabold text-base text-[#2B2B2B] flex items-center gap-2">
+                    {paymentCustomersView.status === 'Paid' ? (
+                      <CheckCircle2 className="w-4 h-4 text-slate-500" />
+                    ) : (
+                      <Clock className="w-4 h-4 text-[#FF5401]" />
+                    )}
+                    {paymentCustomersView.status} Customers
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium mt-0.5">
+                    {paymentCustomersView.month} 2026 · {paymentCustomersTotal.toLocaleString()} accounts
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center bg-slate-100 p-0.5 rounded-lg text-[11px] font-bold">
+                    {PAYMENT_STATUS_SERIES.map(({ key }) => (
+                      <button
+                        key={key}
+                        onClick={() => setPaymentCustomersView({ ...paymentCustomersView, status: key })}
+                        className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                          paymentCustomersView.status === key ? 'bg-white text-[#2B2B2B] shadow-2xs' : 'text-slate-500'
+                        }`}
+                      >
+                        {key}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => setPaymentCustomersView(null)}
+                    className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100 cursor-pointer"
+                    aria-label="Close"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="relative">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={paymentCustomerSearch}
+                  onChange={e => setPaymentCustomerSearch(e.target.value)}
+                  placeholder="Search name or account number"
+                  className="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl pl-9 pr-3 py-2 text-xs font-medium text-[#2B2B2B] focus:outline-none focus:border-[#FF5401]"
+                />
+              </div>
+            </div>
+
+            <div className="overflow-y-auto flex-1">
+              {paymentCustomers.length === 0 ? (
+                <p className="p-8 text-center text-xs text-slate-500 font-medium">No customers found</p>
+              ) : (
+                <table className="w-full text-xs">
+                  <thead className="sticky top-0 bg-white">
+                    <tr className="text-left text-slate-500 border-b border-slate-100">
+                      <th className="py-2.5 px-5 font-bold">Customer</th>
+                      <th className="py-2.5 px-3 font-bold hidden sm:table-cell">Type</th>
+                      <th className="py-2.5 px-3 font-bold text-right">Amount</th>
+                      <th className="py-2.5 px-5 font-bold text-right">
+                        {paymentCustomersView.status === 'Paid' ? 'Paid On' : 'Due Date'}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {paymentCustomers.map(c => (
+                      <tr key={c.accountNumber} className="text-[#2B2B2B] hover:bg-[#F8FAFC]">
+                        <td className="py-2.5 px-5">
+                          <p className="font-bold">{c.name}</p>
+                          <p className="text-[11px] text-slate-500 font-mono">#{c.accountNumber}</p>
+                        </td>
+                        <td className="py-2.5 px-3 text-slate-600 hidden sm:table-cell">{c.serviceType}</td>
+                        <td className="py-2.5 px-3 text-right font-bold">
+                          ₱{c.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="py-2.5 px-5 text-right">
+                          {c.status === 'Paid' ? (
+                            <>
+                              <p className="font-medium">{c.paymentDate}</p>
+                              <p className="text-[11px] text-slate-500">{c.paymentChannel}</p>
+                            </>
+                          ) : (
+                            <p className="font-medium text-[#FF5401]">{c.dueDate}</p>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            <div className="px-5 py-3 border-t border-slate-100 text-[11px] text-slate-500 font-medium">
+              Showing {paymentCustomers.length} of {paymentCustomersTotal.toLocaleString()}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Recent Activities Feed */}
       <div className="bg-white rounded-2xl p-5 border border-[#E5E7EB] shadow-2xs space-y-4">

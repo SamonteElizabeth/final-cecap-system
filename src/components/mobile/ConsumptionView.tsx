@@ -31,7 +31,7 @@ export const ConsumptionView: React.FC = () => {
 
   useEffect(() => {
     if (!selectedAccount) return;
-    fetchConsumptionHistory(selectedAccount.accountNumber).then(res => {
+    fetchConsumptionHistory(selectedAccount.accountNumber, selectedAccount.serviceType).then(res => {
       if (res.consumption) {
         setConsumptionList(res.consumption);
       }

@@ -162,6 +162,81 @@ export const PAYMENT_COLLECTION_DATA = [
   { month: 'Jul', GCash: 25.4, Maya: 15.1, ECPay: 6.2, Bank: 10.2 },
 ];
 
+// Monthly bills issued to active service accounts, split by payment status at month end
+export const BILL_PAYMENT_STATUS_DATA = [
+  { month: 'Jan', Paid: 128940, Unpaid: 10820 },
+  { month: 'Feb', Paid: 130210, Unpaid: 10050 },
+  { month: 'Mar', Paid: 131480, Unpaid: 9640 },
+  { month: 'Apr', Paid: 129870, Unpaid: 11930 },
+  { month: 'May', Paid: 132560, Unpaid: 9880 },
+  { month: 'Jun', Paid: 134120, Unpaid: 8910 },
+  { month: 'Jul', Paid: 135340, Unpaid: 7510 },
+];
+
+export interface BillPaymentCustomer {
+  accountNumber: string;
+  name: string;
+  serviceType: Customer['serviceType'];
+  area: string;
+  amount: number;
+  status: 'Paid' | 'Unpaid';
+  paymentDate?: string;
+  paymentChannel?: string;
+  dueDate: string;
+}
+
+const BILLING_CUSTOMER_POOL: { accountNumber: string; name: string; serviceType: Customer['serviceType']; area: string; baseAmount: number }[] = [
+  ...ADMIN_CUSTOMERS_LIST.map(c => ({
+    accountNumber: c.accountNumber,
+    name: c.name,
+    serviceType: c.serviceType,
+    area: c.serviceAddress.split(',')[0],
+    baseAmount: c.serviceType === 'Industrial' ? 45200 : c.serviceType === 'Commercial' ? 18400 : 4600,
+  })),
+  { accountNumber: '0421-2045-88', name: 'Juan Dela Cruz', serviceType: 'Residential', area: 'Villa 8, Mimosa Leisure Estate', baseAmount: 3400 },
+  { accountNumber: '0421-9012-34', name: 'Eleanor Vance - Philexcel', serviceType: 'Commercial', area: 'Unit 301, Philexcel Business Park', baseAmount: 12800 },
+  { accountNumber: '0421-5512-88', name: 'Mark Anthony Reyes', serviceType: 'Residential', area: 'Block 5 Lot 18, Fontana Residential Enclave', baseAmount: 3800 },
+  { accountNumber: '0421-8420-19', name: 'Clark Global Logistics Hub', serviceType: 'Industrial', area: 'Bldg 7, Civil Aviation Complex', baseAmount: 43500 },
+  { accountNumber: '0421-3007-15', name: 'Angelica Mendoza', serviceType: 'Residential', area: 'Block 2 Lot 11, Air Force City', baseAmount: 3150 },
+  { accountNumber: '0421-3184-62', name: 'Rafael Villanueva', serviceType: 'Residential', area: 'Villa 22, Mimosa Leisure Estate', baseAmount: 5200 },
+  { accountNumber: '0421-3390-07', name: 'Kristine Bautista', serviceType: 'Residential', area: 'Lot 3, Fontana Residential Enclave', baseAmount: 2900 },
+  { accountNumber: '0421-3512-49', name: 'Paolo Garcia', serviceType: 'Residential', area: 'Block 9 Lot 4, Berthaphil Village', baseAmount: 3600 },
+  { accountNumber: '0421-3698-21', name: 'Leah Marie Torres', serviceType: 'Residential', area: 'Unit 5B, Clark Sun Valley Residences', baseAmount: 2700 },
+  { accountNumber: '0421-3825-90', name: 'Dennis Aquino', serviceType: 'Residential', area: 'Block 7 Lot 1, Air Force City', baseAmount: 4100 },
+  { accountNumber: '0421-4011-36', name: 'Sofia Navarro', serviceType: 'Residential', area: 'Villa 3, Mimosa Leisure Estate', baseAmount: 6100 },
+  { accountNumber: '0421-4237-58', name: 'Miguel Fernandez', serviceType: 'Residential', area: 'Lot 15, Fontana Residential Enclave', baseAmount: 3300 },
+  { accountNumber: '0421-5130-14', name: 'Clark Freeport Café Co.', serviceType: 'Commercial', area: 'Stall 12, Clark Parade Grounds', baseAmount: 9800 },
+  { accountNumber: '0421-5276-83', name: 'Pampanga Dental Clinic', serviceType: 'Commercial', area: 'Unit 108, Clark Center Point', baseAmount: 7600 },
+  { accountNumber: '0421-5419-02', name: 'Sky Cargo Forwarders Inc.', serviceType: 'Commercial', area: 'Cargo Bay 4, Clark International Airport', baseAmount: 21300 },
+  { accountNumber: '0421-5683-47', name: 'Hotel Stotsenberg', serviceType: 'Commercial', area: 'Bayanihan Drive, Clark Freeport Zone', baseAmount: 26800 },
+  { accountNumber: '0421-6104-29', name: 'Clark Precision Plastics', serviceType: 'Industrial', area: 'Lot 22, Clark Industrial Estate 2', baseAmount: 38900 },
+  { accountNumber: '0421-6358-71', name: 'Luzon Steel Fabricators', serviceType: 'Industrial', area: 'Block 3, Berthaphil Industrial Park', baseAmount: 52400 },
+];
+
+const PAYMENT_CHANNELS = ['GCash', 'Maya', 'ECPay', 'Bank'];
+const STATUS_MONTHS = BILL_PAYMENT_STATUS_DATA.map(d => d.month);
+const NEXT_MONTH_NAME = ['February', 'March', 'April', 'May', 'June', 'July', 'August'];
+
+// Customers billed in a given 2026 month with their payment status (stable per account and month)
+export const getBillPaymentCustomers = (month: string, status: 'Paid' | 'Unpaid'): BillPaymentCustomer[] => {
+  const mi = Math.max(0, STATUS_MONTHS.indexOf(month));
+  return BILLING_CUSTOMER_POOL.map((c, i) => {
+    const isUnpaid = (i * 5 + mi * 3) % 7 === 0;
+    const amount = Math.round(c.baseAmount * (0.9 + (((i * 13 + mi * 5) % 9) * 0.025)) * 100) / 100;
+    return {
+      accountNumber: c.accountNumber,
+      name: c.name,
+      serviceType: c.serviceType,
+      area: c.area,
+      amount,
+      status: (isUnpaid ? 'Unpaid' : 'Paid') as BillPaymentCustomer['status'],
+      paymentDate: isUnpaid ? undefined : `${NEXT_MONTH_NAME[mi]} ${String(2 + ((i * 3 + mi) % 10)).padStart(2, '0')}, 2026`,
+      paymentChannel: isUnpaid ? undefined : PAYMENT_CHANNELS[(i + mi) % PAYMENT_CHANNELS.length],
+      dueDate: `${NEXT_MONTH_NAME[mi]} 12, 2026`,
+    };
+  }).filter(c => c.status === status);
+};
+
 export const TICKET_DISTRIBUTION_DATA = [
   { name: 'Resolved', value: 480, color: '#22C55E' },
   { name: 'In Progress', value: 142, color: '#3B82F6' },

@@ -1,5 +1,10 @@
 import { Bill, ServiceAccount, BillingHistoryItem, ConsumptionData, NotificationItem, PaymentReceipt, SupportConcern, RegistrationRequest } from '../types';
-import { MOCK_CONSUMPTION_HISTORY } from '../data/mockBillingData';
+import {
+  MOCK_BILLING_HISTORY,
+  MOCK_CONSUMPTION_HISTORY,
+  getSampleBillingHistory,
+  getSampleConsumption,
+} from '../data/mockBillingData';
 
 export async function submitRegistrationRequest(payload: {
   fullName: string;
@@ -163,20 +168,25 @@ export async function fetchAccountDetails(accountNumber: string) {
   }
 }
 
-export async function fetchBillingHistory(accountNumber: string) {
+export async function fetchBillingHistory(accountNumber: string, serviceType?: ServiceAccount['serviceType']) {
+  // The server only knows the demo accounts (it answers others with Juan's history), so other accounts use sample data
+  if (!MOCK_BILLING_HISTORY[accountNumber]) {
+    return { success: true, history: getSampleBillingHistory(accountNumber, serviceType) };
+  }
   try {
     const res = await fetch(`/api/billing/history/${encodeURIComponent(accountNumber)}`);
     return await res.json();
   } catch (err) {
-    return { success: false, history: [] };
+    return { success: true, history: MOCK_BILLING_HISTORY[accountNumber] };
   }
 }
 
-export async function fetchConsumptionHistory(accountNumber: string) {
+export async function fetchConsumptionHistory(accountNumber: string, serviceType?: ServiceAccount['serviceType']) {
   const localConsumption = () => ({
     success: true,
-    consumption: MOCK_CONSUMPTION_HISTORY[accountNumber] || MOCK_CONSUMPTION_HISTORY['0421-8812-90'] || [],
+    consumption: getSampleConsumption(accountNumber, serviceType),
   });
+  if (!MOCK_CONSUMPTION_HISTORY[accountNumber]) return localConsumption();
   try {
     const res = await fetch(`/api/billing/consumption/${encodeURIComponent(accountNumber)}`);
     const data = await res.json();

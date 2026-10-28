@@ -75,7 +75,6 @@ const PasswordPolicyChecklist: React.FC<{
 export type AuthMode = 'CUSTOMER_LOGIN' | 'ADMIN_LOGIN' | 'REGISTER';
 
 const DEMO_CUSTOMER_USERNAME = 'juan.delacruz';
-const DEMO_CUSTOMER_ACCOUNT = '0421-8812-90';
 
 export const AuthView: React.FC<{ initialMode?: AuthMode }> = ({ initialMode = 'CUSTOMER_LOGIN' }) => {
   const {
@@ -110,7 +109,8 @@ export const AuthView: React.FC<{ initialMode?: AuthMode }> = ({ initialMode = '
     resendAdminSetupEmail,
     simulateExpireToken,
     simulateUseToken,
-    registrationRequests,
+    findCustomerByUsername,
+    signInAsCustomer,
   } = useApp();
 
   const [mode, setMode] = useState<AuthMode>(initialMode);
@@ -137,17 +137,8 @@ export const AuthView: React.FC<{ initialMode?: AuthMode }> = ({ initialMode = '
   const [mfaResendCount, setMfaResendCount] = useState(0);
 
   // Customers log in with a username; lockout, MFA and recovery stay keyed to the account number
-  const resolveCustomerAccount = (username: string): string | null => {
-    const entered = username.trim().toLowerCase();
-    if (!entered) return null;
-    if (entered === DEMO_CUSTOMER_USERNAME) return DEMO_CUSTOMER_ACCOUNT;
-    if (user?.username && user.username.toLowerCase() === entered) return user.accountNumber;
-    const approved = registrationRequests.find(
-      r => r.status === 'Approved' && r.accountCode && r.username?.toLowerCase() === entered
-    );
-    return approved?.accountCode ?? null;
-  };
-  const loginAccount = resolveCustomerAccount(loginIdentifier);
+  const loginCustomer = findCustomerByUsername(loginIdentifier);
+  const loginAccount = loginCustomer?.accountNumber ?? null;
   const lockoutKey = loginAccount ?? loginIdentifier.trim().toLowerCase();
 
   // Sync lockout state on username change
@@ -328,9 +319,9 @@ export const AuthView: React.FC<{ initialMode?: AuthMode }> = ({ initialMode = '
         enteredPassword === 'CedcTemp#7419' ||
         enteredPassword === 'CedcTemp#1092' ||
         enteredPassword.toLowerCase().includes('temp') ||
-        (user?.currentPassword && enteredPassword === user.currentPassword);
+        (loginCustomer?.currentPassword && enteredPassword === loginCustomer.currentPassword);
 
-      if (!isKnownAccount || !isCorrectPassword) {
+      if (!isKnownAccount || !loginCustomer || !isCorrectPassword) {
         // Record failed attempt according to lockout policy
         const newLockout = recordFailedAttempt(targetAccount);
         setLockoutState(newLockout);
@@ -349,6 +340,9 @@ export const AuthView: React.FC<{ initialMode?: AuthMode }> = ({ initialMode = '
         lockoutMessage: null,
       });
 
+      // Open this customer's own profile (name, address, bills) for the rest of the session
+      signInAsCustomer(loginCustomer);
+
       // Require MFA/OTP after successful username/password validation (Policy Rule)
       const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
       setCustomerGeneratedMfa(otpCode);
@@ -357,8 +351,8 @@ export const AuthView: React.FC<{ initialMode?: AuthMode }> = ({ initialMode = '
       setCustomerLoginStep('MFA_OTP');
 
       // Dispatch MFA code via email & notification
-      const customerEmail = user?.email || 'juan.delacruz@example.ph';
-      const customerName = user?.name || 'Juan Dela Cruz';
+      const customerEmail = loginCustomer.email;
+      const customerName = loginCustomer.name;
 
       sendEmail({
         to: customerEmail,

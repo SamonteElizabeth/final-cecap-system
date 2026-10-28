@@ -15,7 +15,7 @@ export const BillingView: React.FC = () => {
 
   useEffect(() => {
     if (!selectedAccount) return;
-    fetchBillingHistory(selectedAccount.accountNumber).then(res => {
+    fetchBillingHistory(selectedAccount.accountNumber, selectedAccount.serviceType).then(res => {
       if (res.history) setHistoryList(res.history);
     });
   }, [selectedAccount]);
