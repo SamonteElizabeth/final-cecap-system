@@ -1096,8 +1096,8 @@ Valid for 5 minutes.`,
             <img src={cecapLogo} alt="CECAp Logo" className="h-9 sm:h-10 w-auto object-contain" />
           </div>
 
-          {/* Mode Toggle Pills (Customer, Admin, Register) */}
-          <div className="flex bg-[#F7F4EE] p-1.5 rounded-full mb-7 text-xs font-semibold gap-1 border border-[#EDE7DD]">
+          {/* Mode Toggle Pills (Customer, Admin, Register) - desktop only; on mobile the landing page picks the mode */}
+          <div className="hidden md:flex bg-[#F7F4EE] p-1.5 rounded-full mb-7 text-xs font-semibold gap-1 border border-[#EDE7DD]">
             <button
               type="button"
               onClick={() => setMode('CUSTOMER_LOGIN')}
@@ -1256,7 +1256,7 @@ Valid for 5 minutes.`,
                       type="button"
                       onClick={handleBiometricLogin}
                       disabled={lockoutState.isLocked}
-                      className="w-full bg-[#FFFDF9] hover:bg-orange-50/60 disabled:opacity-60 text-[#FF5401] border border-[#F5D0B8] font-semibold text-xs py-2.5 rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+                      className="w-full bg-[#FFFDF9] hover:bg-orange-50/60 disabled:opacity-60 text-[#FF5401] border border-[#F5D0B8] font-semibold text-xs py-[13px] rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <ScanFace className="w-4 h-4 text-[#FF5401]" />
                       <span>Biometrics</span>

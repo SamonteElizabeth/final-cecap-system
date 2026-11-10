@@ -4,8 +4,27 @@ import { initiatePaymentCheckout, createDemoReceipt } from '../../services/api';
 import { X, CheckCircle2, ShieldCheck, ArrowRight, Smartphone, Building2, Wallet, Download, Share2, AlertCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
+// Utility bills are paid without a convenience fee; kept explicit so the checkout shows the full breakdown
+const CONVENIENCE_FEE = 0;
+
+const CHANNEL_THEMES = {
+  GCash: { header: 'bg-[#007DFE]', text: 'text-[#007DFE]', border: 'border-[#007DFE]', button: 'bg-[#007DFE] hover:bg-[#0068D6]' },
+  Maya: { header: 'bg-[#0B1E2D]', text: 'text-[#16A34A]', border: 'border-[#16A34A]', button: 'bg-[#16A34A] hover:bg-[#15803D]' },
+  ECPay: { header: 'bg-indigo-600', text: 'text-indigo-600', border: 'border-indigo-600', button: 'bg-indigo-600 hover:bg-indigo-700' },
+} as const;
+
+const formatPeso = (amount: number) =>
+  `₱${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+const DetailRow: React.FC<{ label: string; value: string; mono?: boolean }> = ({ label, value, mono }) => (
+  <div className="flex justify-between gap-3">
+    <span className="text-slate-500 shrink-0">{label}</span>
+    <span className={`font-semibold text-[#2B2B2B] text-right truncate ${mono ? 'font-mono' : ''}`}>{value}</span>
+  </div>
+);
+
 export const PaymentModal: React.FC = () => {
-  const { paymentModalOpen, setPaymentModalOpen, selectedAccount, recordDemoPayment } = useApp();
+  const { paymentModalOpen, setPaymentModalOpen, selectedAccount, recordDemoPayment, user } = useApp();
 
   const [paymentType, setPaymentType] = useState<'FULL' | 'PARTIAL'>('FULL');
   const [partialAmount, setPartialAmount] = useState<string>('2000');
@@ -25,6 +44,11 @@ export const PaymentModal: React.FC = () => {
 
   const currentBill = selectedAccount.currentBill;
   const payAmount = paymentType === 'FULL' ? currentBill.amountDue : parseFloat(partialAmount) || 0;
+  const totalCharge = payAmount + CONVENIENCE_FEE;
+  const channelTheme = CHANNEL_THEMES[selectedChannel];
+  const accountName = selectedAccount.accountHolderName || user?.name || 'Valued Customer';
+  const mobileDigits = (user?.mobileNumber || '').replace(/\D/g, '');
+  const maskedMobile = mobileDigits.length >= 4 ? `•••• ••• ${mobileDigits.slice(-4)}` : 'Linked account';
 
   const handleInitiatePayment = async () => {
     if (payAmount <= 0) return;
@@ -85,12 +109,14 @@ export const PaymentModal: React.FC = () => {
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-[60] flex items-center justify-center p-3 animate-fade-in">
       <div className="bg-white rounded-3xl w-full max-w-sm p-5 shadow-2xl border border-slate-100 relative max-h-[90dvh] overflow-y-auto overscroll-contain">
-        <button
-          onClick={handleClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1 rounded-full bg-slate-100"
-        >
-          <X className="w-4 h-4" />
-        </button>
+        {step !== 2 && (
+          <button
+            onClick={handleClose}
+            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1 rounded-full bg-slate-100"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
 
         {/* STEP 1: Review Payment & Select Gateway Channel */}
         {step === 1 && (
@@ -225,60 +251,126 @@ export const PaymentModal: React.FC = () => {
           </div>
         )}
 
-        {/* STEP 2: SIMULATED PAYMENT GATEWAY (GCash / Maya PIN screen) */}
+        {/* STEP 2: SIMULATED PAYMENT GATEWAY (wallet checkout & MPIN screen) */}
         {step === 2 && (
-          <form onSubmit={handleConfirmGatewayPin} className="space-y-4">
-            <div className="text-center pb-2 border-b border-[#E5E7EB]">
-              <div
-                className={`w-12 h-12 rounded-2xl mx-auto flex items-center justify-center text-white font-semibold text-lg mb-2 ${
-                  selectedChannel === 'GCash'
-                    ? 'bg-blue-600'
-                    : selectedChannel === 'Maya'
-                    ? 'bg-[#22C55E]'
-                    : 'bg-indigo-600'
-                }`}
+          <form onSubmit={handleConfirmGatewayPin} className="-m-5">
+            {/* Wallet-branded header */}
+            <div className={`${channelTheme.header} text-white px-5 pt-4 pb-14 rounded-t-3xl`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-xs font-bold">
+                    {selectedChannel.substring(0, 2)}
+                  </div>
+                  <div className="leading-tight">
+                    <p className="text-sm font-bold">{selectedChannel}</p>
+                    <p className="text-[10px] text-white/80">Merchant Checkout</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="text-white/80 hover:text-white p-1 rounded-full bg-white/15"
+                  aria-label="Cancel payment"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="text-center mt-4">
+                <p className="text-[11px] text-white/80">You are paying</p>
+                <p className="text-3xl font-bold tracking-tight mt-0.5">{formatPeso(totalCharge)}</p>
+              </div>
+            </div>
+
+            <div className="px-5 pb-5 -mt-10 space-y-3">
+              {/* Merchant & bill details */}
+              <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm text-xs">
+                <div className="flex items-center gap-3 p-3 border-b border-dashed border-[#E5E7EB]">
+                  <div className="w-9 h-9 rounded-full bg-orange-100 text-[#FF5401] flex items-center justify-center shrink-0">
+                    <Building2 className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] text-slate-500 uppercase tracking-wide">Pay to</p>
+                    <p className="font-semibold text-[#2B2B2B] truncate">Clark Electric Distribution Corp.</p>
+                  </div>
+                </div>
+                <div className="p-3 space-y-1.5">
+                  <DetailRow label="Account Name" value={accountName} />
+                  <DetailRow label="Account No." value={selectedAccount.accountNumber} mono />
+                  <DetailRow label="Bill No." value={currentBill.billNumber} mono />
+                  <DetailRow label="Billing Period" value={currentBill.billingPeriod} />
+                  <DetailRow label="Due Date" value={currentBill.dueDate} />
+                  <DetailRow label="Payment Type" value={paymentType === 'FULL' ? 'Full Payment' : 'Partial Payment'} />
+                </div>
+                <div className="p-3 border-t border-dashed border-[#E5E7EB] space-y-1.5">
+                  <DetailRow label="Amount" value={formatPeso(payAmount)} />
+                  <DetailRow label="Convenience Fee" value={formatPeso(CONVENIENCE_FEE)} />
+                  <div className="flex justify-between pt-1.5 border-t border-[#F1F1F1] text-sm font-bold">
+                    <span className="text-[#2B2B2B]">Total</span>
+                    <span className={channelTheme.text}>{formatPeso(totalCharge)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Paying from */}
+              <div className="flex items-center justify-between bg-[#F8FAFC] border border-[#E5E7EB] rounded-2xl p-3 text-xs">
+                <div className="flex items-center gap-2.5">
+                  <Wallet className={`w-4 h-4 ${channelTheme.text}`} />
+                  <div className="leading-tight">
+                    <p className="text-[10px] text-slate-500">Pay with</p>
+                    <p className="font-semibold text-[#2B2B2B]">
+                      {selectedChannel} Wallet · {maskedMobile}
+                    </p>
+                  </div>
+                </div>
+                <CheckCircle2 className={`w-4 h-4 ${channelTheme.text}`} />
+              </div>
+
+              {/* MPIN entry */}
+              <div>
+                <label htmlFor="gateway-mpin" className="block text-xs font-semibold text-[#2B2B2B] mb-2 text-center">
+                  Enter your 4-digit MPIN
+                </label>
+                <div className="relative flex justify-center gap-3">
+                  {[0, 1, 2, 3].map(i => (
+                    <div
+                      key={i}
+                      className={`w-11 h-12 rounded-xl border-2 flex items-center justify-center transition-colors ${
+                        gatewayPin.length === i ? channelTheme.border : 'border-[#E5E7EB]'
+                      }`}
+                    >
+                      {gatewayPin[i] && <span className="w-2.5 h-2.5 rounded-full bg-[#2B2B2B]" />}
+                    </div>
+                  ))}
+                  <input
+                    id="gateway-mpin"
+                    type="password"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    maxLength={4}
+                    value={gatewayPin}
+                    onChange={e => setGatewayPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    required
+                  />
+                </div>
+                <p className="text-[10px] text-slate-400 text-center mt-2">
+                  Ref. No. <span className="font-mono">{gatewayRef}</span>
+                </p>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading || gatewayPin.length !== 4}
+                className={`w-full ${channelTheme.button} disabled:opacity-60 text-white font-bold text-sm py-3.5 rounded-full shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer`}
               >
-                {selectedChannel.substring(0, 2)}
-              </div>
-              <h3 className="font-semibold text-[#2B2B2B] text-base">{selectedChannel} Secure Gateway</h3>
-            </div>
+                {isLoading ? 'Processing…' : `Pay ${formatPeso(totalCharge)}`}
+              </button>
 
-            <div className="bg-[#F5F5F5] p-3 rounded-2xl border border-[#E5E7EB] text-xs space-y-1">
-              <div className="flex justify-between">
-                <span className="text-slate-500">Account #:</span>
-                <span className="font-mono font-bold text-[#2B2B2B]">{selectedAccount.accountNumber}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Gateway Ref:</span>
-                <span className="font-mono text-slate-700">{gatewayRef}</span>
-              </div>
-              <div className="flex justify-between pt-1 border-t border-[#E5E7EB] font-bold text-sm">
-                <span className="text-[#2B2B2B]">Total Charge:</span>
-                <span className="text-[#FF5401]">₱{payAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-              </div>
+              <p className="flex items-center justify-center gap-1.5 text-[10px] text-slate-400">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                Secured with 256-bit SSL encryption
+              </p>
             </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-[#2B2B2B] mb-1 text-center">
-                Enter {selectedChannel} 4-Digit MPIN / Authorization Code
-              </label>
-              <input
-                type="password"
-                maxLength={4}
-                value={gatewayPin}
-                onChange={e => setGatewayPin(e.target.value)}
-                className="w-full bg-white border border-[#E5E7EB] rounded-2xl py-3 text-center text-2xl font-bold tracking-widest text-[#2B2B2B] focus:outline-none focus:border-[#FF5401]"
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-[#22C55E] hover:bg-emerald-600 text-white font-bold text-sm py-3.5 rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
-            >
-              {isLoading ? 'Authorizing…' : 'Authorize'}
-            </button>
           </form>
         )}
 

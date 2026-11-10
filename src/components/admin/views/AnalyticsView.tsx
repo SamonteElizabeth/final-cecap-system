@@ -435,31 +435,31 @@ export const AnalyticsView: React.FC = () => {
           onClick={() => setPaymentCustomersView(null)}
         >
           <div
-            className="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl border border-[#E5E7EB]"
+            className="bg-white rounded-3xl w-full max-w-5xl h-[88vh] flex flex-col shadow-2xl border border-[#E5E7EB]"
             onClick={e => e.stopPropagation()}
           >
-            <div className="p-5 border-b border-slate-100 space-y-4">
-              <div className="flex items-start justify-between gap-3">
+            <div className="p-6 md:p-7 border-b border-slate-100 space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                 <div>
-                  <h3 className="font-extrabold text-base text-[#2B2B2B] flex items-center gap-2">
+                  <h3 className="font-extrabold text-lg md:text-xl text-[#2B2B2B] flex items-center gap-2.5">
                     {paymentCustomersView.status === 'Paid' ? (
-                      <CheckCircle2 className="w-4 h-4 text-slate-500" />
+                      <CheckCircle2 className="w-5 h-5 text-slate-500" />
                     ) : (
-                      <Clock className="w-4 h-4 text-[#FF5401]" />
+                      <Clock className="w-5 h-5 text-[#FF5401]" />
                     )}
                     {paymentCustomersView.status} Customers
                   </h3>
-                  <p className="text-xs text-slate-500 font-medium mt-0.5">
+                  <p className="text-sm text-slate-500 font-medium mt-1">
                     {paymentCustomersView.month} 2026 · {paymentCustomersTotal.toLocaleString()} accounts
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center bg-slate-100 p-0.5 rounded-lg text-[11px] font-bold">
+                <div className="flex items-center gap-3 self-end sm:self-auto">
+                  <div className="flex items-center bg-slate-100 p-1 rounded-xl text-xs font-bold">
                     {PAYMENT_STATUS_SERIES.map(({ key }) => (
                       <button
                         key={key}
                         onClick={() => setPaymentCustomersView({ ...paymentCustomersView, status: key })}
-                        className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                        className={`px-4 py-1.5 rounded-lg transition-all cursor-pointer ${
                           paymentCustomersView.status === key ? 'bg-white text-[#2B2B2B] shadow-2xs' : 'text-slate-500'
                         }`}
                       >
@@ -469,7 +469,7 @@ export const AnalyticsView: React.FC = () => {
                   </div>
                   <button
                     onClick={() => setPaymentCustomersView(null)}
-                    className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100 cursor-pointer"
+                    className="text-slate-400 hover:text-slate-600 p-1.5 rounded-full hover:bg-slate-100 cursor-pointer"
                     aria-label="Close"
                   >
                     <X className="w-5 h-5" />
@@ -478,28 +478,29 @@ export const AnalyticsView: React.FC = () => {
               </div>
 
               <div className="relative">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
                   value={paymentCustomerSearch}
                   onChange={e => setPaymentCustomerSearch(e.target.value)}
                   placeholder="Search name or account number"
-                  className="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl pl-9 pr-3 py-2 text-xs font-medium text-[#2B2B2B] focus:outline-none focus:border-[#FF5401]"
+                  className="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl pl-11 pr-4 py-3 text-sm font-medium text-[#2B2B2B] focus:outline-none focus:border-[#FF5401]"
                 />
               </div>
             </div>
 
             <div className="overflow-y-auto flex-1">
               {paymentCustomers.length === 0 ? (
-                <p className="p-8 text-center text-xs text-slate-500 font-medium">No customers found</p>
+                <p className="p-10 text-center text-sm text-slate-500 font-medium">No customers found</p>
               ) : (
-                <table className="w-full text-xs">
-                  <thead className="sticky top-0 bg-white">
-                    <tr className="text-left text-slate-500 border-b border-slate-100">
-                      <th className="py-2.5 px-5 font-bold">Customer</th>
-                      <th className="py-2.5 px-3 font-bold hidden sm:table-cell">Type</th>
-                      <th className="py-2.5 px-3 font-bold text-right">Amount</th>
-                      <th className="py-2.5 px-5 font-bold text-right">
+                <table className="w-full text-sm">
+                  <thead className="sticky top-0 bg-white z-10">
+                    <tr className="text-left text-xs uppercase tracking-wider text-slate-500 border-b border-slate-100">
+                      <th className="py-3.5 px-6 md:px-7 font-bold">Customer</th>
+                      <th className="py-3.5 px-4 font-bold hidden md:table-cell">Location</th>
+                      <th className="py-3.5 px-4 font-bold hidden sm:table-cell">Type</th>
+                      <th className="py-3.5 px-4 font-bold text-right">Amount</th>
+                      <th className="py-3.5 px-6 md:px-7 font-bold text-right">
                         {paymentCustomersView.status === 'Paid' ? 'Paid On' : 'Due Date'}
                       </th>
                     </tr>
@@ -507,22 +508,27 @@ export const AnalyticsView: React.FC = () => {
                   <tbody className="divide-y divide-slate-100">
                     {paymentCustomers.map(c => (
                       <tr key={c.accountNumber} className="text-[#2B2B2B] hover:bg-[#F8FAFC]">
-                        <td className="py-2.5 px-5">
+                        <td className="py-4 px-6 md:px-7">
                           <p className="font-bold">{c.name}</p>
-                          <p className="text-[11px] text-slate-500 font-mono">#{c.accountNumber}</p>
+                          <p className="text-xs text-slate-500 font-mono mt-0.5">#{c.accountNumber}</p>
                         </td>
-                        <td className="py-2.5 px-3 text-slate-600 hidden sm:table-cell">{c.serviceType}</td>
-                        <td className="py-2.5 px-3 text-right font-bold">
+                        <td className="py-4 px-4 text-slate-600 hidden md:table-cell">{c.area}</td>
+                        <td className="py-4 px-4 hidden sm:table-cell">
+                          <span className="inline-block px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold">
+                            {c.serviceType}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4 text-right font-bold whitespace-nowrap">
                           ₱{c.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                         </td>
-                        <td className="py-2.5 px-5 text-right">
+                        <td className="py-4 px-6 md:px-7 text-right whitespace-nowrap">
                           {c.status === 'Paid' ? (
                             <>
                               <p className="font-medium">{c.paymentDate}</p>
-                              <p className="text-[11px] text-slate-500">{c.paymentChannel}</p>
+                              <p className="text-xs text-slate-500 mt-0.5">{c.paymentChannel}</p>
                             </>
                           ) : (
-                            <p className="font-medium text-[#FF5401]">{c.dueDate}</p>
+                            <p className="font-semibold text-[#FF5401]">{c.dueDate}</p>
                           )}
                         </td>
                       </tr>
@@ -532,7 +538,7 @@ export const AnalyticsView: React.FC = () => {
               )}
             </div>
 
-            <div className="px-5 py-3 border-t border-slate-100 text-[11px] text-slate-500 font-medium">
+            <div className="px-6 md:px-7 py-4 border-t border-slate-100 text-xs text-slate-500 font-medium">
               Showing {paymentCustomers.length} of {paymentCustomersTotal.toLocaleString()}
             </div>
           </div>
